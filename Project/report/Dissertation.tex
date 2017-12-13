@@ -17,6 +17,24 @@
  \usepackage{booktabs}
 \usepackage[table,xcdraw]{xcolor}
 
+\usepackage{amsthm}
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}[section]
+
+
+\newcommand{\Enc}{\texttt{Enc}}
+\newcommand{\Dec}{\texttt{Dec}}
+\newcommand{\Gen}{\texttt{Gen}}
+
+\newcommand{\M}{\mathcal{M}}
+\newcommand{\K}{\mathcal{K}}
+
+\newcommand{\Int}{\mathbb{Z}}
 
 \addtokomafont{labelinglabel}{\sffamily}
 
@@ -37,8 +55,7 @@
     \begin{center}
         \vspace*{1cm}
         
-        \textbf{The road to fully-homomorphic encryption: A survey of the field and an
-        implementation of a state-of-the-art scheme}
+        \textbf{Fully homomorphic encryption}
         
         \vspace{0.5cm}
         
@@ -66,9 +83,9 @@
     \end{center}
 \end{titlepage}
 
-\section{Abstract}
-
-\section{Declaration}
+\begin{abstract}
+\end{abstract}
+\paragraph{Declaration}
 We declare that the material submitted for assessment is my own work except where credit is explicitly given to others by citation or acknowledgement. This work was performed during the current academic year except where otherwise stated. The main text of this project report is NN,NNN* words long, including project specification and plan. In submitting this project report to the University of St Andrews, I give permission for it to be made available for use in accordance with the regulations of the University Library. I also give permission for the report to be made available on the Web, for this work to be used in research within the University of St Andrews, and for any software to be released on an open source basis. I retain the copyright in this work, and ownership of any resulting intellectual property.
 
 \newpage
@@ -77,8 +94,81 @@ We declare that the material submitted for assessment is my own work except wher
 
 \newpage
 
+
 \section{Introduction}
-\section{Classical Ciphers}
+
+\section{A Very Brief History of Ciphers}
+\paragraph{}
+The history of ciphers goes back at least 2000 years. We will now examine the
+cipher now named after Julius Ceasar, who used the following method to obfuscate
+his correspondance for his adversaries:
+\paragraph{Ceasar Cipher}: Take the message (written using symbols from the
+Latin alphabet) that we wish to obfuscate. Replace each symbol with the one that
+comes 3 places after it in the alphabet. For letters at the end where we could
+not shift, we ``wrap around'' to the beginning of the alphabet and carry on
+counting from there. For example
+\[
+  \textit{Alea iacta est} \quad\to\quad \textit{Dohd mdfzd hxz}.
+\]
+To decrypt a message, we simply shift backwards by 3 positions, e.g.
+\[
+  \textit{Zhqm, zmgm, zmgm} \quad\to\quad \textit{Veni, vidi, vici}.
+\]
+\paragraph{}
+We can further generalise this concept to arrive at the definiton of
+\textit{shift ciphers}, where instead of the fixing the shift to 3, we pick a
+key $k \in \mathbb{N}$, and we then shift $k$ places forward (and backwards).
+With shift ciphers in mind, we now formally defined some key concepts that will
+be used throughout this work.
+\begin{definition}{Cipher:}
+  Let $\M, \K_\Enc, \K_\Dec$ be finite sets of symbols. We will refer to $\M$
+  as the \textbf{message space}.
+  A cipher $C$ over $\M$, $\K_\Enc$ and $\K_\Dec$ is a tuple $(\Gen, \Enc, \Dec)$, where
+  \begin{itemize}
+  \item $\Gen$ is the \textbf{key generation algorithm}, which outputs a key
+    $(k_\Enc, k_\Dec) \in (\K_\Enc^* \times \K_\Dec^*)$, chosen according to some
+    distribution. We refer to the set $\K\subseteq \K_\Enc^* \times \K_\Dec^*$ of all possible outputs of $\Gen$ as the
+    \textbf{key space} of $C$. If for all outputs we have $k_\Enc = k_\Dec$, then we call $C$
+    a \textbf{symmetric cipher} and instead of the tuple we just write $k$.
+    Otherwise we call $C$ an \textbf{asymmetric cipher}.
+  \item $\Enc: \K_\Enc^*\times\M\to \M$ is the \textbf{encryption algorithm}, which takes
+    a encryption key $k$ and a message $m$ and outputs its encoding $c$. We will often
+    refer to the message as the \textbf{plaintext} and to the encrypted message
+    as \textbf{ciphertext}.
+  \item $\Dec: \K_\Dec^*\times\M \to \M$ is the \textbf{decryption algorithm}, which
+    takes some decryption key $k$ and some ciphertext $c$ and outputs its
+    correspnding plaintext $m$. 
+  \end{itemize}
+  Finally, we require the correctness of $C$, concretely
+  \[
+    \forall m \in \M, \forall (k, k') \in \K. \quad \Dec(k', \Enc(k, m)) = m,
+  \]
+  i.e. that the cipher does not change its contents.
+\end{definition}
+
+\paragraph{}
+Let us now revisit shift ciphers over an alphabet $\M = \{m_1, \hdots m_n\}$, and see how they fit our
+definiton of a cipher. First, it is easy to see that we are dealing with a
+symmetric cipher, and since a shift by $k$ and any $k + xn, x \in \mathbb{N}$ is
+going to be the same, $\K = \Int_n$. Then,
+\begin{itemize}
+\item $\Gen$: $\Gen$ is uniformly picking an element from $\Int_n$.
+\item $\Enc$: We note that if we relabel our symbols to their
+  indices (i.e. $m_i \to i$), then we can express our encryption function as
+  \[
+    \Enc(k, i) = i + k \mod n.
+  \]
+\item $\Dec$: Similarly, performing the above relabeling, we get
+  \[
+    \Dec(k, i) = i - k \mod n.
+  \]
+\end{itemize}
+Now, checking the correctness of $C_{shift}$: Let $k, m \in \Int_n$
+\[
+  \Dec(k, \Enc(k, m)) = m + k \mod n - k \mod n = m + k - k \mod n = m \mod n = m.
+\]
+Since $k$ and $m$ were arbitrary, it holds $\forall m, k \in \Int_n$.
+\paragraph{Kerckhoffs' principle}
 \section{Perfect Security}
 \section{Computational Security}
 \section{Public-Key Crypto Schemes}
@@ -87,6 +177,9 @@ We declare that the material submitted for assessment is my own work except wher
 \section{Homomorphic Crypto Schemes}
 \subsection{Definition}
 \section{Paillier Encryption}
+Paillier encryption is an additively homomorphic crypto scheme, that operates
+over $\Int_{N^2}$ where $N = pq$ for some $p, q$ primes. In particular, it takes advantage of the fact that $\Int_{N^2}
+\simeq \Int_{N} \times \Int_{N}^*$. 
 \section{Fully Homomorphic Encryption}
 \subsection{Lattices}
 \subsection{GGH}
