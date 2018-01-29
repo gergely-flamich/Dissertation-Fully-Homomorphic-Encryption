@@ -32,12 +32,15 @@
 \newcommand{\Gen}{\texttt{Gen}}
 
 \newcommand{\M}{\mathcal{M}}
+\newcommand{\C}{\mathcal{C}}
 \newcommand{\K}{\mathcal{K}}
 \newcommand{\A}{\mathcal{A}}
 
 \newcommand{\Prob}{\mathbb{P}}
 
 \newcommand{\Int}{\mathbb{Z}}
+
+\newcommand{\Expr}[2]{\texttt{Expr}^{\texttt{#1}}_{#2}}
 
 \addtokomafont{labelinglabel}{\sffamily}
 
@@ -99,6 +102,7 @@ We declare that the material submitted for assessment is my own work except wher
 
 
 \section{Introduction}
+\section{Preliminaries}
 \section{A Very Brief History of Ciphers}
 \paragraph{}
 The history of ciphers goes back at least 2000 years. We will now examine the
@@ -195,7 +199,15 @@ that may involve computing arbitrary \textit{decidable} functions, no matter how
 long they take to calculate. Also, by Kerckhoff's principle we assume that the
 adversary has perfect knowledge of both our encryption and decryption functions.
 \paragraph{Security} We will also impose a very stringent constraint on what we
-consider secure also. We will require that given any ciphertext and a uniformly
+consider secure.
+\begin{definition}{Perfect Security}
+  \label{def:perfect_security}
+We say that a scheme $\Pi$ is perfectly secure if
+\[
+  \forall m \in \M, c, c' \in \C.\quad \Prob(M=m \,|\, C=c) = \Prob(M=m \,|\, C=c').
+\]
+\end{definition}
+\paragraph{Indistinguishability} We will require that given any ciphertext and a uniformly
 random string from the cipher alphabet, the adversary cannot
 \textit{distinguish} the two strings whatsoever. To formalise this, we will
 first need to define a \textbf{security experiment}:
@@ -207,19 +219,46 @@ follows:
 \item $\A$ generates two messages $m_0$ and $m_1$ from the message space $\M$.
 \item A random bit $b$ is chosen from $\{0, 1\}$.
 \item Put $k = \Gen()$ and $c = \Enc_k(m_b)$.
-\item Pick a string $r$ such that $|r| = |c|$ uniformly randomly.
-\item $\A$ is randomly given $r$ or $c$, and outputs $b'= 1$ if it believes that
-  it was given $c$, and $b' = 0$ otherwise.
-\item We say that $\A$ \textbf{succeeds} iff $b = b'$ and write
-  $\texttt{Expr}^{\texttt{eav}}_{\Pi, \A} = 1$.
+\item $\A$ is given $c$, and outputs $b'= \{0, 1\}$
+\item The experiment outputs 1 if $b = b'$ and write $\Expr{eav}{\A, \Pi} = 1$,
+  and 0 otherwise. If the output is 1, we say that $\A$ \textbf{succeeds}.
 \end{enumerate}
 Now, we are ready for our first definition of security:
-\begin{definition}{Perfect Security}
-We say that a scheme $\Pi$ is perfectly secure iff for all adversaries $\A$
+\begin{definition}{Perfect Indistinguishability}
+  \label{def:perfect_indistinguishability}
+We say that a scheme $\Pi$ is perfectly indistinguishable iff for all adversaries $\A$
 \[
-  \Prob(\texttt{Expr}^{\texttt{eav}}_{\Pi, \A} = 1) = \frac12.
+  \Prob(\Expr{eav}{\A, \Pi} = 1) = \frac12.
 \]
 \end{definition}
+\begin{theorem}
+  \label{thm:perfect_equivalence}
+A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguishable.
+\end{theorem}
+\begin{proof}
+  haha
+\end{proof}
+\begin{theorem}
+A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly secure, is that $|\K|
+\geq |\M|$.
+\end{theorem}
+\begin{proof}
+  Assume $|\K| < |\M|$. We will show that this implies that perfect security is broken.\\
+  The idea is to use the fact that if we are able to brute-force search through
+  all the keys, we will learn some information about the keys and the messages.
+  \paragraph{}
+  For every $c \in \C$, let $\M_c = \{m \,|\, m = \Dec_k(c) k \in \K\}$.
+  Note, that since $\Dec$ is a function, $|\M_c| \leq |K|$, as $\Dec$ may map two ciphertexts
+  to the same plaintext for two different keys, but it can never map a
+  ciphertext to two different plaintexts for the same key. Hence, $\M_c \subset
+  \M$ and in particular $\M \setminus \M_c \neq \emptyset$.\\
+  Now, fix $c \in \C$, and pick $m \in \M \setminus \M_c$. Since by definition
+  $c$ cannot map to $m$, we have $\Prob(M=m | C = c) = 0$. But then
+  \[
+    \Prob(M=m) \neq 0 = \Prob(M=m | C=c)
+  \]
+  which violates perfect security, so our initial assumption must be false.
+\end{proof}
 \section{Computational Security}
 \section{Public-Key Crypto Schemes}
 \subsection{Euler's Theorem}
