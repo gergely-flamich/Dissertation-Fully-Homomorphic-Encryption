@@ -31,13 +31,18 @@
 \newcommand{\Dec}{\texttt{Dec}}
 \newcommand{\Gen}{\texttt{Gen}}
 
+\renewcommand{\C}{\mathcal{C}}
 \newcommand{\M}{\mathcal{M}}
 \newcommand{\K}{\mathcal{K}}
 \newcommand{\A}{\mathcal{A}}
 
 \newcommand{\Prob}{\mathbb{P}}
 
+\newcommand{\Oh}{\mathcal{O}}
+
 \newcommand{\Int}{\mathbb{Z}}
+\newcommand{\Nat}{\mathbb{N}}
+\newcommand{\Reals}{\mathbb{R}}
 
 \addtokomafont{labelinglabel}{\sffamily}
 
@@ -99,6 +104,66 @@ We declare that the material submitted for assessment is my own work except wher
 
 
 \section{Introduction}
+\section{Mathematical Preliminaries}
+\paragraph{}
+Throughout this work some basic concepts will be used, the most important of
+which will be given below.
+\begin{definition}{Strings over an alphabet:}
+  Let $A$ be a finite set of symbols, called an \textbf{alphabet} the strings
+  over $A$ denoted $A^*$ is the set of all finite length sequences of
+  symbols from $A$, including $\epsilon$, the empty string. Formally:
+  \[
+    A^* = \bigcup_{n\in \Nat \cup \{0\}} A^n.
+  \]
+  Here $\epsilon = () \in A^0$, the empty tuple. When talking about strings from $A^*$, instead of $s = (a_1, a_2, \hdots, a_n)
+  \in A^*$, we will just write $a_1a_2\hdots a_n$.
+\end{definition}
+\paragraph{}
+A natural property of strings is their length, i.e. the number of symbols they
+are composed of. Thus, let $|\cdot| : A
+\mapsto \Nat \cup \{0\}$ be defined as
+\[
+  \forall s \in A^* \quad |s| = n \Leftrightarrow s \in A^n
+\]
+\paragraph{}
+A natural operation on strings is concatentaion. Formally, let $A$ be an
+alphabet. Then, let $+ : A^* \times A^* \mapsto A^*$, such that
+\[
+  \forall s_1 = a_1\hdots a_n, s_2 = b_1 \hdots b_m \in A^*.\quad s_1 + s_2 =
+  a_1\hdots a_nb_1 \hdots b_m \in A^*.
+\]
+\begin{definition}{Group:}
+  Let $G$ be a set and $\circ: G \times G \mapsto G$ a binary operation on $G$.
+  Then we will say that $(G, \circ)$ is a group if the following axioms hold:
+  \begin{itemize}
+  \item \textbf{G1:} $\forall a, b, c \in G$ we have $(a \circ b) \circ c = a
+    \circ (b \circ c)$. (associativity)
+  \item \textbf{G2:} $\exists e \in G. \,\forall a \in G$ we have $e \circ a = a \circ e = a.$ (existence of an identity)
+    \\
+    It is easy to show that if such an element $e$ exists, then it
+    is unique. We will call this unique element the \textbf{identity} of $G$.
+    
+  \item \textbf{G3:} $\forall a \in G\, \exists a^{-1} \in G$ such that $a \circ
+    a^{-1} = a ^{-1} \circ a = e$. (existence of inverses)
+    \\
+    It is easy to show that if this axiom holds
+    then for every $a$ the corresponding $a^{-1}$ is unique. We will call this
+    unique element the \textbf{inverse} of $a$. 
+  \end{itemize}
+\end{definition}
+\paragraph{} If $G$ is finite, we call ($G, \circ$) a \textbf{finite group}.
+\begin{definition}{Big-O notation:} Let $f, g: \Nat \mapsto \Reals $ be
+  functions. Then we will write
+  \[
+    f(n) = \Oh(g(n)) \quad \text{(and say $f$ is of order big oh of $g$)}
+  \]
+  if and only if
+  \[
+    \exists M \in \Reals. \exists N \in \Nat.\quad \forall n \geq N \Rightarrow
+    |f(n)| \leq M|g(n)|.
+  \]
+  Intuitively, this means that $f$ grows \textbf{at most} as fast as $g$.
+\end{definition}
 \section{A Very Brief History of Ciphers}
 \paragraph{}
 The history of ciphers goes back at least 2000 years. We will now examine the
@@ -123,23 +188,31 @@ key $k \in \mathbb{N}$, and we then shift $k$ places forward (and backwards).
 With shift ciphers in mind, we now formally defined some key concepts that will
 be used throughout this work.
 \begin{definition}{Cipher:}
-  Let $\M, \K_\Enc, \K_\Dec$ be finite sets of symbols. We will refer to $\M$
-  as the \textbf{message space}.
+  Let $\M, \C, \K_\Enc, \K_\Dec$ be alphabets. We will refer to $\M$
+  as the \textbf{message space} and to $\C$ as the \textbf{cipher space}.
   A cipher $C$ over $\M$, $\K_\Enc$ and $\K_\Dec$ is a tuple $(\Gen, \Enc, \Dec)$, where
   \begin{itemize}
   \item $\Gen$ is the \textbf{key generation algorithm}, which outputs a key
     $(k_\Enc, k_\Dec) \in (\K_\Enc^* \times \K_\Dec^*)$, chosen according to some
     distribution. We refer to the set $\K\subseteq \K_\Enc^* \times \K_\Dec^*$ of all possible outputs of $\Gen$ as the
-    \textbf{key space} of $C$. If for all outputs we have $k_\Enc = k_\Dec$, then we call $C$
+    \textbf{key space} of $C$. If for all outputs there is a polynomial time
+    function $f$ such that $f(k_\Enc) = k_\Dec$, then we call $C$
     a \textbf{symmetric cipher} and instead of the tuple we just write $k$.
     Otherwise we call $C$ an \textbf{asymmetric cipher}.
-  \item $\Enc: \K_\Enc^*\times\M\to \M$ is the \textbf{encryption algorithm}, which takes
+    Since $\Gen$ is usually a probabilistic algorithm, we will denote generating
+    its output by $k \leftarrow \Gen$ instead of $k = \Gen$ to emphasize the
+    randomised nature of the function.
+  \item $\Enc: \K_\Enc^*\times\M\mapsto \C$ is the \textbf{encryption algorithm}, which takes
     a encryption key $k$ and a message $m$ and outputs its encoding $c$. We will often
     refer to the message as the \textbf{plaintext} and to the encrypted message
     as \textbf{ciphertext}.
-  \item $\Dec: \K_\Dec^*\times\M \to \M$ is the \textbf{decryption algorithm}, which
+    \paragraph{Note:} $\Enc$ is not necessarily deterministic. When it is
+    probabilistic, we will write $c \leftarrow \Enc_k(m)$ instead of $c = \Enc_k(m)$.
+  \item $\Dec: \K_\Dec^*\times\C \mapsto \M$ is the \textbf{decryption algorithm}, which
     takes some decryption key $k$ and some ciphertext $c$ and outputs its
     correspnding plaintext $m$. 
+    \paragraph{Note:} $\Dec$ is \textbf{always} deterministic (otherwise the
+    scheme could never be assumed to be correct).
   \end{itemize}
   Finally, we require the correctness of $C$, concretely
   \[
@@ -155,7 +228,7 @@ may be studied and manipulated more easily. Formally, by an encoding we mean a
 bijection $f$ between our alphabet and some other set, where calculating values
 of $f$ and $f^{-1}$ can both be done in polynomial time. Such an encoding may
 be using ASCII for characters of the English alphabet or associating some
-symbols with the elements of GF($p^n$). If there is such a bijection between
+symbols with the elements of $\Int_n$. If there is such a bijection between
 two alphabets, since one can be efficiently transformed into the other, we will
 consider them equivalent.
 
@@ -183,7 +256,13 @@ Now, checking the correctness of $C_{shift}$: Let $k, m \in \Int_n$
 \]
 Since $k$ and $m$ were arbitrary, it holds $\forall m, k \in \Int_n$.
 \paragraph{Kerckhoffs' principle}
-
+Throughout the history of cryptography it has become evident that one must not
+rely on the assumption that the adversary cannot obtain every detail about one's
+crypto-system. This lead to the following important guiding principle in the
+design of new schemes:
+\begin{quotation}
+The security of a scheme must rely in the key and not the scheme.
+\end{quotation}
 \section{Perfect Security}
 In order for us to be able to analyse our schemes, we must have two well defined
 notions: what does it mean that a scheme is \textit{secure} and how \textit{powerful} is
