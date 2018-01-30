@@ -31,9 +31,8 @@
 \newcommand{\Dec}{\texttt{Dec}}
 \newcommand{\Gen}{\texttt{Gen}}
 
-\renewcommand{\C}{\mathcal{C}}
 \newcommand{\M}{\mathcal{M}}
-\newcommand{\C}{\mathcal{C}}
+\renewcommand{\C}{\mathcal{C}}
 \newcommand{\K}{\mathcal{K}}
 \newcommand{\A}{\mathcal{A}}
 
@@ -136,18 +135,18 @@ alphabet. Then, let $+ : A^* \times A^* \mapsto A^*$, such that
   a_1\hdots a_nb_1 \hdots b_m \in A^*.
 \]
 \begin{definition}{Group:}
-  Let $G$ be a set and $\circ: G \times G \mapsto G$ a binary operation on $G$.
+  Let $G$ be a non-empty set and $\circ: G \times G \mapsto G$ a binary operation on $G$.
   Then we will say that $(G, \circ)$ is a group if the following axioms hold:
   \begin{itemize}
   \item \textbf{G1:} $\forall a, b, c \in G$ we have $(a \circ b) \circ c = a
     \circ (b \circ c)$. (associativity)
-  \item \textbf{G2:} $\exists e \in G. \,\forall a \in G$ we have $e \circ a = a \circ e = a.$ (existence of an identity)
+  \item \textbf{G2:} $\exists 1 \in G. \,\forall a \in G$ we have $1 \circ a = a \circ 1 = a.$ (existence of an identity)
     \\
-    It is easy to show that if such an element $e$ exists, then it
+    It is easy to show that if such an element $1$ exists, then it
     is unique. We will call this unique element the \textbf{identity} of $G$.
     
   \item \textbf{G3:} $\forall a \in G\, \exists a^{-1} \in G$ such that $a \circ
-    a^{-1} = a ^{-1} \circ a = e$. (existence of inverses)
+    a^{-1} = a ^{-1} \circ a = 1$. (existence of inverses)
     \\
     It is easy to show that if this axiom holds
     then for every $a$ the corresponding $a^{-1}$ is unique. We will call this
@@ -266,7 +265,7 @@ rely on the assumption that the adversary cannot obtain every detail about one's
 crypto-system. This lead to the following important guiding principle in the
 design of new schemes:
 \begin{quotation}
-The security of a scheme must rely in the key and not the scheme.
+The security of a scheme must lay in the key and not the scheme.
 \end{quotation}
 \section{Perfect Security}
 In order for us to be able to analyse our schemes, we must have two well defined
@@ -298,7 +297,7 @@ follows:
 \begin{enumerate}
 \item $\A$ generates two messages $m_0$ and $m_1$ from the message space $\M$.
 \item A random bit $b$ is chosen from $\{0, 1\}$.
-\item Put $k = \Gen()$ and $c = \Enc_k(m_b)$.
+\item Put $k \leftarrow \Gen()$ and $c = \Enc_k(m_b)$.
 \item $\A$ is given $c$, and outputs $b'= \{0, 1\}$
 \item The experiment outputs 1 if $b = b'$ and write $\Expr{eav}{\A, \Pi} = 1$,
   and 0 otherwise. If the output is 1, we say that $\A$ \textbf{succeeds}.
@@ -341,17 +340,115 @@ A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly se
 \end{proof}
 \section{Computational Security}
 \section{Public-Key Crypto Schemes}
-\subsection{Euler's Theorem}
 \subsection{An Example: RSA}
+In this section we finally illustrate how the previously discussed ideas can be
+combined into a concrete scheme. However, before we can do that we must make a
+brief detour to prove some results we will be using later.
+\subsubsection{Mathematical set-up}
+\begin{theorem}{Order}
+  Let $G$ be a finite group and $g \in G$. Then, there exist positive integers
+  $n$ such that $g^n = 1$. We shall call the smallest such integer the order of
+  $g$, denoted $|g|$ called the \textbf{order} of $g$.
+\end{theorem}
+\begin{proof}
+  Since $G$ is finite, there must exist $n, m \in \Nat, n \neq m$ such that
+  \[
+    g^n = g^m.
+  \]
+  Without loss of generality, we may assume $n > m$. Then, multiplying both
+  sides with the inverse of $g^m$, we get
+  \[
+    g^{n - m } = 1.
+  \]
+\end{proof}
+\begin{theorem}
+  \label{thm:elemorderdiv}
+  Let $G$ be a finite group and $g \in G$. Then, the order of $g$ divides the
+  order of $G$.
+\end{theorem}
+\begin{proof}
+  Assume that $|g| \nmid |G|$. Then, $|G| = q|g| + r$ for $q$ a non-negative
+  integer and $r$ a positive integer.
+\end{proof}
+\begin{corollary}
+  Let $G$ be a finite group. Then,
+  \[
+    \forall g \in G\quad g^{|G|} = 1.
+  \]
+\end{corollary}
+\begin{proof}
+  Let $g \in G$. By Theorem \ref{thm:elemorderdiv} $|G| = q|g|$ for some $q \in
+  \Nat$. Therefore,
+  \[
+    g^{|G|} = g^{q|g|} = (g^{|g|})^q = 1^q = 1.
+  \]
+\end{proof}
+\begin{corollary}
+  \label{thm:groupordpow}
+  Let $G$ be a finite group. Then,
+  \[
+    \forall g \in G, p \in \Nat\quad g^p = g^{p \mod |G|}.
+  \]
+\end{corollary}
+\begin{proof}
+  \label{thm:grouppowmod}
+  Let $g \in G, p \in \Nat$. Then, $p = q|G| + r$ for $q$ non-negative integer
+  and $r$ a positive integer. Then, by the previous corollary $g^{|G|} = 1$, so
+  \[
+    g^p = g^{q|G| + r} = (g^{|G|})^qg^r = 1^qg^r= g^r = g^{p \mod |G|}.
+  \]
+\end{proof}
+Before we may move on to the final corollary, we quickly make the following
+observation:
+\begin{theorem}
+  Let $n \in \Nat$. The elements $x$ of $\Int_n \setminus \{0\}$ such that $\gcd(x, n) = 1$ form
+  a group under multiplication with identity $1$ and inverse $a \in \Int_n$,
+  where $ax + bn = 1$ from B\`ezout's identity. We denote this group by $\Int^*_n$
+\end{theorem}
+\begin{proof}
+  It is very easy to check that the above indeed fulfils all group axioms.
+\end{proof}
+The order of $\Int_n$ is very important number-theoretically, so much so that it
+is usually dentoted $\phi(n) = |\Int_n|$ and is called the \textbf{Euler phi-function}.
+Now, we are ready to state the theorem of our interest:
+\begin{theorem}{(Euler's Theorem)}\\
+  Let $a, n \in \Nat$ such that $a < n$ and $\gcd(a, n) = 1$. Then,
+  \[
+    a^{\phi(n)} = 1 \mod n.
+  \]
+\end{theorem}
+\begin{proof}
+  By the above conditions $a \in \Int^*_n$. Then, the statement is a special
+  case of Corollary \ref{thm:groupordpow}, where $G = \Int^*_n$.
+\end{proof}
+\subsubsection{The construction}
+
 \section{Homomorphic Crypto Schemes}
+\paragraph{}
+At this point, we start to finally focus on the topic of the dissertation:
+homomorphic schemes. Intuitively, these encapsulate the idea of encrypted
+comptutation over encrypted data, in sense that the adversary may at most
+observe the operation take place, but both the inputs and the output of it
+remain secret. In this section we give the formal definition, construct an
+example scheme known as the Paillier scheme. Finally, we close with a discussion
+on the limitation of homomorphic schemes.
 \subsection{Definition}
-\section{Paillier Encryption}
+\subsection{Paillier's Scheme}
 Paillier encryption is an additively homomorphic crypto scheme, that operates
 over $\Int_{N^2}$ where $N = pq$ for some $p, q$ primes. In particular, it takes advantage of the fact that $\Int_{N^2}
 \simeq \Int_{N} \times \Int_{N}^*$. 
-\section{Fully Homomorphic Encryption}
-\subsection{Lattices}
+\subsection{Limitations}
+\section{Lattices}
+\paragraph{}
+In the previous section we have seen the motivating idea behind Gentry's scheme:
+encrypted computation. In this section, we aim to provide a brief introduction
+to the tool that helped the scheme come to life: lattices. We will define what a
+lattice is and see some key definitions and theorems. We will close the section
+with a construction of a simple lattice-based crypto scheme to illustrate how
+the theory may be used to construct secure schemes with the appropriate choice
+of a trapdoor.
 \subsection{GGH}
+\section{Fully Homomorphic Encryption}
 \subsection{Dr Craig Gentry's Scheme}
 
 \printbibliography
