@@ -338,6 +338,18 @@ A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly se
   which violates perfect security, so our initial assumption must be false.
 \end{proof}
 \section{Computational Security}
+\paragraph{}
+Information theoretical security definions, although guaranteeing defense
+against attacks of arbitrary strength, are problematic, as sharing and guarding
+the keys are very cumbersome and in some cases impossible. In a sense, they are
+also more powerful than what we need, since in the real world we do not have to
+deal with attackers of unlimited computational power. Therefore, it would be
+desirable to relax our notions of security that are more ``realistic'', while
+the relaxation allows us to design much more efficient schemes.
+In this section, we will discuss these relaxations, and 3 notions of security,
+each being stronger than the previous. Since these definitions incorporate
+assumptions about computational power and are no longer information theoretical,
+we will call this approach \textbf{computational security}.
 \section{Public-Key Crypto Schemes}
 \subsection{Euler's Theorem}
 \subsection{An Example: RSA}
