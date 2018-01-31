@@ -1,3 +1,4 @@
+
 def key_gen(security_param):
 
     # Choose p and q, remembering with the constraint that |p| = |q|
