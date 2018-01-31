@@ -44,6 +44,8 @@
 \newcommand{\Nat}{\mathbb{N}}
 \newcommand{\Reals}{\mathbb{R}}
 
+\renewcommand{\mod}{\,\,\text{mod}\,\,}
+
 \newcommand{\Expr}[2]{\texttt{Expr}^{\texttt{#1}}_{#2}}
 
 \addtokomafont{labelinglabel}{\sffamily}
@@ -326,7 +328,7 @@ A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly se
   The idea is to use the fact that if we are able to brute-force search through
   all the keys, we will learn some information about the keys and the messages.
   \paragraph{}
-  For every $c \in \C$, let $\M_c = \{m \,|\, m = \Dec_k(c) k \in \K\}$.
+  For every $c \in \C$, let $\M_c = \{m \,|\, m = \Dec_k(c), k \in \K\}$.
   Note, that since $\Dec$ is a function, $|\M_c| \leq |K|$, as $\Dec$ may map two ciphertexts
   to the same plaintext for two different keys, but it can never map a
   ciphertext to two different plaintexts for the same key. Hence, $\M_c \subset
@@ -350,7 +352,20 @@ the relaxation allows us to design much more efficient schemes.
 In this section, we will discuss these relaxations, and 3 notions of security,
 each being stronger than the previous. Since these definitions incorporate
 assumptions about computational power and are no longer information theoretical,
-we will call this approach \textbf{computational security}.
+we will call this approach \textbf{computational security}. We start with some
+theory that will help us establish the required notions.
+\subsection{Mathematical Set-up}
+\begin{definition}{Probabilistic Polynomial-time Algorithm}
+  
+\end{definition}
+\begin{definition}{Negligable function}
+\end{definition}
+
+\subsection{Ciphertext-only Attack}
+\paragraph{}
+Ciphertext-only attacks are the most basic notions of modern-day security.
+\subsection{Chosen Plaintext Attack (CPA)}
+\subsection{Chosen Ciphertext Attack (CCA)}
 \section{Public-Key Crypto Schemes}
 \subsection{An Example: RSA}
 In this section we finally illustrate how the previously discussed ideas can be
@@ -424,6 +439,7 @@ The order of $\Int_n$ is very important number-theoretically, so much so that it
 is usually dentoted $\phi(n) = |\Int_n|$ and is called the \textbf{Euler phi-function}.
 Now, we are ready to state the theorem of our interest:
 \begin{theorem}{(Euler's Theorem)}\\
+  \label{thm:eulersthm}
   Let $a, n \in \Nat$ such that $a < n$ and $\gcd(a, n) = 1$. Then,
   \[
     a^{\phi(n)} = 1 \mod n.
@@ -431,10 +447,58 @@ Now, we are ready to state the theorem of our interest:
 \end{theorem}
 \begin{proof}
   By the above conditions $a \in \Int^*_n$. Then, the statement is a special
-  case of Corollary \ref{thm:groupordpow}, where $G = \Int^*_n$.
+  case of Corollary \ref{thm:groupordpow}, where $(G, \circ) = (\Int^*_n, \times)$.
 \end{proof}
 \subsubsection{The construction}
-
+\paragraph{}
+We are now ready to construct the well-known RSA scheme invented by Rivest,
+Shamir and Adleman in 1978 \cite{rivest1978method}. As mentioned above, computationally secure schemes rely on
+a security parameter $\lambda \in \Nat$. Increasing it will make the scheme run
+slower, but will also make it more resilient.
+\paragraph{Key generation}
+\begin{enumerate}
+\item Pick 2 primes $p, q$ such that $2^\lambda < p, q <
+2^{\lambda + 1}$.
+\item Calculate $N = pq$ and $\phi(N) = (p - 1)(q - 1)$.
+\item Pick a number $i \in \Nat$ such that $\gcd(i, N) = 1$. Then $i \in
+  \Int^*_N$.
+\item Calculate $j = i^{-1}$ in $\Int^*_N$. This can be done by using the
+  Extended Euclidean Algorithm to calculate $\gcd(i, \phi(N))$.
+\item Output $k_\Enc = (N, i)$ and $k_\Dec = (N, j)$.
+\end{enumerate}
+\paragraph{Encryption}
+Our message and cipher space are the binary string representations of naturals such that $m
+< N$. Formally, $\M = \C = \{0, 1\}^{\lfloor {\log_2N} \rfloor}$.
+\begin{enumerate}
+\item Given public key $(N, i)$ and message $m \in \M$ calculate $c = m^i \mod N$.
+\item Output $c$.
+\end{enumerate}
+\paragraph{Decryption}
+\begin{enumerate}
+\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m' = c^j \mod
+  N$.
+\item Output $m'$.
+\end{enumerate}
+\paragraph{Correctness} To show that the above scheme is indeed a cipher, we
+must show that it is correct, i.e. that
+\[
+  \forall (k_\Enc, k_\Dec) \in \K, \forall m \in \M\quad\text{we have}\quad
+  \Dec_{k_\Dec}(\Enc_{k_\Enc}(m)) = m.
+\]
+To see this, let $k_\Enc = (N, i)$ and $k_\Dec = (N, j)$ such that $(k_\Enc,
+k_\Dec) \in \K$ and let $m \in \M$ be arbitrary. Then,
+\[
+  c = \Enc_{k_\Enc}(m) = m^i \mod N.
+\]
+Decrypting, we get
+\begin{align*}
+  m' &= \Dec_{k_\Dec}(c) \\
+     &= c^j \mod N \\
+     &= (m^i)^j \mod N = m^{ij} \mod N \\
+     &= m^{ij \mod N} \mod N \quad \text{by Corollary \ref{thm:grouppowmod}} \\
+     &= m^1 \mod N \quad \text{Since $j$ is the multiplicative inverse of $i$ mod $N$ by definition}
+\end{align*}
+Since $m < N$ we may omit the mod $N$ on the last line. Therefore m = m' and so the scheme is correct.
 \section{Homomorphic Crypto Schemes}
 \paragraph{}
 At this point, we start to finally focus on the topic of the dissertation:
@@ -445,10 +509,64 @@ remain secret. In this section we give the formal definition, construct an
 example scheme known as the Paillier scheme. Finally, we close with a discussion
 on the limitation of homomorphic schemes.
 \subsection{Definition}
+\begin{definition}{Homomorphic Encryption}
+  Let $\Pi = (\Gen, \Enc, \Dec)$ be a cipher with message space $\M$ and cipher
+  space $\C$. Furtermore, let $(\M, \circ)$ and $(\C, \oplus)$ be groups where
+  $\circ, \oplus$ are binary operations.
+  We say that $\Pi$ is homomorphic iff $\forall (k_\Enc, k_\Dec) \in \K, \forall
+  m_1, m_2 \in \M, c_1 = \Enc_{k_\Enc}(m_1), c_2 = \Enc_{k_\Enc}(m_2)$ we have
+  \[
+    m_1 \circ m_2 = \Dec_{k_\Dec}(c_1 \oplus c_2).
+  \]
+\end{definition}
 \subsection{Paillier's Scheme}
-Paillier encryption is an additively homomorphic crypto scheme, that operates
-over $\Int_{N^2}$ where $N = pq$ for some $p, q$ primes. In particular, it takes advantage of the fact that $\Int_{N^2}
-\simeq \Int_{N} \times \Int_{N}^*$. 
+\paragraph{}
+Here we will give a concrete example of a homomorphic scheme, called the Paillier
+cryptosystem, named after Pascal Paillier, who invented it in 1999
+\cite{paillier1999public}. Once again, however, before we discuss the
+construction of the scheme, we must familiarize ourselves with the theory upon
+which it is built.
+\subsection{Mathematical Set-up}
+The cryptosystem is built on a key observation, that we will be proving here.
+\begin{theorem}
+Let $\lambda \in \Nat$ be our security parameter. Let $p, q$ be primes such that
+$2^\lambda < p, q < 2^{\lambda + 1}$ and $N = pq$. Then,
+\[
+  \Int_{N^2}^* \cong \Int_{N} \times \Int_{N}^*.
+\]
+In particular, the isomorphism $f:\Int_{N} \times \Int_{N}^* \mapsto \Int_{N^2}^*$
+is given by
+\[
+   f((a, b)) = (1 + N)^a \times b^N \quad\text{for}\,\, a \in \Int_{N}, b \in \Int_{N}^*.
+\]
+\end{theorem}
+For clarity, we shall follow the notation of \cite{katz2014introduction} and
+write
+\[
+  (a, b) \leftrightarrow x \Leftrightarrow f((a,b)) = x
+\]
+\begin{proof}
+  We shall break down the proof into the following steps:
+  \begin{enumerate}
+  \item Show $f$ is a bijection.
+  \item Show $f$ is a homomorphism.
+  \end{enumerate}
+  \paragraph{Claim 1.} We first note the following:
+  \[
+    |\Int_{N}| = N = pq,\quad
+    |\Int_{N}^*| = \phi(N) = (p - 1)(q - 1),\quad
+    |\Int_{N^2}^*| = \phi(N^2) = pq(p - 1)(q - 1).
+  \]
+  This means that since $|\Int_{N} \times \Int_{N}^*| = |\Int_{N}|
+  \times |\Int_{N}^*|$ we have $|\Int_{N} \times \Int_{N}^*| = |\Int_{N^2}^*|$.
+  Hence, we only need to show that $f$ is a injection to show that it is a bijection.
+  \paragraph{}
+  Therefore, let $f((a_1, b_1)) = f((a_2, b_2))$ for some $(a_1, b_1), (a_2,
+  b_2) \in \Int_{N} \times \Int_{N}^*$. Then,
+  \[
+    (1 + N)^{a_1}\times b_1^N = (1 + N)^{a_2}\times b_2^N
+  \]
+\end{proof}
 \subsection{Limitations}
 \section{Lattices}
 \paragraph{}
