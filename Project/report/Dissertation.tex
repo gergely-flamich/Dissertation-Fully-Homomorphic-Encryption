@@ -285,7 +285,7 @@ consider secure.
   \label{def:perfect_security}
 We say that a scheme $\Pi$ is perfectly secure if
 \[
-  \forall m \in \M, c, c' \in \C.\quad \Prob(M=m \,|\, C=c) = \Prob(M=m \,|\, C=c').
+  \forall m \in \M, c \in \C.\quad \Prob(M=m \,|\, C=c) = \Prob(M=m).
 \]
 \end{definition}
 \paragraph{Indistinguishability} We will require that given any ciphertext and a uniformly
@@ -317,7 +317,95 @@ We say that a scheme $\Pi$ is perfectly indistinguishable iff for all adversarie
 A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguishable.
 \end{theorem}
 \begin{proof}
-  haha
+  `$\Rightarrow$' Let $\A$ be an arbitrary adversary. Without loss
+  of generality, we may assume that $\A$ outputs $m_0, m_1$ and that $\Gen$
+  outputs $k$. Let $c_0 = \Enc_k(m_0)$ and $c_1 = \Enc_k(m_1)$. Then,
+  \begin{align*}
+    \Prob(\Expr{eav}{\A, \Pi} = 1) &= \Prob(\A \,\text{outputs 0}\,| B = 0)\Prob(B = 0) + \Prob(\A \,\text{outputs 1}\,| B = 1)\Prob(B = 1) \quad\text{by definition}\\
+    &= \frac12\Prob(\A \,\text{outputs 0}\,| B = 0) + \frac12\Prob(\A \,\text{outputs 1}\,| B = 1)
+  \end{align*}
+  Notice, that since $B$ completely determines whether we have receive $c_0$ or
+  $c_1$, we have $\Prob(B = b) = \Prob(C = c_b)$. Letting
+  $\Prob(\A\,\text{outputs 0} | C = c_0) = p$ and $\Prob(\A\,\text{outputs 1} |
+  C = c_1) = q$, we get
+  \begin{align*}
+    \label{eq:perfequivforward}
+    \Prob(\Expr{eav}{\A, \Pi} = 1) &= \frac12 \Prob(\A \, \text{outputs 0} \,| C = c_0) + \frac12 \Prob(\A \,\text{outputs 1}\,| C = c_1) \\
+                                   &= \frac12 p + \frac12 q \\
+                                   &=  \frac12 (p + q)
+  \end{align*}
+  Recall that since $\Pi$ is perfectly secure, $\forall m \in \M$ and $\forall c
+  \in \C$ we have $\Prob(M = m | C = c) = \Prob(M = m)$. In particular, we have
+  \[
+    \Prob(M = m_0) = \Prob(M = m_0 | C = c_0) = \Prob(M = m_0 | C = c_1).
+  \]
+  Note, that beside the complete knowledge of the system the \textbf{only information} $\A$
+  may work with is the value of $C$ to infer anything about the value of $M$.
+  It is clear from above, that the knowledge of the value of $C$ does not change
+  the amount of information that can be inferred about the value of $M$.
+  Therefore, the probability that $\A$ guesses $0$ correctly must be equal to when $\A$ guesses
+  $0$ incorrectly! Formally:
+  \[
+    \Prob(\A \, \text{outputs 0} \,| C = c_0) = \Prob(\A \,
+    \text{outputs 0} \,| C = c_1) = p.
+  \]
+  and from this, we get
+  \[
+  q = \Prob(\A \, \text{outputs 1} \,| C = c_1) =
+  1 - \Prob(\A \, \text{outputs 0} \,| C = c_1) = 1 - p.
+  \]
+  Combining this with Equation \ref{eq:perfequivforward}, we have
+  \[
+    \Prob(\Expr{eav}{\A, \Pi} = 1) = \frac12 (p + q) = \frac12 (p + 1 - p) = \frac12.
+  \]
+  `$\Leftarrow$' We shall prove this direction through a contradiction. Thus,
+  assume $\Pi$ is not perfectly secure. Then, it is easy to see the following:
+  \paragraph{Claim:} $\exists m \in \M$ for which $\exists c_0, c_1 \in \C$ such
+  that
+  \[
+    \Prob(M = m | C = c_0) \neq \Prob(M = m | C = c_1).
+  \]
+  \paragraph{} To see this, assume the opposite: $\forall m \in \M, \forall c
+  \in \C$ we have $\Prob(M = m | C = c) = p$ for some $p \geq 0$. Since $\Pi$ is
+  not perfectly secure, $\exists m \in \M. \exists c \in \C$ such that
+  \[
+    \Prob(M = m) \neq Prob(M = m | C = c) = p.
+  \]
+  But then,
+  \begin{align*}
+    \Prob(M = m) &= \sum_{c' \in \C} \Prob(M = m | C = c')\Prob(C = c') \\
+                 &= \sum_{c' \in \C} p\Prob(C = c')\quad\text{by our assumption above} \\
+   &= p\sum_{c' \in \C} \Prob(C = c') = p.
+  \end{align*}
+  This violates our assumption that $\Pi$ is not perfectly secure, so the claim
+  must hold.
+  \paragraph{}
+  Let $m \in \M$, $c_0, c_1 \in \C$ be as in the above claim. Without loss of
+  generality, we may assume, that
+  \[
+    \Prob(M = m | C = c_0) = \Prob(M = m | C = c_1) + \delta
+  \]
+  where $\delta > 0$. Now, construct the following adversary $\A$:
+  \begin{enumerate}
+    \item $\A$ outputs $m_0 = m$ and some other arbitrary $m_1 = m'$.
+    \item When $\A$ receives $c_0$ output $0$, $1$ when it receives $c_1$ and
+      output a uniformly random guess otherwise.
+  \end{enumerate}
+  Therefore, the probability that $\A$ outputs $0$ given $B = 0$ is
+  \begin{align*}
+    \Prob(\A \, \text{outputs 0} | B = 0) &= \frac12 \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \Prob(M = m | C = c) + \Prob(M = m | C = c_0)\\
+                                          &= \frac12 (\sum{c \in \C} \Prob(C = c) + \Prob(M = m | C = c_0) - \Prob(M = m | C = c_1)) \\
+                                          &= \frac12 (1 + \delta) \\
+                                          &= \frac12 + \frac{\delta}{2} = p
+  \end{align*}
+  Similarly, we get $q = \frac12 + \frac{\delta}{2}$. Hence, by Equation
+  \ref{eq:perfequivforward} we have
+  \[
+    \Prob(\Expr{eav}{\Pi, \A} = 1) = \frac12 (p + q) = \frac12 (\frac12 +
+    \frac{\delta}{2} + \frac12 + \frac{\delta}{2}) = \frac12 + \frac{\delta}{2}.
+  \]
+  Hence $\Pi$ is not perfectly indistinguishable. Since the contraposition of
+  our claim is true, our original claim is also true.
 \end{proof}
 \begin{theorem}
 A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly secure, is that $|\K|
