@@ -44,6 +44,8 @@
 \newcommand{\Nat}{\mathbb{N}}
 \newcommand{\Reals}{\mathbb{R}}
 
+\newcommand{\PPT}{\texttt{PPT}}
+\newcommand{\negl}{\text{negl}}
 \renewcommand{\mod}{\,\,\text{mod}\,\,}
 
 \newcommand{\Expr}[2]{\texttt{Expr}^{\texttt{#1}}_{#2}}
@@ -108,6 +110,39 @@ We declare that the material submitted for assessment is my own work except wher
 
 
 \section{Introduction}
+\paragraph{}
+Cryptography is a fascinating subject, not only because it occupies the gray
+zone between pure mathematics and computer science, but also because of how much
+and how diversely it draws from both disciplines. It is a subject that has its
+roots going back as far as the beginning of human communications. Regarded
+for most of history as an art, but certainly a very intuition-based and ad hoc
+discipline, during the 20th century it has transformed into a precise mathematical
+science throught the works of Shannon \cite{shannon1949communication}, later Diffie and Hellman
+\cite{diffie1976new} and Rivest, Shamir and Adleman \cite{rivest1978method}
+kicking off the public-key revolution.
+\paragraph{}
+Fully homomorphic cryptosystems - one of which is the topic of is this work - are one
+of the many fruits that this transformation has enabled. These schemes are such
+that, in some sense, they do not only allow the encryption of data but also
+arbitrary computations as well. Such a scheme in theory allows any concievable
+program to be encrypted and ran on some untrusted party, without reavealing
+enough information that any adversary could learn what is being computed.
+\paragraph{}
+It is not possible to present every, in itself marvellous, aspect of these
+cryptosystems. Nonetheless, the author hopes to present the key ideas as
+clearly and in as self-contained of a manner as possible. Where it is not
+possible to advance without significant deviation from the topic, the
+appropriate citation will be given to the external result.
+\paragraph{}
+This work is divided into three parts: \textbf{the first half} of this text is an
+introduction to/ survey of the mathematical and computer scientific foundations
+upon which the second half is built. \textbf{The second half} of this text will
+detail the cryptosystem invented by Gentry, published in 2009
+\cite{gentry2009fully}. \textbf{Finally}, the text is accompanied by a
+collection of \texttt{Sage} \cite{SageMath} programs. They are implementations
+of the schemes presented below and they are aimed to illuminate the practical
+aspects of their respective cryptosystem.
+
 \section{Mathematical Preliminaries}
 \paragraph{}
 Throughout this work some basic concepts will be used, the most important of
@@ -186,7 +221,7 @@ To decrypt a message, we simply shift backwards by 3 positions, e.g.
   \textit{Zhqm, zmgm, zmgm} \quad\to\quad \textit{Veni, vidi, vici}.
 \]
 \paragraph{}
-We can further generalise this concept to arrive at the definiton of
+We can further generalise this concept to arrive at the definition of
 \textit{shift ciphers}, where instead of the fixing the shift to 3, we pick a
 key $k \in \mathbb{N}$, and we then shift $k$ places forward (and backwards).
 With shift ciphers in mind, we now formally defined some key concepts that will
@@ -328,12 +363,14 @@ A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguisha
   $c_1$, we have $\Prob(B = b) = \Prob(C = c_b)$. Letting
   $\Prob(\A\,\text{outputs 0} | C = c_0) = p$ and $\Prob(\A\,\text{outputs 1} |
   C = c_1) = q$, we get
-  \begin{align*}
+  \begin{equation}
+    \begin{split}
     \label{eq:perfequivforward}
     \Prob(\Expr{eav}{\A, \Pi} = 1) &= \frac12 \Prob(\A \, \text{outputs 0} \,| C = c_0) + \frac12 \Prob(\A \,\text{outputs 1}\,| C = c_1) \\
                                    &= \frac12 p + \frac12 q \\
                                    &=  \frac12 (p + q)
-  \end{align*}
+    \end{split}
+  \end{equation}
   Recall that since $\Pi$ is perfectly secure, $\forall m \in \M$ and $\forall c
   \in \C$ we have $\Prob(M = m | C = c) = \Prob(M = m)$. In particular, we have
   \[
@@ -343,7 +380,7 @@ A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguisha
   may work with is the value of $C$ to infer anything about the value of $M$.
   It is clear from above, that the knowledge of the value of $C$ does not change
   the amount of information that can be inferred about the value of $M$.
-  Therefore, the probability that $\A$ guesses $0$ correctly must be equal to when $\A$ guesses
+  Therefore, $\A$ must treat $c_0$ and $c_1$ the same way and so the probability that $\A$ guesses $0$ correctly must be equal to when $\A$ guesses
   $0$ incorrectly! Formally:
   \[
     \Prob(\A \, \text{outputs 0} \,| C = c_0) = \Prob(\A \,
@@ -391,12 +428,20 @@ A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguisha
     \item When $\A$ receives $c_0$ output $0$, $1$ when it receives $c_1$ and
       output a uniformly random guess otherwise.
   \end{enumerate}
+  Note that the probability in any case that $\A$ guesses 0 correctly is the
+  probabilty that $\A$ guesses 0 given the ciphertext multiplied by the
+  probability that given the ciphertext the underlying message is $m_0 = m$.
   Therefore, the probability that $\A$ outputs $0$ given $B = 0$ is
   \begin{align*}
-    \Prob(\A \, \text{outputs 0} | B = 0) &= \frac12 \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \Prob(M = m | C = c) + \Prob(M = m | C = c_0)\\
-                                          &= \frac12 (\sum{c \in \C} \Prob(C = c) + \Prob(M = m | C = c_0) - \Prob(M = m | C = c_1)) \\
-                                          &= \frac12 (1 + \delta) \\
-                                          &= \frac12 + \frac{\delta}{2} = p
+    \Prob(\A \, \text{outputs 0} | B = 0) &= \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \Prob(\A \, \text{outputs 0} | C = c)\Prob(M = m | C = c) + \Prob(\A \, \text{outputs 0} | C = c)\Prob(M = m | C = c_0) \\
+                                          &\quad\quad\quad+ \Prob(\A \, \text{outputs 0} | C = c_1)\Prob(M = m | C = c_1)\\
+                                          &= \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \frac12\Prob(M = m | C = c) + \Prob(M = m | C = c_0)\\
+                                          &= \frac12 \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \Prob(M = m | C = c) + \Prob(M = m | C = c_0)\\
+    \end{align*}
+    Adding and taking away the missing terms in the sum, we have
+    \begin{align*}
+      \Prob(\A \, \text{outputs 0} | B = 0) &= \frac12\sum_{c \in \C} \Prob(M = m | C = c) + \frac12\left(\Prob(M = m | C = c_0) - \Prob(M = m | C = c_1)\right) \\
+                                            &= \frac12 + \frac{\delta}{2} = p
   \end{align*}
   Similarly, we get $q = \frac12 + \frac{\delta}{2}$. Hence, by Equation
   \ref{eq:perfequivforward} we have
@@ -443,17 +488,68 @@ assumptions about computational power and are no longer information theoretical,
 we will call this approach \textbf{computational security}. We start with some
 theory that will help us establish the required notions.
 \subsection{Mathematical Set-up}
+\begin{definition}{Random Oracle}
+\end{definition}
 \begin{definition}{Probabilistic Polynomial-time Algorithm}
-  
+ Let $\A$ be an algorithm with access to a random oracle. Then, we say that $\A$
+ is a probabilistic polynomial-time ($\PPT$) algorithm iff for every input of size
+ $n$ $\A$ terminates in $\Oh(n)$ steps. 
 \end{definition}
 \begin{definition}{Negligable function}
+  Let $f: \Nat \mapsto \Reals$ be a function. Then, we say that $f$ is
+  \textbf{negligable} iff $\forall p: \Nat \mapsto \Reals$ polynomials $\exists
+  N \in \Nat$ such that $\forall n \geq N$ we have
+  \[
+    f(n) < \frac{1}{p(n)}. 
+  \]
+  We shall write $\negl(n)$ when referring to some arbitrary negligable function.
 \end{definition}
 
-\subsection{Ciphertext-only Attack}
+\subsection{Eavesdropping Attack}
 \paragraph{}
-Ciphertext-only attacks are the most basic notions of modern-day security.
+Ciphertext-only attacks are the most basic notions of modern-day security. As
+noted in the previous chapter, we shall use experiment-based models, as later it
+will allow us to prove the security of various schemes much easier. Therefore we
+begin with the definition of the appropriate experiment.
+\begin{definition}{Eavesdropping Experiment}
+  Let $\Pi$ be a cipher and $\A$ be a \PPT algorithm. Then, the experiment is as
+  follows:
+  \begin{enumerate}
+  \item $\A$ outputs two messages $m_0, m_1 \in \M$.
+  \item A key $(k_\Enc, k_\Dec) \leftarrow \Gen$ is generated and a bit $b$ is chosen uniform
+    randomly. $c \leftarrow \Enc_{k_\Enc}(m_b)$ is calculated and given to $\A$.
+  \item $\A$ guesses a bit $b'$
+  \item If $b' = b$ we say that $\A$ succeeds and write $\Expr{eav}{\Pi, \A} =
+    1$, and $0$ otherwise.
+  \end{enumerate}
+\end{definition}
+Now, we are ready to state our first computational security definition:
+\begin{definition}{Eav-security}
+  We say that a scheme $\Pi$ is Eav-secure, if any \PPT adversary $\A$ can only
+  succeed negligably better than probability a half. Formally: $\forall \A$
+  $\PPT$ algorithms, we have
+  \[
+    \Prob(\Expr{eav}{\Pi, \A} = 1) = \frac12
+    + \negl(n).
+  \]
+\end{definition}
 \subsection{Chosen Plaintext Attack (CPA)}
+\begin{definition}{Encryption Oracle}
+\end{definition}
+\begin{definition}{CPA Experiment}
+
+\end{definition}
+\begin{definition}{CPA-security}
+\end{definition}
 \subsection{Chosen Ciphertext Attack (CCA)}
+\begin{definition}{Decryption Oracle}
+
+\end{definition}
+\begin{definition}{CCA Experiment}
+\end{definition}
+
+\begin{definition}{CCA-security}
+\end{definition}
 \section{Public-Key Crypto Schemes}
 \subsection{An Example: RSA}
 In this section we finally illustrate how the previously discussed ideas can be
@@ -537,7 +633,7 @@ Now, we are ready to state the theorem of our interest:
   By the above conditions $a \in \Int^*_n$. Then, the statement is a special
   case of Corollary \ref{thm:groupordpow}, where $(G, \circ) = (\Int^*_n, \times)$.
 \end{proof}
-\subsubsection{The construction}
+\subsubsection{The Construction: RSA}
 \paragraph{}
 We are now ready to construct the well-known RSA scheme invented by Rivest,
 Shamir and Adleman in 1978 \cite{rivest1978method}. As mentioned above, computationally secure schemes rely on
@@ -655,6 +751,7 @@ write
     (1 + N)^{a_1}\times b_1^N = (1 + N)^{a_2}\times b_2^N
   \]
 \end{proof}
+\subsection{The Construction: Paillier Cryptoscheme}
 \subsection{Limitations}
 \section{Lattices}
 \paragraph{}
