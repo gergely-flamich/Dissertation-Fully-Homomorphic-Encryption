@@ -486,12 +486,16 @@ In this section, we will discuss these relaxations, and 3 notions of security,
 each being stronger than the previous. Since these definitions incorporate
 assumptions about computational power and are no longer information theoretical,
 we will call this approach \textbf{computational security}. We start with some
-theory that will help us establish the required notions.
+theory that will help us establish the required notions. Note that since this
+work is mainly concerned with asymmetric cryptosystems, we give our definitions
+in the appropriate setting; mutatis mutandis the same notions hold for symmetric systems.
 \subsection{Mathematical Set-up}
-\begin{definition}{Random Oracle}
-\end{definition}
+\paragraph{Note:} From this point onwards, we discuss everything in the
+public-key setting. To better align with literature therefore, we shall write
+$(pk, sk)$ instead of $(k_\Enc, k_\Dec)$, where $pk$ is called the \textbf{public key}
+and $sk$ is called the \textbf{private} or \textbf{secret key}.
 \begin{definition}{Probabilistic Polynomial-time Algorithm}
- Let $\A$ be an algorithm with access to a random oracle. Then, we say that $\A$
+ Let $\A$ be an algorithm with access to a uniformly random tape. Then, we say that $\A$
  is a probabilistic polynomial-time ($\PPT$) algorithm iff for every input of size
  $n$ $\A$ terminates in $\Oh(n)$ steps. 
 \end{definition}
@@ -504,37 +508,10 @@ theory that will help us establish the required notions.
   \]
   We shall write $\negl(n)$ when referring to some arbitrary negligable function.
 \end{definition}
-
-\subsection{Eavesdropping Attack}
-\paragraph{}
-Ciphertext-only attacks are the most basic notions of modern-day security. As
-noted in the previous chapter, we shall use experiment-based models, as later it
-will allow us to prove the security of various schemes much easier. Therefore we
-begin with the definition of the appropriate experiment.
-\begin{definition}{Eavesdropping Experiment}
-  Let $\Pi$ be a cipher and $\A$ be a \PPT algorithm. Then, the experiment is as
-  follows:
-  \begin{enumerate}
-  \item $\A$ outputs two messages $m_0, m_1 \in \M$.
-  \item A key $(k_\Enc, k_\Dec) \leftarrow \Gen$ is generated and a bit $b$ is chosen uniform
-    randomly. $c \leftarrow \Enc_{k_\Enc}(m_b)$ is calculated and given to $\A$.
-  \item $\A$ guesses a bit $b'$
-  \item If $b' = b$ we say that $\A$ succeeds and write $\Expr{eav}{\Pi, \A} =
-    1$, and $0$ otherwise.
-  \end{enumerate}
-\end{definition}
-Now, we are ready to state our first computational security definition:
-\begin{definition}{Eav-security}
-  We say that a scheme $\Pi$ is Eav-secure, if any \PPT adversary $\A$ can only
-  succeed negligably better than probability a half. Formally: $\forall \A$
-  $\PPT$ algorithms, we have
-  \[
-    \Prob(\Expr{eav}{\Pi, \A} = 1) = \frac12
-    + \negl(n).
-  \]
-\end{definition}
 \subsection{Chosen Plaintext Attack (CPA)}
 \begin{definition}{Encryption Oracle}
+  $\mathcal{E}_{sk}(\cdot)$ is an encryption oracle that an adversary $\A$ may query at
+  any point.
 \end{definition}
 \begin{definition}{CPA Experiment}
 
@@ -713,17 +690,32 @@ which it is built.
 \subsection{Mathematical Set-up}
 The cryptosystem is built on a key observation, that we will be proving here.
 \begin{theorem}
-Let $\lambda \in \Nat$ be our security parameter. Let $p, q$ be primes such that
-$2^\lambda < p, q < 2^{\lambda + 1}$ and $N = pq$. Then,
-\[
-  \Int_{N^2}^* \cong \Int_{N} \times \Int_{N}^*.
-\]
+Let $1^n$ be our security parameter. Let $p, q$ be primes such that
+$|p| = |q| = n$ and $N = pq$. Then, the following hold:
+\begin{enumerate}
+\item $\gcd(N, \phi(N)) = 1$
+\item For any $a \in \Int_{N^2}^*$ we have $(1 + N)^a = 1 + aN \mod N^2$.
+\item We have $\Int_{N^2}^* \cong \Int_{N} \times \Int_{N}^*$.
 In particular, the isomorphism $f:\Int_{N} \times \Int_{N}^* \mapsto \Int_{N^2}^*$
 is given by
 \[
    f((a, b)) = (1 + N)^a \times b^N \quad\text{for}\,\, a \in \Int_{N}, b \in \Int_{N}^*.
 \]
+\end{enumerate}  
 \end{theorem}
+\paragraph{Claim 1:} We may assume without loss of generality, that $p > q$.
+Then obviously $\gcd(p, p - 1) = 1$ and $\gcd(p, q - 1) = 1$. If $\gcd(q, p - 1)
+\neq 1$, then $\gcd(q, p - 1) = q$, since $q$ is a prime. But then $p - 1 = aq$
+for some $a \in \Nat$, in particular $\frac{p - 1}{2} \geq q$ from which $|p| >
+|q|$, a contradiction, hence $\gcd(q, p - 1) = 1$. From this we have $\gcd(q,
+\phi(N)) = 1$ and $\gcd(p, \phi(N)) = 1$ and therefore $\gcd(N, \phi(N)) = 1$.
+\paragraph{Claim 2:} Expanding $(1 + N)^a$ by the binomial theorem, we get
+\[
+  (1 + N)^a = \sum_{i =0}^a \binom{a}{i} N^i
+\]
+Reducing modulo $N^2$, all terms with degree 2 or higher become 0 and the only
+two terms remaining will be $1 + aN$.
+\paragraph{Claim 3:}
 For clarity, we shall follow the notation of \cite{katz2014introduction} and
 write
 \[
