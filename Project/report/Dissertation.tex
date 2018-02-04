@@ -15,6 +15,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
  \usepackage{booktabs}
+ \usepackage{enumerate}
 \usepackage[table,xcdraw]{xcolor}
 
 \usepackage{amsthm}
@@ -35,6 +36,10 @@
 \renewcommand{\C}{\mathcal{C}}
 \newcommand{\K}{\mathcal{K}}
 \newcommand{\A}{\mathcal{A}}
+\renewcommand{\L}{\mathcal{L}}
+\newcommand{\F}{\mathcal{F}}
+\newcommand{\D}{\mathcal{D}}
+\renewcommand{\P}{\mathcal{P}}
 
 \newcommand{\Prob}{\mathbb{P}}
 
@@ -49,6 +54,9 @@
 \renewcommand{\mod}{\,\,\text{mod}\,\,}
 
 \newcommand{\Expr}[2]{\texttt{Expr}^{\texttt{#1}}_{#2}}
+\newcommand{\Adv}[2]{\texttt{Adv}^{\texttt{#1}}_{#2}}
+
+\newcommand{\norm}[1]{||#1||}
 
 \addtokomafont{labelinglabel}{\sffamily}
 
@@ -452,6 +460,8 @@ A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguisha
   Hence $\Pi$ is not perfectly indistinguishable. Since the contraposition of
   our claim is true, our original claim is also true.
 \end{proof}
+The following theorem (in fact, a stronger version of it) was first proved by
+Shannon in \cite{shannon1949communication}.
 \begin{theorem}
 A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly secure, is that $|\K|
 \geq |\M|$.
@@ -508,7 +518,84 @@ and $sk$ is called the \textbf{private} or \textbf{secret key}.
   \]
   We shall write $\negl(n)$ when referring to some arbitrary negligable function.
 \end{definition}
-\subsection{Chosen Plaintext Attack (CPA)}
+\subsection{How do we define security?}
+\paragraph{} Now that we decided to relax our definition of security, we are
+once again in the awkward position of having to decide what it should mean to
+``break'' a scheme. And not just that, we also must specify what we mean by
+``relaxation'', i.e. what strength we give our adversary. It turns out neither
+of the previous two notions is trivial to formalise, and there has been a lot of
+effort put into finding the appropriate formulations. The approach we will consider here is based on the work by Bellare
+et al. \cite{bellaresecurityrelations}, initially suggested by Moni
+Naor\footnotemark. We will consider so
+called \textbf{goals} (our definition of a scheme being broken) and \textbf{threat} or
+\textbf{attack models} (our definition of what we allow the adversary to do).
+Then, combining a goal with a threat model will give us a framework in which we
+will be able to prove the security of a cipher. In the rest of this section we
+will explore 2 goals and 3 threat models, yielding 6 possible security
+frameworks. Then, we will establish some connection between appropriate notions.
+\paragraph{} It is important to remember that one of the reasons why we
+abandoned the notions of information-theoretic security is because it assumed
+unbounded computational power. Instead we shall restrict our focus on \PPT
+algorithms, since by the Extended Church-Turing Thesis, and ``efficient'' or ``reasonable'' model
+of computation can be simulated by such an algorithm. This will immediately
+lead us to the asymptotic analysis of schemes, which we will do from now on. The
+reader might ask now: asymptotic in what though? The ciphers that we consider
+from now on will all have a \textbf{security parameter} $\lambda$ associated
+with them, that effectively ``tunes'' the difficulty of the underlying problem
+of the cipher. The parameter will mostly affect the key length of a particular instance
+of the scheme, and hence it is common to denote it $\lambda = 1^n \in \{0,
+1\}^n$ as a string, as if it was the input to some Turing machine.
+\footnotetext{As described in Section 1.1 in \cite{bellaresecurityrelations}, this was
+  suggested in private communications with the authors.}
+\subsection{Goals}
+\paragraph{}
+We begin by formalising the notion of ``breaking the scheme''. Below we will see
+first the idea of the \textbf{indistinguishability of encryptions}, coined by Goldwasser and Micali in
+\cite{goldwasser1984probabilistic} and second the idea of \textbf{non-malleable
+  encryptions}, due to Dolev, Dwork and Naor \cite{dolev2003nonmalleable}. Both
+notions will rely on two key definitions: \textbf{experiments} and
+\textbf{advantages}.
+\paragraph{Experiments} will be our formalisation of an attack being carried
+out (in polynomial time). If the attack reaches its goal, we say that the adversary \textbf{succeeds}
+(this is up to the respective aim of the experiment). We will write
+$\Expr{atk}{\Pi, \A}(n)$ for an experiment where adversary $\A$ is attacking scheme
+$\Pi$ under the \textit{atk} threat model with security parameter $\lambda =
+1^n$ and write $\Expr{atk}{\Pi, \A}(n) = 1$ when an adversary succeeds and $\Expr{atk}{\Pi, \A}(n) = 0$ when
+it does not.
+\paragraph{Advantages} will be our formalisation of how well an adversary can
+take advantage of certain properties of the system to increase their chances in
+successfully breaking the scheme. The aim of our security proofs will be to show
+that any attacker attempting to break our cipher can only have negligable
+advantage. Formally, the general framework will be to conclude that for a scheme
+$\Pi$ for any $\PPT$ adversary $\A$ in the \textit{atk} threat model
+\[
+  \Adv{atk}{\Pi, \A}(n) = |\Prob(\Expr{atk}{\Pi, \A}(n) = 1) - \Prob(\Expr{atk}{\Pi,
+    \A}(n) = 1)| \leq \negl(n).
+\]
+\subsubsection{Indistinguishability}
+\paragraph{} Intuitively, our first notion will capture the idea that
+ciphertexts do not leak enough information about their underlying plaintext that
+could be used to predict what was encrypted reliably. This definition will be
+familiar, since we have already seen its information-theoretic equivalent in
+Definition \ref{def:perfect_indistinguishability}.
+\begin{definition}{IND}
+  An indistinguishability experiment (IND) involving a cipher $\Pi$ with
+  security parameter $\lambda$, attack model atk and adversary $\A$ will be as follows:
+  \begin{enumerate}
+  \item $\A$ is given full knowledge of $\Pi$, and anything additional that the
+    attack model \textit{atk} allows in \textbf{stage 1}. Then, $\A$ outputs two messages
+    $m_0, m_1 \in \M$ such that $|m_1| = |m_2|$.
+  \item $(pk, sk) \leftarrow \Gen(\lambda)$ and uniformly random bit $b \in \{0,
+    1\}$ is generated. $c = \Enc_{pk}(m_b)$ is calculated.
+  \item $\A$ is given $c$ and anything addition that the attack model
+    \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a bit $b' \in \{0,
+    1\}$.
+  \item If $b = b'$, then $\A$ succeeds.
+  \end{enumerate}
+\end{definition}
+\subsubsection{Non-malleability}
+\subsection{Threat models}
+\subsubsection{Chosen Plaintext Attack (CPA)}
 \begin{definition}{Encryption Oracle}
   $\mathcal{E}_{sk}(\cdot)$ is an encryption oracle that an adversary $\A$ may query at
   any point.
@@ -518,7 +605,7 @@ and $sk$ is called the \textbf{private} or \textbf{secret key}.
 \end{definition}
 \begin{definition}{CPA-security}
 \end{definition}
-\subsection{Chosen Ciphertext Attack (CCA)}
+\subsubsection{Chosen Ciphertext Attack (CCA)}
 \begin{definition}{Decryption Oracle}
 
 \end{definition}
@@ -559,6 +646,7 @@ brief detour to prove some results we will be using later.
   integer and $r$ a positive integer.
 \end{proof}
 \begin{corollary}
+  \label{cor:elemgroupordpow}
   Let $G$ be a finite group. Then,
   \[
     \forall g \in G\quad g^{|G|} = 1.
@@ -636,9 +724,9 @@ Our message and cipher space are the binary string representations of naturals s
 \end{enumerate}
 \paragraph{Decryption}
 \begin{enumerate}
-\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m' = c^j \mod
+\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''' = c^j \mod
   N$.
-\item Output $m'$.
+\item Output $m''''$.
 \end{enumerate}
 \paragraph{Correctness} To show that the above scheme is indeed a cipher, we
 must show that it is correct, i.e. that
@@ -688,13 +776,75 @@ cryptosystem, named after Pascal Paillier, who invented it in 1999
 construction of the scheme, we must familiarize ourselves with the theory upon
 which it is built.
 \subsection{Mathematical Set-up}
-The cryptosystem is built on a key observation, that we will be proving here.
+The cryptosystem is built on a particular isomorphism between two groups, that
+we will be proving here. However, before we can do that, we revisit the $\phi$
+function.
 \begin{theorem}
+  \label{thm:phiformula}
+  Recall that Euler's $\phi$-function is defined as
+  \[
+    \phi(N) = |\{k \in \{0\hdots N - 1\} \,\,|\,\, \gcd(k, N) = 1\}|
+  \]
+  Assume $N = \prod_{i = 1}^n p_i^{e_i}$, for $p_i$ primes and $e_i$ naturals. Then,
+  \[
+    \phi(N) = \prod_{i = 1}^n p_i^{e_i - 1} (p_i - 1).
+  \]
+\end{theorem}
+\begin{proof}
+  We will present a simple counting argument using the inclusion-exclusion
+  principle. That is, let $\P$ be the set of prime divisors of $N$, and
+  let $\D_P$, where $P \subseteq \P$ be the set of integers
+  between $0$ and $N - 1$ divisible by all primes in $P$. Formally:
+  \[
+    \text{For } P \subseteq \P \quad \D_P = \{n \in \{0 \hdots
+    N - 1\}\,\,|\,\,p | n\,\,\forall p \in P\}.
+  \]
+  Then, our problem can be reformulated in the following way:
+  \[
+    \phi(N) = |\D_\emptyset|.
+  \]
+  We observe the following two simple facts: First
+  \[
+    |\D_P| = \frac{|N|}{\prod_{p \in P}p} = \prod_{i = 1}^n p_i^{e_i -
+      1} \times \prod_{p \not\in P}p
+  \]
+  Second, for any $A = \{a_1, a_2, \hdots a_n\}$ integers we have
+  \begin{equation}
+    \label{eq:prodexpansion}
+    \prod_{i = 1}^n (a_i - 1) = \sum_{i = 0}^n (-1)^i
+ \sum_{\substack{B \subseteq A \\ |B| = n - i}} \prod_{a \in B}a
+  \end{equation}
+  This holds, because if we expand the left-hand term, then every term in the
+  result will be a product of $n - k$ first terms and $k$ second terms. The
+  expression on the right hand merely captures summing all possible combinations.
+  By the inclusion-exclusion principle we have
+  \begin{align*}
+    |\D_\emptyset| &= |\{0 \hdots N-1\}| - \sum_{\substack{P \subseteq \P \\ |P| =
+        1}} |\D_P| + \sum_{\substack{P \subseteq \P \\ |P| =
+        2}} |\D_P| - \hdots \sum_{\substack{P \subseteq \P \\ |P| =
+    |\P|}} |\D_P| \\
+                   &= N + \sum_{i = 1}^n (-1)^i \sum_{\substack{P \subseteq \P \\ |P| =
+    i}} |\D_P| \\
+                   &= N + \sum_{i = 1}^n (-1)^i \sum_{\substack{P \subseteq \P \\ |P| =
+        i}} \left(  \prod_{i = 1}^n p_i^{e_i - 1} \times \prod_{p \not\in P}p \right)\\
+                   &= \prod_{i = 1}^n p_i^{e_i - 1} \left( \prod_{p\in\P}p +  \sum_{i = 1}^n (-1)^i \sum_{\substack{P \subseteq \P \\ |P| =
+    i}} \prod_{p \not\in P}p \right) \quad \text{merge the product with the sum}\\
+                   &= \prod_{i = 1}^n p_i^{e_i - 1} \left( \sum_{i = 0}^n (-1)^i
+ \sum_{\substack{P \subseteq \P \\ |P| = n - i}} \prod_{p \in P}p \right) \quad\text{by Equation \ref{eq:prodexpansion}}\\
+                   &=\prod_{i = 1}^n p_i^{e_i - 1}\prod_{p \in \P} (p - 1) = \prod_{i = 1}^n p_i^{e_i - 1}(p_i - 1).
+ \end{align*}
+\end{proof}
+\paragraph{Note:} A much nicer proof of the above result follows from Chinese
+Remainder Theorem using the fact that for $m, n \in \Nat$ where $\gcd(m, n) = 1$
+we have $\phi(mn) = \phi(m)\phi(n)$, but this is outside the scope of this work. 
+\begin{theorem}
+  \label{thm:paillierthms}
 Let $1^n$ be our security parameter. Let $p, q$ be primes such that
 $|p| = |q| = n$ and $N = pq$. Then, the following hold:
 \begin{enumerate}
 \item $\gcd(N, \phi(N)) = 1$
-\item For any $a \in \Int_{N^2}^*$ we have $(1 + N)^a = 1 + aN \mod N^2$.
+\item For any $a \in \Int_{N^2}^*$ we have $(1 + N)^a = 1 + aN \mod N^2$. In
+  particular, the order of $1 + N$ is $N$.
 \item We have $\Int_{N^2}^* \cong \Int_{N} \times \Int_{N}^*$.
 In particular, the isomorphism $f:\Int_{N} \times \Int_{N}^* \mapsto \Int_{N^2}^*$
 is given by
@@ -714,7 +864,8 @@ for some $a \in \Nat$, in particular $\frac{p - 1}{2} \geq q$ from which $|p| >
   (1 + N)^a = \sum_{i =0}^a \binom{a}{i} N^i
 \]
 Reducing modulo $N^2$, all terms with degree 2 or higher become 0 and the only
-two terms remaining will be $1 + aN$.
+two terms remaining will be $1 + aN$. From this, setting $a = N$ we get $(1 +
+N)^N = 1$, and this is the smallest possible positive integer.
 \paragraph{Claim 3:}
 For clarity, we shall follow the notation of \cite{katz2014introduction} and
 write
@@ -723,16 +874,17 @@ write
 \]
 \begin{proof}
   We shall break down the proof into the following steps:
-  \begin{enumerate}
+  \begin{enumerate}[i.]
   \item Show $f$ is a bijection.
   \item Show $f$ is a homomorphism.
   \end{enumerate}
-  \paragraph{Claim 1.} We first note the following:
+  \paragraph{Claim 3.i} We first note the following:
   \[
     |\Int_{N}| = N = pq,\quad
     |\Int_{N}^*| = \phi(N) = (p - 1)(q - 1),\quad
-    |\Int_{N^2}^*| = \phi(N^2) = pq(p - 1)(q - 1).
+    |\Int_{N^2}^*| = \phi(N^2) = pq(p - 1)(q - 1),
   \]
+  where the last two equalities hold by Theorem \ref{thm:phiformula}.
   This means that since $|\Int_{N} \times \Int_{N}^*| = |\Int_{N}|
   \times |\Int_{N}^*|$ we have $|\Int_{N} \times \Int_{N}^*| = |\Int_{N^2}^*|$.
   Hence, we only need to show that $f$ is a injection to show that it is a bijection.
@@ -740,11 +892,129 @@ write
   Therefore, let $f((a_1, b_1)) = f((a_2, b_2))$ for some $(a_1, b_1), (a_2,
   b_2) \in \Int_{N} \times \Int_{N}^*$. Then,
   \[
-    (1 + N)^{a_1}\times b_1^N = (1 + N)^{a_2}\times b_2^N
+    (1 + N)^{a_1}\times b_1^N = (1 + N)^{a_2}\times b_2^N\mod N^2
   \]
+  Then, since we have inverses in both $\Int_N$ and $\Int_N^*$, we have
+  \[
+    (1 + N)^{a_1 - a_2}\times (b_1b_2^{-1})^N = 1 \mod N^2
+  \]
+  Since $b_1, b_2 \in \Int_N^*$, raising both sides to the power of $\phi(N)$,
+  we get
+  \begin{align*}
+    (1 + N)^{\phi(N)(a_1 - a_2)} \times ((b_1b_2^{-1})^{\phi(N)})^N &= 1 \mod N^2 \\
+    (1 + N)^{\phi(N)(a_1 - a_2)}  &= 1 \mod N^2\quad\text{by Corollary \ref{cor:elemgroupordpow}}
+  \end{align*}
+  Then, since by Claim 1 $\gcd(N, \phi(N)) = 1$, it must be the case that $(1 +
+  N)^{a_1 - a_2} = (1 + (a_1 - a_2)N) = 1 \mod N^2$. Hence $a_1 - a_2 = 0 \mod N^2$
+  and since $a_1, a_2 \in \Int_N$ the above is an equality, from which we have
+  $a_1 = a_2$.
+  \paragraph{} Going back to our initial formula, now simplifying by the terms
+  involving the $a$s:
+  \[
+    b_1^N = b_2^N \mod N^2.
+  \]
+  Since $b_1, b_2 \in \Int_N^*$ we have $b_1, b_2\in \Int_{N^2}^*$. But
+  exponentiation in finite groups is a bijection, hence $b_1 = b_2 \mod N^2$.
+  Again, since $b_1, b_2 < N$, it is actually an equality. Thus $f$ is
+  injective, and hence bijective.
+  \paragraph{Claim 3.ii} Let $a_1, a_2 \in \Int_N$ and $b_1, b_2 \in \Int_N^*$. We need to show that
+  \[
+    f((a_1, b_1)) \times f((a_2, b_2)) = f((a_1 + a_2), (b_1b_2)).
+  \]
+  We note that the multiplication on the left-hand side is carried out modulo
+  $N^2$, whereas the addition and multiplication on the right-hand side is done
+  modulo $N$. We will begin with
+  \begin{align*}
+    (1 + N)^{a_1}b_1^N(1 + N)^{a_2}b_2^N &= (1 + N)^{a_1 + a_2}(b_1b_2)^N \mod N^2 \\
+                                         &= (1 + N)^{[a_1 + a_2 \mod N]}(b_1b_2)^N \mod N^2 \quad \text{by Claim 2 and Theorem \ref{thm:grouppowmod}}
+  \end{align*}
+  The addition is now carried out modulo $N$, but there is some more work with
+  the multiplication. Let $b_1b_2 = \gamma N + r$ where $0 \leq \gamma$ and $0 <
+  r \leq N$. Note that $r \neq 0$, since that would mean $b_1b_2$ is divisible
+  by $N$, but it is not since it is in $\Int_N^*$. Then, by the Binomial
+  Theorem, we have
+  \begin{align*}
+    (b_1b_2)^N &= (\gamma N + r)^N \\
+               &= \sum_{i = 0}^N \binom{N}{i}(\gamma N)^ir^i \\
+               &= r^N \mod N
+  \end{align*}
+  This means that $(b_1b_2)^N$ is an Nth power modulo $N$, and hence $f$ is a
+  homomorphism. \\
+  By Claim 3.i and Claim.ii, $f$ is an isomorphism.
 \end{proof}
+Finally, we look at the particular set of elements used in Paillier's scheme:
+$N$th residues.
+\begin{definition}{Nth residue:} Let $G$ be a group and let $x, y \in G$. Then, we call $x$
+  an Nth residue, if $x^N = y$, and write $x \in \texttt{Res}(G)$.
+\end{definition}
+We now characterise Nth residues in $\Int_{N^2}^*$.
+\begin{theorem}
+  Let $x \in \texttt{Res}(\Int_{N^2}^*)$ be an Nth residue. Then, $\exists b \in
+  \Int_N^*$ such that
+  \[
+    x \leftrightarrow (0, b),
+  \]
+  and thus
+  \[
+    \texttt{Res}(\Int_{N^2}^*) = \{b \,\,|\,\, b \in \Int_N^*\}.
+  \]
+\end{theorem}
+\begin{proof}
+  We will construct a generic Nth residue. Let $a \in \Int_N$ and $b \in
+  \Int_N^*$. By Claim 1, $\gcd(N, \phi(N)) = 1$, hence $N$ has a multiplicative
+  inverse mod $\phi(N)$. Call this inverse $d = N^{-1}$. Then, $b^d$ is also in $\Int_N^*$. Then, let $x \in \Int_{N^2}^*$ such
+  that
+  \[
+    x \leftrightarrow (a, b^d).
+  \] 
+  Note, that since $a$ and $b$ were arbitrary and $f$ is an isomorphism, every
+  element of $\Int_{N^2}^*$ can be written in the above form. Raising both sides
+  to the Nth power, we get
+  \begin{align*}
+    x^N &\leftrightarrow (a, b^d)^N \\
+        &\leftrightarrow (aN \mod N, b^{dN} \mod N) \\
+        &\leftrightarrow (0, b).
+  \end{align*}
+\end{proof}
+\paragraph{} We also note that it is easy to see from the above that there are
+precisely $N$ elements mapping to the same residue, since all elements of the
+form $(a, b^d)$ map to $(0, b)$, and since $a\in \Int_N$, there are $N$ choices
+for $a$.
+\paragraph{} Now, we have all the tools required to construct the scheme.
 \subsection{The Construction: Paillier Cryptoscheme}
-\subsection{Limitations}
+\paragraph{Key Generation}
+Pick two primes of length equal to the security parameter, i.e. $p, q$ primes,
+such that $|p| = |q| = |\lambda|$. Calculate $N = pq$, $N^2$ and $\phi(N) = (p -
+1)(q - 1)$.
+Then output $pk = N^2$ and $sk = \phi(N)$.
+\paragraph{Encryption}
+Let $m$ be the message we wish to encrypt. Pick a uniform $(0, r) \in
+\Int_{N^2}^*$. Then output the ciphertext $c = (m, 1) \times (0, r) = (m, r)$.
+\paragraph{Decryption} 
+Let $c$ be the ciphertext we wish to decrypt. First, let $\hat{c} = c^{\phi(N)}
+\mod N^2$. Then, calculate $m' = \frac{(\hat{c} - 1)}{N} \times \phi(N)^{-1} \mod N$.
+Output $m'$.
+\paragraph{Correctness}
+Let $(pk, sk)$ be the key $\Gen$ generates, with $pk = N^2$, for some $N = pq$
+primes and $sk = \phi(N)$. Let$m$ be the message we encrypt and $c =
+\Enc_{pk}(m) =(m, r)$ for some uniformly random $r$. Then
+\begin{align*}
+  \hat{c} &= c^{\phi(N)} = (m, r)^{\phi(N)} = (\phi(N)m, r^{\phi(N)}) \\
+          &= (\phi(N)m, 1) \quad \text{by Corollary \ref{cor:elemgroupordpow}}\\
+          &\leftrightarrow (1 + N)^{\phi(N)m} \mod N^2 \quad \text{by Theorem \ref{thm:paillierthms} part 2}\\
+          &= (1 + \phi(N)mN) \mod N^2.
+\end{align*}
+Then, we have
+\begin{align*}
+  \Dec_{sk}(c) &= \frac{\hat{c} - 1}{N} \times \phi(N)^{-1} \mod N\\
+               &= \frac{(1 + \phi(N)mN) - 1}{N} \times \phi(N)^{-1} \mod N\\
+               &= \frac{\phi(N)mN}{N}\times \phi(N)^{-1} \mod N\\
+               &= \phi(N)m \times \phi(N)^{-1} \mod N \\
+               &= m \mod N. \\
+               &= m \quad \text{since } m < N.
+\end{align*}
+Thus, $m = \Enc_{pk}(\Dec_{sk}(m))$, and so the scheme is correct, and therefore
+a cipher.
 \section{Lattices}
 \paragraph{}
 In the previous section we have seen the motivating idea behind Gentry's scheme:
@@ -754,7 +1024,72 @@ lattice is and see some key definitions and theorems. We will close the section
 with a construction of a simple lattice-based crypto scheme to illustrate how
 the theory may be used to construct secure schemes with the appropriate choice
 of a trapdoor.
-\subsection{GGH}
+\subsection{Mathematical Set-up I: Introduction to Lattices}
+\paragraph{} We shall begin by a basic introduction to lattices in general, then
+turn our attention to computational problems involving lattices. In the
+following section, we construct a very simple cryptosystem that relies on the
+ideas we explore here.
+\begin{definition}{(Finite dimensional) Lattice:}
+  Let $V = \Reals^n$ be the $n$-dimensional Euclidean space, and $B = \{v_1,
+  v_2, \hdots, v_n\}$ be a basis for $V$. Then, the \textbf{lattice generated by $B$} is the set
+  \[
+    \L(B) = \{\alpha_1v_1 + \alpha_2v_2 + \hdots \alpha_nv_n\,\,|\,\, v_i \in B,
+    \alpha_i \in \Int\}.
+  \]
+  Then $B$ is also called the basis of the lattice $\L$.
+\end{definition}
+\begin{definition}{Fundamental Domain}
+  Let $\L$ be a lattice with basis $B = \{v_1, v_2, \hdots, v_n\}$. Then, the
+  \textbf{fundamental domain of $\L$ with respect to $B$} is
+  \[
+    \F_B = \{t_1v_1 + t_2v_2 + \hdots + t_nv_n \,\,|\,\, v_i \in B, t_i \in [0,
+    1)\} \subseteq \Reals^n.
+  \]
+\end{definition}
+The following theorem is key for cryptographic application of lattices:
+\begin{theorem}
+  Let $\L$ be a lattice with basis $B$. Then $\F_B$ tessalates $\Reals^n$
+  without overlap. Formally, let $x \in \Reals^n$. Then there exists a unique $\ell \in \L$
+  and $f \in \F_B$ such that
+\[
+  x = \ell + f.
+\]
+\end{theorem}
+\begin{proof}
+\end{proof}
+The following result is an important result about lattices.
+\begin{theorem}
+  Let $\L$ be a lattice with bases $B_1$ and $B_2$. Then $\det(B_1) = \det(B_2)$
+  and is called the \textbf{covolume} of $\L$, denoted Vol($\L$).
+\end{theorem}
+\begin{proof}
+\end{proof}
+\begin{theorem}
+  Let $\L$ be a lattice with basis $B = \{v_1, v_2, \hdots v_n\}$. Then
+\[
+  \text{Vol}(\L) \leq \norm{v_1}\cdot\norm{v_2}\cdots\norm{v_n}.
+\]
+\end{theorem}
+\begin{proof}
+\end{proof}
+Based on the above theorem, we will make the following definition:
+\begin{definition}{Hadamard Ratio}
+  Let $\L$ and $B$ as in the theorem above. Then, the \textbf{Hadamard ratio of $B$}
+  is defined as
+  \[
+    h(B) = \left( \frac{\text{Vol}(\L)}{\norm{v_1}\cdot\norm{v_2}\cdots\norm{v_n}} \right)^{\frac1n}.
+  \]
+\end{definition}
+We note that by the above theorem $0 < h(B) \leq 1$.
+\subsection{Mathematical Set-up II: Computational Lattice Problems}
+SVP
+CVP
+Babai's algorithm
+\subsection{The Construction: GGH}
+\paragraph{Key Generation}
+\paragraph{Encryption}
+\paragraph{Decryption}
+\paragraph{Correctness}
 \section{Fully Homomorphic Encryption}
 \subsection{Dr Craig Gentry's Scheme}
 
