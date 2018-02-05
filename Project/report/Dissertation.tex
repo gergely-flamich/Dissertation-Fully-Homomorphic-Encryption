@@ -519,6 +519,7 @@ and $sk$ is called the \textbf{private} or \textbf{secret key}.
   We shall write $\negl(n)$ when referring to some arbitrary negligable function.
 \end{definition}
 \subsection{How do we define security?}
+\label{sec:howdefsec}
 \paragraph{} Now that we decided to relax our definition of security, we are
 once again in the awkward position of having to decide what it should mean to
 ``break'' a scheme. And not just that, we also must specify what we mean by
@@ -577,8 +578,9 @@ $\Pi$ for any $\PPT$ adversary $\A$ in the \textit{atk} threat model
 ciphertexts do not leak enough information about their underlying plaintext that
 could be used to predict what was encrypted reliably. This definition will be
 familiar, since we have already seen its information-theoretic equivalent in
-Definition \ref{def:perfect_indistinguishability}.
-\begin{definition}{IND}
+Definition \ref{def:perfect_indistinguishability}. This is intuitively is what probabily
+most people would associate with definitions of security.
+\begin{definition}{IND-atk:}
   An indistinguishability experiment (IND) involving a cipher $\Pi$ with
   security parameter $\lambda$, attack model atk and adversary $\A$ will be as follows:
   \begin{enumerate}
@@ -587,20 +589,68 @@ Definition \ref{def:perfect_indistinguishability}.
     $m_0, m_1 \in \M$ such that $|m_1| = |m_2|$.
   \item $(pk, sk) \leftarrow \Gen(\lambda)$ and uniformly random bit $b \in \{0,
     1\}$ is generated. $c = \Enc_{pk}(m_b)$ is calculated.
-  \item $\A$ is given $c$ and anything addition that the attack model
+  \item $\A$ is given $c$ and anything additional that the attack model
     \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a bit $b' \in \{0,
     1\}$.
   \item If $b = b'$, then $\A$ succeeds.
   \end{enumerate}
 \end{definition}
 \subsubsection{Non-malleability}
-\subsection{Threat models}
-\subsubsection{Chosen Plaintext Attack (CPA)}
-\begin{definition}{Encryption Oracle}
-  $\mathcal{E}_{sk}(\cdot)$ is an encryption oracle that an adversary $\A$ may query at
-  any point.
+\paragraph{} Upon some deliberation, we might arrive at a different notion of
+security. Maybe the goal of the adversary is not to learn the underlying
+plaintext $m$ of some ciphertext $c$, but is content just with modifying it to
+obtain another ciphertext $\hat{c}$, such that when decrypted,
+$\Dec_{pk}(\hat{c})$ is related to $m$ in some way. The classic example here is
+bank transfers: imagine that some honest party is requesting a transfer of some
+amount of money. Then, this request must contain the identifier of the
+recipient. Imagine an adversary observing this communication, and is able to
+modify the encrypted request so that the identifier is changed to someone else's
+(perhaps the attacker's). Here the attacker has managed to cause damage without
+knowing obtaining the plaintext, and this is exactly what we wish to prevent.
+\paragraph{} Non-malleability captures this notion. Informally, it states that
+no matter what set of plaintexts we encrypt no $\PPT$ adversary can modify a set
+of ciphertexts that when decrypted would have some $t$-ary relationship with the
+original plaintext. (Note: this is the definition of Bellare et al., for an
+equivalent definition using \textit{simulations} see
+\cite{dolev2003nonmalleable}.) We now give the formal definition, using the
+experiment described in \cite{bellaresecurityrelations}:
+\begin{definition}{NM-atk:}
+  A non-malleability experiment (NM) involving a cipher $\Pi$ with security
+  parameter $\lambda$, attack model atk and adversary $\A$ will be as follows:
+  \begin{enumerate}
+    \item $\A$ is given full knowledge of $\Pi$, and anything additional that
+      the attack model \textit{atk} allows in \textbf{stage 1}. Then, $\A$
+      outputs a ($\PPT$) sampling algorithm $M$. $M$ must be valid, in the sense
+      that all its outputs must be of equal length, appropriate to the scheme.
+    \item $(pk, sk) \leftarrow \Gen(\lambda)$, and $m \leftarrow M$ are
+      generated. $c = \Enc_{pk}(m)$ is calculated.
+    \item $\A$ is given $c$ and anything additional that the attack model
+      \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a $t$-ary relation
+      $R:\M \times \M^{t-1} \mapsto \{True, False\}$, and a vector of
+      ciphertexts \textbf{y}.
+    \item $\A$ succeeds if for $\textbf{m}' = \Dec_{sk}(\textbf{y}) = (\Dec_{sk}(y_1),
+      \hdots,\Dec_{sk}(y_{t-1}))$ we have $R(m, \textbf{m}') = True$.
+  \end{enumerate}
 \end{definition}
-\begin{definition}{CPA Experiment}
+\subsection{Threat models}
+\paragraph{} As we have seen in Section \ref{sec:howdefsec}, a security
+framework also relies on a threat model, i.e. what we assume the attacker to be
+able to do. Below we formalise what we mean by this, and see 3 increasingly
+harsh models.
+\subsubsection{Chosen Plaintext Attack (CPA)}
+\paragraph{} For public key crypto systems CPA is the most basic model.
+Informally, it allows the attacker to encrypt any message using the scheme,
+using the public key at any stage of the attack. To formalise this, we will rely
+on the notion of an \textbf{encryption oracle}.
+\begin{definition}{Encryption Oracle}
+  Given a security experiment involving scheme $\Pi = (\Gen, \Enc, \Dec)$ and
+  $(pk, sk)$ as generated by $\Gen$ during the experiment, an encryption oracle
+  $\Enc_{pk}(\cdot)$ is a ``black box'' $\PPT$ algorithm that the adversary $\A$
+  can query with a message $m\in \M$ and outputs $c \leftarrow \Enc_{pk}(m)$. If
+  $\Enc$ is probabilistic, it uses ``fresh'' randomness during every query.
+\end{definition}
+From this definition, the definition 
+\begin{definition}{CPA-experiment}
 
 \end{definition}
 \begin{definition}{CPA-security}
@@ -724,7 +774,7 @@ Our message and cipher space are the binary string representations of naturals s
 \end{enumerate}
 \paragraph{Decryption}
 \begin{enumerate}
-\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''' = c^j \mod
+\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''''' = c^j \mod
   N$.
 \item Output $m''''$.
 \end{enumerate}
