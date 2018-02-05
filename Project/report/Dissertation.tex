@@ -17,7 +17,8 @@
  \usepackage{booktabs}
  \usepackage{enumerate}
 \usepackage[table,xcdraw]{xcolor}
-
+\usepackage{tikz}
+\usetikzlibrary{matrix}
 \usepackage{amsthm}
 
 \newtheorem{theorem}{Theorem}[section]
@@ -48,6 +49,8 @@
 \newcommand{\Int}{\mathbb{Z}}
 \newcommand{\Nat}{\mathbb{N}}
 \newcommand{\Reals}{\mathbb{R}}
+\renewcommand{\H}{\mathcal{H}}
+\renewcommand{\vec}[1]{\textbf{#1}}
 
 \newcommand{\PPT}{\texttt{PPT}}
 \newcommand{\negl}{\text{negl}}
@@ -545,7 +548,10 @@ from now on will all have a \textbf{security parameter} $\lambda$ associated
 with them, that effectively ``tunes'' the difficulty of the underlying problem
 of the cipher. The parameter will mostly affect the key length of a particular instance
 of the scheme, and hence it is common to denote it $\lambda = 1^n \in \{0,
-1\}^n$ as a string, as if it was the input to some Turing machine.
+1\}^n$ as a string, as if it was the input to some Turing machine. Finally, we
+note that since for a scheme $\Pi$ the function $\Enc$ will now be a $\PPT$
+algorithm, we also allow it to fail with negilgable probability, and we will
+denote it by writing $\Enc_{pk}(m) = \perp$.
 \footnotetext{As described in Section 1.1 in \cite{bellaresecurityrelations}, this was
   suggested in private communications with the authors.}
 \subsection{Goals}
@@ -558,11 +564,12 @@ notions will rely on two key definitions: \textbf{experiments} and
 \textbf{advantages}.
 \paragraph{Experiments} will be our formalisation of an attack being carried
 out (in polynomial time). If the attack reaches its goal, we say that the adversary \textbf{succeeds}
-(this is up to the respective aim of the experiment). We will write
+(this is up to the respective aim of the experiment) and we call the particular
+problem to be solved the \textbf{challenge}. We will write
 $\Expr{atk}{\Pi, \A}(n)$ for an experiment where adversary $\A$ is attacking scheme
 $\Pi$ under the \textit{atk} threat model with security parameter $\lambda =
 1^n$ and write $\Expr{atk}{\Pi, \A}(n) = 1$ when an adversary succeeds and $\Expr{atk}{\Pi, \A}(n) = 0$ when
-it does not.
+it does not, including when some part of the algorithm fails.
 \paragraph{Advantages} will be our formalisation of how well an adversary can
 take advantage of certain properties of the system to increase their chances in
 successfully breaking the scheme. The aim of our security proofs will be to show
@@ -584,11 +591,11 @@ most people would associate with definitions of security.
   An indistinguishability experiment (IND) involving a cipher $\Pi$ with
   security parameter $\lambda$, attack model atk and adversary $\A$ will be as follows:
   \begin{enumerate}
-  \item $\A$ is given full knowledge of $\Pi$, and anything additional that the
+  \item $(pk, sk) \leftarrow \Gen(\lambda)$ is generated
+  \item $\A$ is given full knowledge of $\Pi$ (including $pk$), and anything additional that the
     attack model \textit{atk} allows in \textbf{stage 1}. Then, $\A$ outputs two messages
     $m_0, m_1 \in \M$ such that $|m_1| = |m_2|$.
-  \item $(pk, sk) \leftarrow \Gen(\lambda)$ and uniformly random bit $b \in \{0,
-    1\}$ is generated. $c = \Enc_{pk}(m_b)$ is calculated.
+  \item A uniformly random bit $b \in \{0, 1\}$ is generated. $c = \Enc_{pk}(m_b)$ is calculated.
   \item $\A$ is given $c$ and anything additional that the attack model
     \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a bit $b' \in \{0,
     1\}$.
@@ -618,19 +625,22 @@ experiment described in \cite{bellaresecurityrelations}:
   A non-malleability experiment (NM) involving a cipher $\Pi$ with security
   parameter $\lambda$, attack model atk and adversary $\A$ will be as follows:
   \begin{enumerate}
-    \item $\A$ is given full knowledge of $\Pi$, and anything additional that
+    \item $(pk, sk) \leftarrow \Gen(\lambda)$ is generated.
+    \item $\A$ is given full knowledge of $\Pi$ (including $pk$), and anything additional that
       the attack model \textit{atk} allows in \textbf{stage 1}. Then, $\A$
       outputs a ($\PPT$) sampling algorithm $M$. $M$ must be valid, in the sense
       that all its outputs must be of equal length, appropriate to the scheme.
-    \item $(pk, sk) \leftarrow \Gen(\lambda)$, and $m \leftarrow M$ are
-      generated. $c = \Enc_{pk}(m)$ is calculated.
+    \item $m \leftarrow M$ are generated. $c = \Enc_{pk}(m)$ is calculated.
     \item $\A$ is given $c$ and anything additional that the attack model
       \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a $t$-ary relation
       $R:\M \times \M^{t-1} \mapsto \{True, False\}$, and a vector of
       ciphertexts \textbf{y}.
     \item $\A$ succeeds if for $\textbf{m}' = \Dec_{sk}(\textbf{y}) = (\Dec_{sk}(y_1),
-      \hdots,\Dec_{sk}(y_{t-1}))$ we have $R(m, \textbf{m}') = True$.
+      \hdots,\Dec_{sk}(y_{t-1}))$ we have $R(m, \textbf{m}') = True$ with $m
+      \not\in \textbf{m}'$.
   \end{enumerate}
+  \paragraph{Note:} The last condition is necessary, because otherwise we would
+  be giving credit to $\A$ for copying the ciphertext and output the equality relation.
 \end{definition}
 \subsection{Threat models}
 \paragraph{} As we have seen in Section \ref{sec:howdefsec}, a security
@@ -645,25 +655,129 @@ on the notion of an \textbf{encryption oracle}.
 \begin{definition}{Encryption Oracle}
   Given a security experiment involving scheme $\Pi = (\Gen, \Enc, \Dec)$ and
   $(pk, sk)$ as generated by $\Gen$ during the experiment, an encryption oracle
-  $\Enc_{pk}(\cdot)$ is a ``black box'' $\PPT$ algorithm that the adversary $\A$
+  $\Enc_{pk}(\cdot)$ is a ``black box'' $\PPT$ algorithm that the adversary $\A$ 
   can query with a message $m\in \M$ and outputs $c \leftarrow \Enc_{pk}(m)$. If
   $\Enc$ is probabilistic, it uses ``fresh'' randomness during every query.
 \end{definition}
-From this definition, the definition 
-\begin{definition}{CPA-experiment}
-
+From the above, the definition of CPA is straight forward.
+\begin{definition}{CPA experiment}
+  Let $\Expr{goal-cpa}{\Pi, \A}(n)$ be a CPA security experiment with goal
+  \textit{goal} involving cipher $\Pi$, adversary $\A$ with security parameter $\lambda = 1^n$, where
+  $\A$ is given access to an encryption oracle in \textbf{both stages}.
 \end{definition}
-\begin{definition}{CPA-security}
-\end{definition}
-\subsubsection{Chosen Ciphertext Attack (CCA)}
+\subsubsection{Non-Adaptive Chosen Ciphertext Attack (CCA1)}
+\paragraph{} We will now consider a harsher threat model called Non-Adaptive
+Chosen Ciphertext Attack, or a lunchtime attack. Here, we allow the attacker to
+obtain the decryption of arbitrary ciphertexts \textbf{before the challenge}.
+We will formalise obtaining the decryption of a ciphertext through a
+\textbf{decryption oracle}.
 \begin{definition}{Decryption Oracle}
-
+  Given a security experiment involving scheme $\Pi = (\Gen, \Enc, \Dec)$ and
+  $(pk, sk)$ as generated by $\Gen$ during the experiment, a decryption oracle
+  $\Dec_{sk}(\cdot)$ is a ``black box'' \textit{deterministic polynomial-time}
+  algorithm that the adversary $\A$ can query with ciphertext $c\in \C$ and
+  outputs $m' = \Dec_{sk}(c)$.
 \end{definition}
-\begin{definition}{CCA Experiment}
+\paragraph{} Again, the definition of CCA1 follows easily.
+\begin{definition}{CCA1 Experiment}
+  Let $\Expr{goal-cca1}{\Pi, \A}(n)$ be a CCA1 security experiment with goal
+  \textit{goal} involving
+  cipher $\Pi$, adversary $\A$ with security parameter $\lambda = 1^n$, where
+  $\A$ is given access to an encryption oracle in \textbf{both stages} and a
+  decryption oracle in \textbf{stage 1} only.
 \end{definition}
-
-\begin{definition}{CCA-security}
+\subsubsection{Adaptive Chosen Ciphertext Attack (CCA2)}
+\paragraph{} The harshest threat model we will consider is the Adaptive Chosen
+Ciphertext Attack (CCA2). Its definition is not very different from that of CCA1:
+\begin{definition}{CCA2 Experiment}
+  Let $\Expr{goal-cca2}{\Pi, \A}(n)$ be a CCA2 security experiment with goal
+  \textit{goal} involving
+  cipher $\Pi$, adversary $\A$ with security parameter $\lambda = 1^n$, where
+  $\A$ is given access to an encryption oracle in \textbf{both stages} and a
+  decryption oracle in \textbf{both stages} as well, with the condition that
+  $\A$ may not query the decryption oracle on the challenge ciphertext.
 \end{definition}
+\subsection{Putting in together: Security frameworks}
+\paragraph{} We can now put what we know together, and obtain valid security
+frameworks! Namely, the 6 we can get from what we have seen above are: IND-CPA,
+IND-CCA1, IND-CCA2, NM-CPA, NM-CCA1 and NM-CCA2. A natural question to ask then,
+is how are these 6 notions related to each other? In this section we will show 3
+different kinds of relations, and mention the rest, but only their proofs are
+outside the scope of this work.
+\subsubsection{Relationship under a fixed security goal}
+\paragraph{} The easiest set of relationships to conclude is the one between
+notions security where the goal is fixed, only the threat model is different.
+The connection between these frameworks is very intuitive, and it is captured in
+the following theorem:
+\begin{theorem}
+  Let a security goal be fixed. Then, we have the following:
+  \begin{enumerate}
+  \item If a cipher $\Pi$ is secure in the sense of \textit{goal}-CCA1, then it
+    is also secure in the sense of \textit{goal}-CPA.
+  \item If a cipher $\Pi$ is secure in the sense of \textit{goal}-CCA2, then it
+    is also secure in the sense of \textit{goal}-CCA1.
+  \end{enumerate}
+\end{theorem}
+Below is a sketch of the theorem, as the author finds it that its details are not
+illuminating in any way.
+\begin{proof}(Sketch)
+  \paragraph{Claim 1.} We let $\A$ be an arbitrary $\PPT$ adversary attacking
+  $\Pi$ under the CPA threat model. Then, $\A$ is equivalent to an adversary $\A'$ under the
+  CCA1 threat model, where $\A'$ never uses its decryption oracle. Since $\Pi$
+  is \textit{goal}-CCA1 secure, $\A'$ cannot break it and hence $\A$ cannot
+  break it either.
+  \paragraph{Claim 2.} The proof is very similar to Claim 1., but here $\A$
+  under CCA1 will be equivalent to $\A'$ under CCA2 where $\A'$ never uses its
+  decryption oracle in stage 2. The rest of the proof follows.
+\end{proof}
+\subsubsection{Relationship under a fixed threat model}
+\paragraph{} Now, how are frameworks of fixed threat model related? In this
+section, we give two results based on our definitions, both due to \cite{bellaresecurityrelations}.
+\begin{theorem}{NM-ATK $\Rightarrow$ IND-ATK}\\
+  Let $\Pi$ be secure in the sense of NM-ATK then $\Pi$ is also secure in the
+  sense of IND-ATK.
+\end{theorem}
+\begin{proof}
+\end{proof}
+\begin{theorem}{IND-CCA2 $\Rightarrow$ NM-CCA2}\\
+  Let $\Pi$ be secure in the sense of IND-CCA2 then $\Pi$ is also secure in the
+  sense of NM-CCA2.
+\end{theorem}
+\begin{proof}
+\end{proof}
+\subsubsection{All relationships}
+\label{sec:allrelations}
+\paragraph{} In Figure \ref{fig:secrelations} we indicate all the connections in the following way:
+an uncrossed arrow represents implication, and a crossed arrow represents strict
+strongness towards the arrows target (i.e. $A \rightarrow B$ means $A$ implies
+$B$ and $A \not\rightarrow B$ means there is a scheme that breaks $A$ but does
+not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
+``horzontal'' arrows, for the remaining proofs, please see Section 3 in \cite{bellaresecurityrelations}.
+\begin{figure}
+  \centering
+  \begin{tikzpicture}
+    \matrix (m) [matrix of math nodes,row sep=3em,column sep=4em,minimum width=2em]
+    {
+      NM-CPA & NM-CCA1 & NM-CCA2 \\
+      IND-CPA & IND-CCA1 & IND-CCA2 \\
+    };
+    \path[-stealth]
+    (m-1-2) edge node {} (m-1-1)
+    (m-1-3) edge node {} (m-1-2)
+    (m-2-2) edge node {} (m-2-1)
+    (m-2-3) edge node {} (m-2-2)
+    (m-1-1) edge node {} (m-2-1) 
+    (m-1-2) edge node {} (m-2-2)
+    (m-1-3) edge node {} (m-2-3)
+    (m-1-1) edge node {$\not$} (m-2-2.north)
+    (m-2-2) edge node {$\not$} (m-1-1.south)
+    (m-2-3) edge node {} (m-1-3)
+    (m-1-2) edge node {$\not$} (m-1-3);
+      \end{tikzpicture}
+  \caption{All relations between our defined security frameworks. See Section
+    \ref{sec:allrelations} for the explanation of the arrows.}
+  \label{fig:secrelations}
+\end{figure}
 \section{Public-Key Crypto Schemes}
 \subsection{An Example: RSA}
 In this section we finally illustrate how the previously discussed ideas can be
@@ -774,7 +888,7 @@ Our message and cipher space are the binary string representations of naturals s
 \end{enumerate}
 \paragraph{Decryption}
 \begin{enumerate}
-\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''''' = c^j \mod
+\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''''''' = c^j \mod
   N$.
 \item Output $m''''$.
 \end{enumerate}
@@ -1080,19 +1194,19 @@ turn our attention to computational problems involving lattices. In the
 following section, we construct a very simple cryptosystem that relies on the
 ideas we explore here.
 \begin{definition}{(Finite dimensional) Lattice:}
-  Let $V = \Reals^n$ be the $n$-dimensional Euclidean space, and $B = \{v_1,
-  v_2, \hdots, v_n\}$ be a basis for $V$. Then, the \textbf{lattice generated by $B$} is the set
+  Let $V = \Reals^n$ be the $n$-dimensional Euclidean space, and $B = \{\vec{v}_1,
+  \vec{v}_2, \hdots, \vec{v}_n\}$ be a basis for $V$. Then, the \textbf{lattice generated by $B$} is the set
   \[
-    \L(B) = \{\alpha_1v_1 + \alpha_2v_2 + \hdots \alpha_nv_n\,\,|\,\, v_i \in B,
+    \L(B) = \{\alpha_1\vec{v}_1 + \alpha_2\vec{v}_2 + \hdots \alpha_n\vec{v}_n\,\,|\,\, \vec{v}_i \in B,
     \alpha_i \in \Int\}.
   \]
   Then $B$ is also called the basis of the lattice $\L$.
 \end{definition}
 \begin{definition}{Fundamental Domain}
-  Let $\L$ be a lattice with basis $B = \{v_1, v_2, \hdots, v_n\}$. Then, the
+  Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots, \vec{v}_n\}$. Then, the
   \textbf{fundamental domain of $\L$ with respect to $B$} is
   \[
-    \F_B = \{t_1v_1 + t_2v_2 + \hdots + t_nv_n \,\,|\,\, v_i \in B, t_i \in [0,
+    \F_B = \{t_1\vec{v}_1 + t_2\vec{v}_2 + \hdots + t_n\vec{v}_n \,\,|\,\, \vec{v}_i \in B, t_i \in [0,
     1)\} \subseteq \Reals^n.
   \]
 \end{definition}
@@ -1106,6 +1220,22 @@ The following theorem is key for cryptographic application of lattices:
 \]
 \end{theorem}
 \begin{proof}
+  Let $x \in \Reals^n$ be arbitrary. Since $B = \{ \vec{v}_1, \hdots, \vec{v}_n \}$ is a basis for $\Reals^n$, there
+  is a unique combination of its vectors that give $x$, i.e. there exist unique
+  reals $a_1, \hdots, a_n$ such that
+  \[
+    x = a_1\vec{v}_1 + \hdots + a_n\vec{v}_n.
+  \]
+  For all $i$ let $\alpha_i = \lfloor a_i \rfloor$ and $t_i = a_i - \lfloor a_i
+  \rfloor$. We note that by the definition of the floor function, $0 \leq t_i <
+  1$ for all $i$. Then, letting $\ell = \sum_{i = 1}^n \alpha_i\vec{v}_i$ and $f
+  = \sum_{i = 1}^n t_i\vec{v}_i$, we clearly have $\ell \in \L$ and $f \in
+  \F_B$. Now, from the above equation we get
+  \begin{align*}
+    x &= (\alpha_1 + t_1)\vec{v}_1 + \hdots (\alpha_n + t_n)\vec{v}_n \\
+      &= \alpha_1\vec{v}_1 + \hdots + \alpha_n\vec{v}_n + t_1\vec{v}_1 + \hdots + t_n\vec{v}_n \\
+      &= \ell + f \quad \text{as required.}
+  \end{align*}
 \end{proof}
 The following result is an important result about lattices.
 \begin{theorem}
@@ -1115,9 +1245,9 @@ The following result is an important result about lattices.
 \begin{proof}
 \end{proof}
 \begin{theorem}
-  Let $\L$ be a lattice with basis $B = \{v_1, v_2, \hdots v_n\}$. Then
+  Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots \vec{v}_n\}$. Then
 \[
-  \text{Vol}(\L) \leq \norm{v_1}\cdot\norm{v_2}\cdots\norm{v_n}.
+  \text{Vol}(\L) \leq \norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}.
 \]
 \end{theorem}
 \begin{proof}
@@ -1127,10 +1257,10 @@ Based on the above theorem, we will make the following definition:
   Let $\L$ and $B$ as in the theorem above. Then, the \textbf{Hadamard ratio of $B$}
   is defined as
   \[
-    h(B) = \left( \frac{\text{Vol}(\L)}{\norm{v_1}\cdot\norm{v_2}\cdots\norm{v_n}} \right)^{\frac1n}.
+    \H(B) = \left( \frac{\text{Vol}(\L)}{\norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}} \right)^{\frac1n}.
   \]
 \end{definition}
-We note that by the above theorem $0 < h(B) \leq 1$.
+We note that by the above theorem $0 < \H(B) \leq 1$.
 \subsection{Mathematical Set-up II: Computational Lattice Problems}
 SVP
 CVP
