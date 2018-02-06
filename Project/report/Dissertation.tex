@@ -6,7 +6,6 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{mathtools}
-\usepackage{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{graphicx}
 \usepackage{float}
@@ -15,6 +14,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
  \usepackage{booktabs}
+ \usepackage{algpseudocode}
  \usepackage{enumerate}
 \usepackage[table,xcdraw]{xcolor}
 \usepackage{tikz}
@@ -555,6 +555,7 @@ denote it by writing $\Enc_{pk}(m) = \perp$.
 \footnotetext{As described in Section 1.1 in \cite{bellaresecurityrelations}, this was
   suggested in private communications with the authors.}
 \subsection{Goals}
+\label{sec:secgoals}
 \paragraph{}
 We begin by formalising the notion of ``breaking the scheme''. Below we will see
 first the idea of the \textbf{indistinguishability of encryptions}, coined by Goldwasser and Micali in
@@ -615,13 +616,14 @@ modify the encrypted request so that the identifier is changed to someone else's
 (perhaps the attacker's). Here the attacker has managed to cause damage without
 knowing obtaining the plaintext, and this is exactly what we wish to prevent.
 \paragraph{} Non-malleability captures this notion. Informally, it states that
-no matter what set of plaintexts we encrypt no $\PPT$ adversary can modify a set
+no matter what plaintext we encrypt, no $\PPT$ adversary can come up with a set
 of ciphertexts that when decrypted would have some $t$-ary relationship with the
-original plaintext. (Note: this is the definition of Bellare et al., for an
+original plaintext with higher probability than the relationship holding for
+some randomly picked, unknown plaintext. (Note: this is the definition of Bellare et al., for an
 equivalent definition using \textit{simulations} see
 \cite{dolev2003nonmalleable}.) We now give the formal definition, using the
 experiment described in \cite{bellaresecurityrelations}:
-\begin{definition}{NM-atk:}
+\begin{definition}{NM-ATK:}
   A non-malleability experiment (NM) involving a cipher $\Pi$ with security
   parameter $\lambda$, attack model atk and adversary $\A$ will be as follows:
   \begin{enumerate}
@@ -641,6 +643,9 @@ experiment described in \cite{bellaresecurityrelations}:
   \end{enumerate}
   \paragraph{Note:} The last condition is necessary, because otherwise we would
   be giving credit to $\A$ for copying the ciphertext and output the equality relation.
+\end{definition}
+\begin{definition}{NM-ATK secure}
+ A scheme $\Pi$ is secure in the NM-ATK sense
 \end{definition}
 \subsection{Threat models}
 \paragraph{} As we have seen in Section \ref{sec:howdefsec}, a security
@@ -738,6 +743,35 @@ section, we give two results based on our definitions, both due to \cite{bellare
   sense of IND-ATK.
 \end{theorem}
 \begin{proof}
+  Let $\Pi$ be a cipher that is secure in the sense of NM-ATK. Let $\A'$ be
+  a $\PPT$ IND-ATK adversary, who is attacking $\Pi$. Then, recall from Section
+  \ref{sec:secgoals} that now we must show that the advantage of $\A'$ in
+  breaking $\Pi$ is negligable. Formally, we wish to establish that
+  \[
+    \Adv{ind-atk}{\Pi, \A'}(n) = \negl(n).
+  \]
+  To do just that, we define NM-ATK adversary $\A$, that will make use of $\A'$.
+  In particular, let $\A$ be defined as below. Note, that both $\A$ and $\A$ are
+  given access to the oracles in the appropriate stages, specified by the attack
+  model ATK. Recall, that $\bar{x}$ denotes the binary complement of $x$.
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
+    \State $(x_0, x_1) \leftarrow \A'$ Stage 1
+    \State $M:= \{x_0, x_1\}$ such that $M$ returns an element with probability $\frac12$.
+    \State \Return M
+    \State
+    \State \textbf{Algorithm} $\A(c)$ \textbf{Stage 2}
+    \State $b \leftarrow \A'(c)$ Stage 2
+    \State Let $x = \bar{x}_b$.
+    \State \Return $(x, R)$ where $R$ is the complement relation, i.e. $R(a,
+    b) = True$ iff $a = \bar{b}$.
+  \end{algorithmic}
+  Below, we will use the fact that without the loss of generaliy, we may assume
+  that $\A'$ always outputs $x_0 \neq x_1$. To see a proof of this, please see
+  Proposition 3.8 in \cite{bellaresecurityrelations}.
+  \paragraph{Claim 1.} $\Prob(\Expr{nm-atk}{\Pi, \A}(n) = 1 | ) =
+  \Prob(\Expr{ind-atk}{\Pi, \A}(n) = b | B = b)$.
+  \paragraph{Claim 2.}
 \end{proof}
 \begin{theorem}{IND-CCA2 $\Rightarrow$ NM-CCA2}\\
   Let $\Pi$ be secure in the sense of IND-CCA2 then $\Pi$ is also secure in the
@@ -745,7 +779,7 @@ section, we give two results based on our definitions, both due to \cite{bellare
 \end{theorem}
 \begin{proof}
 \end{proof}
-\subsubsection{All relationships}
+\subsubsection{All relationships together}
 \label{sec:allrelations}
 \paragraph{} In Figure \ref{fig:secrelations} we indicate all the connections in the following way:
 an uncrossed arrow represents implication, and a crossed arrow represents strict
@@ -762,17 +796,17 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
       IND-CPA & IND-CCA1 & IND-CCA2 \\
     };
     \path[-stealth]
-    (m-1-2) edge node {} (m-1-1)
-    (m-1-3) edge node {} (m-1-2)
-    (m-2-2) edge node {} (m-2-1)
-    (m-2-3) edge node {} (m-2-2)
-    (m-1-1) edge node {} (m-2-1) 
-    (m-1-2) edge node {} (m-2-2)
-    (m-1-3) edge node {} (m-2-3)
+    (m-1-2) edge (m-1-1)
+    ([yshift=0.3em]m-1-3.west) edge ([yshift=0.3em]m-1-2.east)
+    (m-2-2) edge (m-2-1)
+    (m-2-3) edge (m-2-2)
+    ([xshift=-0.5em]m-1-1.south) edge ([xshift=-0.5em]m-2-1.north)
+    ([xshift=0.5em]m-1-2.south) edge ([xshift=0.5em]m-2-2.north)
+    ([xshift=-0.5em]m-1-3.south) edge ([xshift=-0.5em]m-2-3.north)
     (m-1-1) edge node {$\not$} (m-2-2.north)
     (m-2-2) edge node {$\not$} (m-1-1.south)
-    (m-2-3) edge node {} (m-1-3)
-    (m-1-2) edge node {$\not$} (m-1-3);
+    (m-2-3) edge (m-1-3)
+    ([yshift=-0.3em]m-1-2.east) edge node {$\not$} ([yshift=-0.3em]m-1-3.west);
       \end{tikzpicture}
   \caption{All relations between our defined security frameworks. See Section
     \ref{sec:allrelations} for the explanation of the arrows.}
@@ -888,9 +922,9 @@ Our message and cipher space are the binary string representations of naturals s
 \end{enumerate}
 \paragraph{Decryption}
 \begin{enumerate}
-\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''''''' = c^j \mod
+\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'= c^j \mod
   N$.
-\item Output $m''''$.
+\item Output $m'$.
 \end{enumerate}
 \paragraph{Correctness} To show that the above scheme is indeed a cipher, we
 must show that it is correct, i.e. that
@@ -905,7 +939,7 @@ k_\Dec) \in \K$ and let $m \in \M$ be arbitrary. Then,
 \]
 Decrypting, we get
 \begin{align*}
-  m' &= \Dec_{k_\Dec}(c) \\
+  m'' &= \Dec_{k_\Dec}(c) \\
      &= c^j \mod N \\
      &= (m^i)^j \mod N = m^{ij} \mod N \\
      &= m^{ij \mod N} \mod N \quad \text{by Corollary \ref{thm:grouppowmod}} \\
