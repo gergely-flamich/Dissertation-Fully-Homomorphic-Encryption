@@ -603,6 +603,22 @@ most people would associate with definitions of security.
   \item If $b = b'$, then $\A$ succeeds.
   \end{enumerate}
 \end{definition}
+Note that we shall denote the independent choice of the bit $b$ as the random
+variable $B$.
+\begin{definition}{IND-ATK secure}
+  \label{def:adv_ind}
+  We say that a scheme $\Pi$ is IND-ATK secure if for all $\PPT$ adversaries
+  $\A$ in the ATK threat model we have
+  \[
+    \Adv{ind-atk}{\Pi, \A} = 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) = b)
+    - 1
+    \leq \negl(n).
+  \]
+\end{definition}
+\paragraph{Note:} the above definition may be strange at first sight considering
+our motivation. It is, however, not hard to see that it indeed captures the
+ideat that an adversary cannot guess correctly with probability better than
+$\frac12$. 
 \subsubsection{Non-malleability}
 \paragraph{} Upon some deliberation, we might arrive at a different notion of
 security. Maybe the goal of the adversary is not to learn the underlying
@@ -632,20 +648,32 @@ experiment described in \cite{bellaresecurityrelations}:
       the attack model \textit{atk} allows in \textbf{stage 1}. Then, $\A$
       outputs a ($\PPT$) sampling algorithm $M$. $M$ must be valid, in the sense
       that all its outputs must be of equal length, appropriate to the scheme.
-    \item $m \leftarrow M$ are generated. $c = \Enc_{pk}(m)$ is calculated.
+    \item $m, \hat{m} \leftarrow M$ are generated. $c = \Enc_{pk}(m)$ is calculated.
     \item $\A$ is given $c$ and anything additional that the attack model
       \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a $t$-ary relation
       $R:\M \times \M^{t-1} \mapsto \{True, False\}$, and a vector of
       ciphertexts \textbf{y}.
-    \item $\A$ succeeds if for $\textbf{m}' = \Dec_{sk}(\textbf{y}) = (\Dec_{sk}(y_1),
-      \hdots,\Dec_{sk}(y_{t-1}))$ we have $R(m, \textbf{m}') = True$ with $m
-      \not\in \textbf{m}'$.
+    \item $\A$ succeeds in case 1 if $\textbf{m}' = \Dec_{sk}(\textbf{y}) = (\Dec_{sk}(y_1),
+      \hdots,\Dec_{sk}(y_{t-1}))$ we have $R(m, \textbf{m}') = True$ with $m 
+      \not\in \textbf{m}'$, and write $\Expr{nm-atk-1}{\Pi, \A}(n) = 1$. \\
+      $\A$ succeeds in case 0 if $\textbf{m}' = \Dec_{sk}(\textbf{y})$ we have
+      $R(\hat{m}, \textbf{m}') = True$ with $\hat{m} 
+      \not\in \textbf{m}'$, and write $\Expr{nm-atk-0}{\Pi, \A}(n) = 1$. \\
+
   \end{enumerate}
   \paragraph{Note:} The last condition is necessary, because otherwise we would
   be giving credit to $\A$ for copying the ciphertext and output the equality relation.
+  \paragraph{Note:} Succeeding in case 1 represents the occasion when the
+  adversary deliberately outputs a related ciphertext vector, and case 0
+  represents when the output just happens to match some randomly selected message.
 \end{definition}
 \begin{definition}{NM-ATK secure}
- A scheme $\Pi$ is secure in the NM-ATK sense
+ A scheme $\Pi$ is secure in the NM-ATK sense, if for all $\PPT$ adversaries
+ $\A$ in the ATK threat model, we have
+ \[
+   \Adv{nm-atk}{\Pi, \A} = |\Prob(\Expr{nm-atk-1}{\Pi, \A}(n) = 1) -
+   \Prob(\Expr{nm-atk-0}{\Pi, \A}(n) = 1)| \leq \negl(n).
+ \]
 \end{definition}
 \subsection{Threat models}
 \paragraph{} As we have seen in Section \ref{sec:howdefsec}, a security
@@ -753,7 +781,7 @@ section, we give two results based on our definitions, both due to \cite{bellare
   To do just that, we define NM-ATK adversary $\A$, that will make use of $\A'$.
   In particular, let $\A$ be defined as below. Note, that both $\A$ and $\A$ are
   given access to the oracles in the appropriate stages, specified by the attack
-  model ATK. Recall, that $\bar{x}$ denotes the binary complement of $x$.
+  model ATK. Recall, that $\bar{x}$ denotes the binary complement of $x$.\\
   \begin{algorithmic}
     \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
     \State $(x_0, x_1) \leftarrow \A'$ Stage 1
@@ -762,22 +790,127 @@ section, we give two results based on our definitions, both due to \cite{bellare
     \State
     \State \textbf{Algorithm} $\A(c)$ \textbf{Stage 2}
     \State $b \leftarrow \A'(c)$ Stage 2
-    \State Let $x = \bar{x}_b$.
-    \State \Return $(x, R)$ where $R$ is the complement relation, i.e. $R(a,
+    \State Let $x = \bar{x}_b$. Calculate $c' = \Enc_{pk}(x)$
+    \State \Return $(c', R)$ where $R$ is the complement relation, i.e. $R(a,
     b) = True$ iff $a = \bar{b}$.
+    \State
   \end{algorithmic}
   Below, we will use the fact that without the loss of generaliy, we may assume
-  that $\A'$ always outputs $x_0 \neq x_1$. To see a proof of this, please see
-  Proposition 3.8 in \cite{bellaresecurityrelations}.
-  \paragraph{Claim 1.} $\Prob(\Expr{nm-atk}{\Pi, \A}(n) = 1 | ) =
-  \Prob(\Expr{ind-atk}{\Pi, \A}(n) = b | B = b)$.
-  \paragraph{Claim 2.}
+  that $\A'$ always outputs $x_0 \neq x_1$. This fact is very intuitive, however
+  showing it formally requires some care. To see a proof of this, please see
+  Proposition 3.8 in \cite{bellaresecurityrelations}. To arrive at the statement
+  of the theorem, we need to prove the two fairly intuitive claims below.
+  \paragraph{Claim 1.} $\Prob(\Expr{nm-atk-1}{\Pi, \A}(n) = 1) = \Prob(\Expr{ind-atk}{\Pi, \A'}(n) = b)$.\\
+  This means that $\A$ succeeding is exactly as likely as $\A'$ succeeding.
+  Looking at the above definition of $\A$ this should seem fairly obvious, and
+  we verify this intuition formally here. First, assuming that in the
+  NM-Experiment we had $\A$ output $M = \{x_0, x_1\}, x \leftarrow M, c
+  \leftarrow \Enc_{pk}(x), b' \leftarrow \A'(c)$ and $(c', R) \leftarrow \A(c)$
+  with $x' = \Dec_{sk}(c')$ note that
+  $R(x, x') = True$ if and only if $\Dec_{sk}(c) = x_{b'}$. That is, $\A'$
+  managed to infer the correct underlying plaintext of $c$. Note also, that when
+  we have $R(x, x') = True$ by the definition of $R$ it must be that $x \neq
+  x'$. Then, since $\Dec$ assigns a unique plaintext to a ciphertext, it must
+  also be the case that $c \neq c'$. We also always have $\perp \neq x'$.
+  \paragraph{} Now, consider $\Expr{ind-atk}{\Pi, \A'}$ given $B = b$. By our assumption, we
+  always have $x_0 \neq x_1$, and hence we observe that therefore $\Dec_{sk}(c) =
+  x_{b'}$ if and only if $b = b'$. (Otherwise, if we could have the same
+  ciphertext twice, the decryption could still be correct, but $b = 1 - b'$!)
+  Putting this fact together with the above, we see that $b = b'$ if and only if
+  $c \neq c'$, $\perp \neq x'$ and $R(x, x') = True$, which is exactly the
+  definition of $\A$ succeeding in case 1.
+  \paragraph{Claim 2.} $\Prob(\Expr{nm-atk-0}{\Pi, \A}(n) = 1) = \frac12$\\
+  This follows from the fact that since by the definition of NM-ATK experiments
+  $\A$'s behaviour is not affected by $\hat{m}$. Hence, by the definition of
+  $\A$ succeeds in case 0 if and only if $\hat{m} = m$. Since $M$ is a uniformly random
+  sampling algorithm, $\Prob(M = m) = \Prob(M = \hat{m}) = \frac12$.
+  \paragraph{}
+  Hence, we have 
+  \begin{align*}
+    \Adv{nm-atk}{\Pi, \A} &= \Prob(\Expr{nm-atk-1}{\Pi, \A}(n) = 1) - \Prob(\Expr{nm-atk-0}{\Pi, \A}(n) = 1)\\
+                          &= \Prob(\Expr{ind-atk}{\Pi, \A'}(n) = b) - \frac12 \quad\text{by Claim 1 and 2.}\\
+                          &= \frac12 \Adv{ind-atk}{\Pi, \A'}\quad\text{by Definition \ref{def:adv_ind}}.
+  \end{align*}
+  Since $\Pi$ is NM-ATK secure $\Adv{nm-atk}{\Pi, \A}$ is negligable, hence by
+  the above equation $\Adv{ind-atk}{\Pi, \A'}$ is negligable also. Since $\A'$ can
+  be any IND-ATK adversary, $\Pi$ is IND-ATK secure.
 \end{proof}
 \begin{theorem}{IND-CCA2 $\Rightarrow$ NM-CCA2}\\
   Let $\Pi$ be secure in the sense of IND-CCA2 then $\Pi$ is also secure in the
   sense of NM-CCA2.
 \end{theorem}
 \begin{proof}
+  Let $\Pi$ be a cipher secure in the IND-CCA2 sense. The intuition is that CCA2
+  gives so much power to the adversary, in particular the ability to decrypt
+  almost arbitrary ciphertexts, that the fact that it is enough for the
+  adversary to output some modified ciphertext instead of a guess about
+  plaintexts does not really matter.\\
+  Formally, let $\A'$ be an NM-CCA2 adversary attacking $\Pi$. We would like to
+  show that its advantage to break the cipher is negligable. To do this, we will
+  describe an IND-CCA2 adversary $\A$ attacking $\Pi$ that incorporates $\A'$.\\
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
+    \State $M \leftarrow \A'$ Stage 1
+    \State Generate $x_0 \leftarrow M$ and $x_1 \leftarrow M$
+    \State \Return $(x_0, x_1)$
+    \State
+    \State \textbf{Algorithm} $\A(c)$ \textbf{Stage 2}
+    \State $(R, \vec{c}') \leftarrow \A'(M, c)$
+    \State $\vec{x}' \leftarrow \Dec_{sk}(\vec{c}')$
+    \If{$c \not\in \vec{c}'$ and $\perp \not\in \vec{x}'$ and $R(x_0,
+      \vec{x}') = True$}{ $d = 0$}\Else{ $d \leftarrow \{0, 1\}$} \EndIf
+    \State \Return $d$
+    \State
+  \end{algorithmic}
+  We note that since $\A', M$ and $R$ are $\PPT$ algorithms, so is $\A$. Let
+  \[
+    p_n(b) = \Prob(\A \text{ outputs } 0 \,\, | \,\, B = b).
+  \]
+  Then, it is easy to see, that $\A$'s advantage may be reformulated as follows:
+  \begin{equation}
+    \begin{split}
+      \label{eq:indcca2eqnmcca2}
+    \Adv{ind-cca2}{\Pi, \A}(n) &= 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) = b)
+    - 1 \\
+                               &= 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) = b | B = b)\Prob(B = b)
+    - 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) \neq b)\Prob(B = b) \\
+                               &= p_n(0) - p_n(1)\quad\text{since } \Prob(B = b) = \frac12.
+     \end{split}
+  \end{equation}
+  Now, define
+  \[
+    p'_n(b) = \Prob[\A'(c_b) \text{ outputs } (\vec{c}', R) \text{ such that }
+    c_b \not\in \vec{c}' \land \perp \not\in \vec{x}' = \Dec_{sk}(\vec{c}') \land R(x_0, \vec{x}')].
+  \]
+  Here we make a crucial observation based on the definition of $\A$: the only
+  two ways it outputs $0$ is if $\vec{x}'$ is related to $x_0$, or if it is not,
+  and guesses $0$ randomly. Hence, $p_n(b)$ and $p'_n(b)$ are related in the
+  following way:
+  \[
+    p_n(b) = \frac12 (1 + p'_n(b))
+  \]
+  where the first term comes from the coinflip $(\frac12)$ and the second term
+  is the probability of $\A'$ relating $x_0$ with $\vec{x}'$ times $\Prob(B =
+  b)$, which gives $\frac{p'_n(b)}{2}$. (The reader is encouraged to go through
+  the definition of $\A$ to verify that this is indeed the case.)
+  Therefore, continuing from Equation \ref{eq:indcca2eqnmcca2}:
+  \[
+    \Adv{ind-cca2}{\Pi, \A}(n) = p_k(0) - p_k(1) = \frac12 (1 + p_k'(0)) -
+    \frac12 (1 + p_k'(1)) = \frac12 (p_k'(0) - p_k'(1)).
+  \]
+  The second crucial observation is that in an NM-CCA2 experiment giving $x_1$
+  to $\A'$ and and it then $R$-relating it to $x_0$ is precisely $\A'$
+  succeeding in case 0, since it corresponds to the scenario that we
+  accidentally related a ciphertext to a random plaintext from the sample space.
+  Formally, $p'_k(1) = \Prob(\Expr{nm-cca2-0}{\Pi, \A'}(n) = 1)$. Similarly,
+  giving $x_0$ to $\A'$ corresponds to $p'_k(0) = \Prob(\Expr{nm-cca2-1}{\Pi, \A'}(n) =
+  1)$. Putting this together with the previous equation, we get
+  \[
+    \Adv{nm-cca2}{\Pi, \A'}(n) = p'_k(0) - p'_k(1) = 2\cdot\Adv{ind-cca2}{\Pi, \A}(n).
+  \]
+  Since $\Pi$ is IND-CCA2 secure, $\Adv{ind-cca2}{\Pi, \A}$ is negligable and
+  hence so is $\Adv{nm-cca2}{\Pi, \A'}$. Since $\A'$ was arbitrary, $\Pi$ is
+  NM-CCA2 secure.
 \end{proof}
 \subsubsection{All relationships together}
 \label{sec:allrelations}
