@@ -50,8 +50,9 @@
 \newcommand{\Nat}{\mathbb{N}}
 \newcommand{\Reals}{\mathbb{R}}
 \renewcommand{\H}{\mathcal{H}}
-\renewcommand{\vec}[1]{\textbf{#1}}
+%\renewcommand{\vec}[1]{\textbf{#1}}
 
+\newcommand{\Span}{\text{Span}}
 \newcommand{\PPT}{\texttt{PPT}}
 \newcommand{\negl}{\text{negl}}
 \renewcommand{\mod}{\,\,\text{mod}\,\,}
@@ -946,11 +947,10 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
   \label{fig:secrelations}
 \end{figure}
 \section{Public-Key Crypto Schemes}
-\subsection{An Example: RSA}
 In this section we finally illustrate how the previously discussed ideas can be
 combined into a concrete scheme. However, before we can do that we must make a
 brief detour to prove some results we will be using later.
-\subsubsection{Mathematical set-up}
+\subsection{Mathematical set-up}
 \begin{theorem}{Order}
   Let $G$ be a finite group and $g \in G$. Then, there exist positive integers
   $n$ such that $g^n = 1$. We shall call the smallest such integer the order of
@@ -1029,7 +1029,7 @@ Now, we are ready to state the theorem of our interest:
   By the above conditions $a \in \Int^*_n$. Then, the statement is a special
   case of Corollary \ref{thm:groupordpow}, where $(G, \circ) = (\Int^*_n, \times)$.
 \end{proof}
-\subsubsection{The Construction: RSA}
+\subsection{The Construction: RSA}
 \paragraph{}
 We are now ready to construct the well-known RSA scheme invented by Rivest,
 Shamir and Adleman in 1978 \cite{rivest1978method}. As mentioned above, computationally secure schemes rely on
@@ -1355,7 +1355,121 @@ lattice is and see some key definitions and theorems. We will close the section
 with a construction of a simple lattice-based crypto scheme to illustrate how
 the theory may be used to construct secure schemes with the appropriate choice
 of a trapdoor.
-\subsection{Mathematical Set-up I: Introduction to Lattices}
+\subsection{Mathematical Set-up I: Vector Spaces and Rings}
+\paragraph{} As it happens, lattices and then later a special species of them
+that will be of particular interest to us rely on the theory of vector
+spaces and rings. Therefore, we first review these structures. We note that
+these may be defined in a very general sense, however, we shall focus on
+definitions involving only the real numbers.
+\subsubsection{Vector Spaces}
+\paragraph{} We begin with vector spaces. These will enable us to formalise a
+lot of geometric arguments very neatly. Thus, we begin with their definition.
+\begin{definition}{Vector Space:}
+  Let $V \subseteq \Reals^n$ for some $n \in \Nat$. Then, we say that $V$ is a
+  vector space iff for all $\vec{v}_1, \vec{v}_2 \in V$ and $\alpha_1, \alpha_2
+  \in \Reals$ we have
+  \[
+    \alpha_1\vec{v}_1 + \alpha_2\vec{v}_2 \in V.
+  \]
+\end{definition}
+We immediately follow up with 3 key definitions involving members of $V$.
+\begin{definition}{Linear Combination:}
+  Let $V$ be a vector space, and $W = \{\vec{v}_1, \hdots, \vec{v}_m\} \subseteq
+  V$. Then, a linear combination of the vectors in $W$ is the vector
+  \[
+    \vec{w} = \alpha_1\vec{v}_1 + \hdots + \alpha_m\vec{v}_m\quad\text{ with }
+    \alpha_1, \hdots \alpha_m \in \Reals.
+  \]
+  The set of all combinations that can be made up using the vectors in $W$ is
+  called the \textbf{span} of $W$. Formally:
+  \[
+    \Span(W) = \{\vec{w} = \alpha_1\vec{v}_1 + \hdots + \alpha_m\vec{v}_m
+    \,\,|\,\, \alpha_1, \hdots \alpha_m \in \Reals, \vec{v}_1,\hdots, \vec{v}_m
+    \in W \}.
+  \]
+\end{definition}
+\paragraph{} One can think of the span of a set of vector as the ``smallest''
+space in which all vectors related to the elements of $W$ can be found.
+Geometrically, it is the ``smallest'' set of points that can be reached from the
+origin by translating by scaled version of the vectors in $W$. It is usually
+convenient to collect vectors in $W$ in a structured way, called a matrix. If we
+collected the scaling factors in a vector $\vec{\alpha} = (\alpha_1, \hdots,
+\alpha_m)$, then we can express the vector $\vec{w}$ by writing
+\[
+  \vec{w} = \vec{\alpha} \cdot W = \vec{\alpha} \cdot 
+  \begin{bmatrix}
+    - \vec{v}_1 - \\
+    \vdots \\
+    - \vec{v}_m - 
+  \end{bmatrix}
+\]
+\begin{definition}{Linear Independence}
+  Let $V$ be a vector space, and $W = \{\vec{v}_1, \hdots, \vec{v}_m\} \subseteq
+  V$. We say that the vectors of $W$ are linearly independent if
+  \[
+    \vec{0} = \alpha \cdot W\quad\text{ with }
+    \vec{\alpha} = [\alpha_1, \hdots \alpha_m] \in \Reals^m 
+ \]
+  holds if and only if $\alpha_1 = \alpha_2 = \hdots = \alpha_m = 0$. If the
+  condition does not hold, we call the vectors of $W$ linearly dependent.
+\end{definition}
+\paragraph{} Geometrically, one can think of linearly independent vectors as
+vectors not parallel to each other.
+\begin{definition}{Basis}
+  Let $V$ be a vector space, and $W = \{\vec{v}_1, \hdots, \vec{v}_m\} \subseteq
+  V$. Then, we say $W$ is a basis for $V$ if we have $\Span(W) = V$ and the
+  vectors of $W$ are linearly independent.
+\end{definition}
+\begin{theorem}
+  Let $V$ be a vector space. Then, $V$ has a basis, and for any bases $B_1, B_2$
+  we have $|B_1| = |B_2|$. We call this unique number the dimension of $V$ and
+  write $\dim(V) = |B_1|$.
+\end{theorem}
+\paragraph{} We now briefly discuss the idea of projecting a vector onto
+another, as well as measuring the length of a vector or the distance between two
+vectors.
+\begin{definition}{Inner product:}
+  Let $\vec{u} = [u_1, \hdots, u_n], \vec{v} = [v_1, \hdots, v_n] \in \Reals^n$.
+  Then define the inner product of $\vec{u}, \vec{v}$ as
+  \[
+    \vec{u} \cdot \vec{v} = \sum_{i = 1}^n u_iv_i.
+  \]
+\end{definition}
+On can think of the inner product of two vectors as the ``generalised'' length
+of the shadow (projection) of one vector on the other.
+We can then use the length of the projection of a vector onto itself as a way of
+measuring its length. In particular:
+\begin{definition}{Norm}
+  Let $\vec{v} = [v_1, \hdots, v_n] \in R^n$. Then we say that the (Euclidean) norm (length) of
+  $\vec{v}$ is defined as
+  \[
+    \norm{\vec{v}} = \sqrt{\vec{v} \cdot \vec{v}} = \sqrt{v_1^2 + \hdots + v_n^2}.
+  \]
+\end{definition}
+Finally, using the definition of length, we may measure distance between any two
+vectors by measuring the length of their difference:
+\begin{definition}
+  Let $\vec{v}, \vec{u} \in \Reals^n$. Then, the (Euclidean) distance between
+  them is defined as
+  \[
+    d(\vec{v}, \vec{u}) = \norm{v - u}.
+  \]
+\end{definition}
+\paragraph{} We note here that all the definitions above fulfil the axioms of
+inner product space theory, normed space theory and metric space theory,
+respectively. We also note that the norm and the metric we are imposing on
+$\Reals^n$ are exactly the norm and metric induced by the inner product.
+Finally, we finish with an important geometric concept: perpendicular lines.
+In a generalised setting we will say that two vectors are perpendicular to each
+other if the length of the shadow of one on the other is $0$. Formally:
+\begin{definition}
+  Let $\vec{v}, \vec{u} \in \Reals^n$. We say that they are orthogonal
+  (perpendicular) to each other if we have
+  \[
+    \vec{v} \cdot \vec{u} = 0.
+  \]
+\end{definition}
+\subsection{Mathematical Set-up II: Introduction to Lattices}
 \paragraph{} We shall begin by a basic introduction to lattices in general, then
 turn our attention to computational problems involving lattices. In the
 following section, we construct a very simple cryptosystem that relies on the
@@ -1404,21 +1518,24 @@ The following theorem is key for cryptographic application of lattices:
       &= \ell + f \quad \text{as required.}
   \end{align*}
 \end{proof}
-The following result is an important result about lattices.
+\begin{definition}
+  Let $\L$ be an $n$-dimensional lattice with basis $B$ and fundamental domain
+  $\F_B$. Then, the $n$-dimensional volume of $\F_B$ is called the determinant
+  (or covolume) of $\L$, denoted by $\det(\L)$.
+\end{definition}
 \begin{theorem}
-  Let $\L$ be a lattice with bases $B_1$ and $B_2$. Then $\det(B_1) = \det(B_2)$
-  and is called the \textbf{covolume} of $\L$, denoted Vol($\L$).
+  \label{thm:lattice_change_of_basis}
+  Let $\L$ be a lattice with bases $B_1, B_2$. Then, there exists a matrix $A$
+  with $\det(A) = \pm 1$ such that $AB_1 = B_2$.
 \end{theorem}
 \begin{proof}
 \end{proof}
-\begin{theorem}
+\begin{theorem}{Hadamard's inequality}
   Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots \vec{v}_n\}$. Then
 \[
   \text{Vol}(\L) \leq \norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}.
 \]
 \end{theorem}
-\begin{proof}
-\end{proof}
 Based on the above theorem, we will make the following definition:
 \begin{definition}{Hadamard Ratio}
   Let $\L$ and $B$ as in the theorem above. Then, the \textbf{Hadamard ratio of $B$}
@@ -1428,15 +1545,82 @@ Based on the above theorem, we will make the following definition:
   \]
 \end{definition}
 We note that by the above theorem $0 < \H(B) \leq 1$.
-\subsection{Mathematical Set-up II: Computational Lattice Problems}
+\begin{theorem}
+  Let $\L$ be a lattice with basis $B = \{v_1, \hdots, v_n\}$. Then, $Vol(\F_B) = |\det(B)|$
+\end{theorem}
+\begin{proof}
+  We clearly have
+  \[
+    Vol(\F_B) = \int_{\F_B} dx_1dx_2\cdots dx_n.
+  \]
+  We do not know much about the variables $x_i$, so using the defintion of the
+  fundamental domain, we change the variables of the integration:
+  \[
+    \vec{x} = \vec{t} \cdot B
+  \]
+  where $\vec{x} = [x_1, \hdots x_n] \Reals^n, \vec{t} = [t_1, \hdots, t_n] \in
+  [0, 1)^n$. Then, the Jacobian of the above equation if $B$.
+  Note, that $[0, 1)^n = C_n$ is the $n$-dimensional unit cube, and
+  hence $C_n$ is precisely the pre-image of $\F_B$ under the map $B$. Hence, $BC_n = \F_B$.
+  Therefore, changing the variables, we will have
+  \begin{align*}
+    \int_{\F_B} dx_1dx_2\cdots dx_n &= \int_{BC_n} dx_1dx_2\cdots dx_n =
+                                      \int_{C_n} |\det(B)|dt_1dt_2\cdots dt_n \\
+                                    &= |\det(B)|Vol(C_n) = |\det(B)|.
+  \end{align*}
+\end{proof}
+\begin{corollary}
+  Let $\L$ be a lattice with bases $B_1, B_2$. Then, $\det(\L)$ is independent
+  of its bases.
+\end{corollary}
+\begin{proof}
+  By Theorem \ref{thm:lattice_change_of_basis}, there is a matrix $A$ such that
+  $\det(A) = \pm 1$ and
+  \[
+    AB_1 = B_2.
+  \]
+  Then, from the definition of covolume, we have
+  \begin{align*}
+    Vol(\F_{B_1}) &= |\det(B_1)| \\
+                  &= |\det(A)| \cdot |\det(B_1)| \\
+                  &= |\det(AB_1) | \\
+                  &= |\det(B_2)| \\
+                  &= Vol(\F_{B_2}).
+  \end{align*}
+\end{proof}
+\subsection{Mathematical Set-up III: Computational Lattice Problems}
 SVP
 CVP
 Babai's algorithm
 \subsection{The Construction: GGH}
+\paragraph{} To see the ideas presented above work in practice, we give a
+straightforward application of them in a cryptosystem developed due to
+Goldreich, Goldwasser and Halevi, named GGH in their honour \cite{goldreich1997public}.
 \paragraph{Key Generation}
+\paragraph{} Assume the security parameter is $\lambda = 1^n$. Generate a basis
+$V \in \Int^{n\times n}$ with small Hadamard ratio. Then, generate a random matrix
+$U \in \Int^{n\times n}$ such that $\det(U) = \pm 1$. Calculate $W = UV$. Output
+$(pk, sk) = (W, U)$.
 \paragraph{Encryption}
+Let $pk = W$ and $m \in \Int^n$ be the message that we want to encrypt. Let $r
+\in \Int^n$ be a random vector with $\norm{r}$ small. Then, caluclate and output
+$c = Wm + r$.
 \paragraph{Decryption}
+Let $pk = W$, $sk = V$ and $c$ the ciphertext we want to decrypt. Use Babai's
+algorithm with $V$ and $c$ as inputs to obtain a vector $\hat{m} \in \Int^n$. Then multiply
+$\hat{m}$ by $W^{-1}V$ on the left and output the answer.
 \paragraph{Correctness}
+Let $pk = W$, $sk = V$ and $m$ be the message we wish to encrypt. Then, $c =
+\Enc_{pk}(m) = Wm + r$, for some small $r$. Now, examining $\Dec_{sk}(c)$, we
+find that first we calculate $\hat{m} = \lfloor V^{-1}c \rfloor$. Since $V$'s
+Hadamard ratio is high we will have decoded to the closest lattice point, hence
+we will now have $V\hat{m} = Wm$. Hence by multiplying $\hat{m}$ by $W^{-1}V$ on
+the left, we get
+\[
+  m' = W^{-1}V\hat{m} = W^{-1}Wm = m.
+\]
+Hence the cipher is correct.
+\paragraph{Security}
 \section{Fully Homomorphic Encryption}
 \subsection{Dr Craig Gentry's Scheme}
 
