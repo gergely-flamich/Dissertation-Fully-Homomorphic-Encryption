@@ -1589,9 +1589,14 @@ We note that by the above theorem $0 < \H(B) \leq 1$.
   \end{align*}
 \end{proof}
 \subsection{Mathematical Set-up III: Computational Lattice Problems}
-SVP
-CVP
-Babai's algorithm
+\paragraph{} Up to now, we only considered structures in the context of the
+properties that their axioms give rise to. In this section, we now switch
+contexts, and consider them from a computational point of view. In particular,
+we consider computational problems that arise from lattices that can be used to
+construct public-key ciphers.
+\subsubsection{Shortest Vector Problem}
+\subsubsection{Closest Vector Problem}
+\subsubsection{Ideal Coset Problem}
 \subsection{The Construction: GGH}
 \paragraph{} To see the ideas presented above work in practice, we give a
 straightforward application of them in a cryptosystem developed due to
@@ -1604,25 +1609,27 @@ $(pk, sk) = (W, U)$.
 \paragraph{Encryption}
 Let $pk = W$ and $m \in \Int^n$ be the message that we want to encrypt. Let $r
 \in \Int^n$ be a random vector with $\norm{r}$ small. Then, caluclate and output
-$c = Wm + r$.
+$c = mW + r$.
 \paragraph{Decryption}
 Let $pk = W$, $sk = V$ and $c$ the ciphertext we want to decrypt. Use Babai's
 algorithm with $V$ and $c$ as inputs to obtain a vector $\hat{m} \in \Int^n$. Then multiply
-$\hat{m}$ by $W^{-1}V$ on the left and output the answer.
+$\hat{m}$ by $VW^{-1}$ on the right and output the answer.
 \paragraph{Correctness}
 Let $pk = W$, $sk = V$ and $m$ be the message we wish to encrypt. Then, $c =
-\Enc_{pk}(m) = Wm + r$, for some small $r$. Now, examining $\Dec_{sk}(c)$, we
-find that first we calculate $\hat{m} = \lfloor V^{-1}c \rfloor$. Since $V$'s
+\Enc_{pk}(m) = mW + r$, for some small $r$. Now, examining $\Dec_{sk}(c)$, we
+find that first we calculate $\hat{m} = \lfloor cV^{-1} \rfloor$. Since $V$'s
 Hadamard ratio is high we will have decoded to the closest lattice point, hence
-we will now have $V\hat{m} = Wm$. Hence by multiplying $\hat{m}$ by $W^{-1}V$ on
+we will now have $\hat{m}V = mW$. Hence by multiplying $\hat{m}$ by $VW^{-1}$ on
 the left, we get
 \[
-  m' = W^{-1}V\hat{m} = W^{-1}Wm = m.
+  m' = \hat{m}VW^{-1} = mWW^{-1} = m.
 \]
 Hence the cipher is correct.
 \paragraph{Security}
 \section{Fully Homomorphic Encryption}
 \subsection{Dr Craig Gentry's Scheme}
+\begin{defintion}{}
+\end{definition}
 
 \printbibliography
 
