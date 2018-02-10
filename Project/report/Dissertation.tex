@@ -33,6 +33,8 @@
 \newcommand{\Dec}{\texttt{Dec}}
 \newcommand{\Gen}{\texttt{Gen}}
 
+\newcommand{\Vol}{\text{Vol}}
+
 \newcommand{\M}{\mathcal{M}}
 \renewcommand{\C}{\mathcal{C}}
 \newcommand{\K}{\mathcal{K}}
@@ -1354,7 +1356,7 @@ to the tool that helped the scheme come to life: lattices. We will define what a
 lattice is and see some key definitions and theorems. We will close the section
 with a construction of a simple lattice-based crypto scheme to illustrate how
 the theory may be used to construct secure schemes with the appropriate choice
-of a trapdoor.
+of a trapdoor. \cite{hoffstein2014introduction}
 \subsection{Mathematical Set-up I: Vector Spaces and Rings}
 \paragraph{} As it happens, lattices and then later a special species of them
 that will be of particular interest to us rely on the theory of vector
@@ -1533,7 +1535,7 @@ The following theorem is key for cryptographic application of lattices:
 \begin{theorem}{Hadamard's inequality}
   Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots \vec{v}_n\}$. Then
 \[
-  \text{Vol}(\L) \leq \norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}.
+  \Vol(\L) \leq \norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}.
 \]
 \end{theorem}
 Based on the above theorem, we will make the following definition:
@@ -1541,7 +1543,7 @@ Based on the above theorem, we will make the following definition:
   Let $\L$ and $B$ as in the theorem above. Then, the \textbf{Hadamard ratio of $B$}
   is defined as
   \[
-    \H(B) = \left( \frac{\text{Vol}(\L)}{\norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}} \right)^{\frac1n}.
+    \H(B) = \left( \frac{\Vol(\L)}{\norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}} \right)^{\frac1n}.
   \]
 \end{definition}
 We note that by the above theorem $0 < \H(B) \leq 1$.
@@ -1551,14 +1553,14 @@ We note that by the above theorem $0 < \H(B) \leq 1$.
 \begin{proof}
   We clearly have
   \[
-    Vol(\F_B) = \int_{\F_B} dx_1dx_2\cdots dx_n.
+    \Vol(\F_B) = \int_{\F_B} dx_1dx_2\cdots dx_n.
   \]
   We do not know much about the variables $x_i$, so using the defintion of the
   fundamental domain, we change the variables of the integration:
   \[
     \vec{x} = \vec{t} \cdot B
   \]
-  where $\vec{x} = [x_1, \hdots x_n] \Reals^n, \vec{t} = [t_1, \hdots, t_n] \in
+  where $\vec{x} = [x_1, \hdots x_n] \in \Reals^n, \vec{t} = [t_1, \hdots, t_n] \in
   [0, 1)^n$. Then, the Jacobian of the above equation if $B$.
   Note, that $[0, 1)^n = C_n$ is the $n$-dimensional unit cube, and
   hence $C_n$ is precisely the pre-image of $\F_B$ under the map $B$. Hence, $BC_n = \F_B$.
@@ -1566,7 +1568,7 @@ We note that by the above theorem $0 < \H(B) \leq 1$.
   \begin{align*}
     \int_{\F_B} dx_1dx_2\cdots dx_n &= \int_{BC_n} dx_1dx_2\cdots dx_n =
                                       \int_{C_n} |\det(B)|dt_1dt_2\cdots dt_n \\
-                                    &= |\det(B)|Vol(C_n) = |\det(B)|.
+                                    &= |\det(B)|\Vol(C_n) = |\det(B)|.
   \end{align*}
 \end{proof}
 \begin{corollary}
@@ -1581,11 +1583,11 @@ We note that by the above theorem $0 < \H(B) \leq 1$.
   \]
   Then, from the definition of covolume, we have
   \begin{align*}
-    Vol(\F_{B_1}) &= |\det(B_1)| \\
+    \Vol(\F_{B_1}) &= |\det(B_1)| \\
                   &= |\det(A)| \cdot |\det(B_1)| \\
                   &= |\det(AB_1) | \\
                   &= |\det(B_2)| \\
-                  &= Vol(\F_{B_2}).
+                  &= \Vol(\F_{B_2}).
   \end{align*}
 \end{proof}
 \subsection{Mathematical Set-up III: Computational Lattice Problems}
@@ -1597,6 +1599,8 @@ construct public-key ciphers.
 \subsubsection{Shortest Vector Problem}
 \subsubsection{Closest Vector Problem}
 \subsubsection{Ideal Coset Problem}
+\cite{Babai1986}
+\cite{AjtaiLatticeAvgWorst}
 \subsection{The Construction: GGH}
 \paragraph{} To see the ideas presented above work in practice, we give a
 straightforward application of them in a cryptosystem developed due to
@@ -1628,7 +1632,7 @@ Hence the cipher is correct.
 \paragraph{Security}
 \section{Fully Homomorphic Encryption}
 \subsection{Dr Craig Gentry's Scheme}
-\begin{defintion}{}
+\begin{definition}
 \end{definition}
 
 \printbibliography
