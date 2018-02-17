@@ -38,9 +38,9 @@ def key_gen(N = 5, t = 32, num_retry = 10):
 
     print("HNF in correct form after {} tries.".format(counter))
 
-    w_i = filter(lambda x: x % 2 == 1, w_prime)
+    w_i = filter(lambda x: abs(x) % 2 == 1, w_prime)
 
-    return (N, r, d), (d, w_i[0], N, w, v)
+    return (N, centered_mod(r, d), d), (d, w_i[0], N, w, v)
 
 def hadamard_ratio(basis):
     if basis is None:
@@ -57,7 +57,7 @@ def construct_hnf(n, d, r):
 
     r_prime = mod(r, d)
 
-    first_col = [-r] + [-centered_mod(r_prime^i, d) for i in xrange(2, n)]
+    first_col = [-centered_mod(r_prime^i, d) for i in xrange(1, n)]
 
     return block_matrix([[matrix(ZZ, first_row)],
                          [matrix(ZZ, first_col).transpose(), identity_matrix(n-1,n-1)]],
@@ -112,17 +112,21 @@ def inefficient_encrypt(pk, plaintext):
 
     u = R(u_coeff_vec)
 
-    m_prime = R([plaintext])
-
-    a = 2 * u + m_prime
+    a = 2 * u + plaintext
 
     B = construct_hnf(n, d, r)
 
     Binv = B.inverse()
 
-    a_prime = vector(list(a))
+    a_prime = vector(a)
 
-    return a_prime - vector(map(round, (a_prime * Binv))) * B, u
+    amodB = (vector(map(round, (a_prime * Binv))) * B)
+
+    ciphertext = a_prime - amodB
+
+    print("a(r) mod d: {}. Is within required bounds ({}): {}".format(ciphertext[0], d//2, abs(ciphertext[0])< d//2))
+
+    return ciphertext, u, amodB
 
 
 def decrypt(sk, ciphertext):
@@ -138,11 +142,17 @@ def inefficient_decrypt(sk, ciphertext):
     W = w.matrix()
     V = v.matrix()
 
+    print(ciphertext)
+
     c_prime = (ciphertext * W)/d
 
+    print(c_prime)
+
     c_prime = vector(map(round, c_prime))
+    print(c_prime)
 
     a = ciphertext - c_prime * V
+    print(a)
 
     return a[0].mod(2)
 
