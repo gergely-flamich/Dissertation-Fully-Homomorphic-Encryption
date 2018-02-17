@@ -1,42 +1,154 @@
-def ideal_gen(security_param, ring, ideal_i):
-    pass
+def key_gen(N = 5, t = 32, num_retry = 10):
+    Zx = PolynomialRing(ZZ, 'x')
 
-def key_gen(security_param, l_samp = None):
-    """
-    Generates the key for Craig Gentry's somewhat homomorphic scheme.
+    n = 2^N
 
-    security_param - dimension of the ideal lattice
-    l_samp - bound on the norm of the random element from Z[x]/f
-    """
+    f = Zx(x^n + 1)
 
-    # Just have a shorter name for the security parameter internally
-    n = security_param
+    R = Zx.quotient(f)
 
-    # Create the quotient ring Z[x]/f with f(x) = x^n - 1.
-    # TODO: choose different f, with f irreducible. In particular, attempt Thm 7.4.2
-    qring = PolynomialRing(ZZ, 'x').quotient(x^n - 1)
+    lower_bound = -2^(t-1)
+    upper_bound = 2^(t-1)
 
-    # s will be the generator for the ideal I.
-    s = qring(2)
+    counter = 0
 
-    print(s)
+    for i in xrange(num_retry):
 
-    return v
+        counter = i + 1
 
-def samp(ideal_i, plaintext):
-    pass
+        v = R.random_element(x=lower_bound, y=upper_bound)
 
-def encrypt(pk, plaintext):
-    pass
+        V = v.matrix()
+
+        (d, w, _) = xgcd(v.lift(), f)
+
+        w = R(w)
+
+        Zd = Zmod(d)
+
+        w_prime = list(w)
+
+        try:
+            r = Zd(w[0]) * Zd(w[1]).inverse_of_unit()
+        except ArithmeticError:
+            continue
+
+        if r^n == -1:
+            break
+
+    print("HNF in correct form after {} tries.".format(counter))
+
+    w_i = filter(lambda x: x % 2 == 1, w_prime)
+
+    return (N, r, d), (d, w_i[0], N, w, v)
+
+def hadamard_ratio(basis):
+    if basis is None:
+        return 0
+
+    vol = abs(det(basis))
+    block = product(map(norm, basis))
+
+    return n((vol/block)^(1/basis.rank()))
+
+def construct_hnf(n, d, r):
+
+    first_row = [d] + [0]*(n - 1)
+
+    r_prime = mod(r, d)
+
+    first_col = [-r] + [-centered_mod(r_prime^i, d) for i in xrange(2, n)]
+
+    return block_matrix([[matrix(ZZ, first_row)],
+                         [matrix(ZZ, first_col).transpose(), identity_matrix(n-1,n-1)]],
+                        subdivide = False)
+
+def encrypt(pk, plaintext, u=None):
+
+    if plaintext != 0 and plaintext != 1:
+        raise ArithmeticError("Plaintext must be a bit!")
+
+    N, r, d = pk
+
+    Zx = PolynomialRing(ZZ, 'x')
+
+    n = 2^N
+
+    f = Zx(x^n + 1)
+
+    R = Zx.quotient(f)
+
+    p = 10/n
+
+    if u is None:
+        u_coeff_vec = [0 if abs(candidate) > p else sgn(candidate) for candidate in random_vector(RR, n)]
+        u = R(u_coeff_vec)
+
+    print("Perturbation is {} dimensional and has {} non-zero entries.".format(n, sum(map(abs, u))))
+
+    m_prime = R([plaintext])
+
+    a = 2 * u + m_prime
+
+    return centered_mod(a.lift()(r), d)
+
+def inefficient_encrypt(pk, plaintext):
+    if plaintext != 0 and plaintext != 1:
+        raise ArithmeticError("Plaintext must be a bit!")
+
+    N, r, d = pk
+
+    Zx = PolynomialRing(ZZ, 'x')
+
+    n = 2^N
+
+    f = Zx(x^n + 1)
+
+    R = Zx.quotient(f)
+
+    p = 10/n
+
+    u_coeff_vec = [0 if abs(candidate) > p else sgn(candidate) for candidate in random_vector(RR, n)]
+
+    u = R(u_coeff_vec)
+
+    m_prime = R([plaintext])
+
+    a = 2 * u + m_prime
+
+    B = construct_hnf(n, d, r)
+
+    Binv = B.inverse()
+
+    a_prime = vector(list(a))
+
+    return a_prime - vector(map(round, (a_prime * Binv))) * B, u
+
 
 def decrypt(sk, ciphertext):
-    pass
+    w_i, d, _, _, _ = sk
 
-def evaluate(pk, circuit, ct_vec):
-    pass
+    b = centered_mod(ciphertext * w_i, d).mod(2)
 
-def add(pk, ct_1, ct_2):
-    return ct_1 + ct_2
+    return b
 
-def mult(pk, ct_1, ct_2):
-    return ct_1 * ct_2
+def inefficient_decrypt(sk, ciphertext):
+    _, d, N, w, v = sk
+
+    W = w.matrix()
+    V = v.matrix()
+
+    c_prime = (ciphertext * W)/d
+
+    c_prime = vector(map(round, c_prime))
+
+    a = ciphertext - c_prime * V
+
+    return a[0].mod(2)
+
+def centered_mod(x, modulus):
+    x = ZZ(x)
+    res = x.mod(modulus)
+    half_mod = (modulus + 1)//2
+    return  res if res < half_mod else res - modulus
+
