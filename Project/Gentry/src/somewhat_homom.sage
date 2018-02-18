@@ -26,8 +26,6 @@ def key_gen(N = 5, t = 32, num_retry = 10):
 
         Zd = Zmod(d)
 
-        w_prime = list(w)
-
         try:
             r = Zd(w[0]) * Zd(w[1]).inverse_of_unit()
         except ArithmeticError:
@@ -38,7 +36,10 @@ def key_gen(N = 5, t = 32, num_retry = 10):
 
     print("HNF in correct form after {} tries.".format(counter))
 
-    w_i = filter(lambda x: abs(x) % 2 == 1, w_prime)
+    w_i = filter(lambda x: x % 2 == 1, w)
+
+    d = ZZ(d)
+    r = ZZ(r)
 
     return (N, centered_mod(r, d), d), (d, w_i[0], N, w, v)
 
@@ -80,17 +81,18 @@ def encrypt(pk, plaintext, u=None):
 
     p = 10/n
 
+    p = 0.5 if p > 0.5 else p
+
     if u is None:
         u_coeff_vec = [0 if abs(candidate) > p else sgn(candidate) for candidate in random_vector(RR, n)]
         u = R(u_coeff_vec)
 
     print("Perturbation is {} dimensional and has {} non-zero entries.".format(n, sum(map(abs, u))))
+    print("Namely, u(x) = {}".format(u))
 
-    m_prime = R([plaintext])
+    a = 2 * u
 
-    a = 2 * u + m_prime
-
-    return centered_mod(a.lift()(r), d)
+    return (a.lift()(r) + plaintext).mod(d)
 
 def inefficient_encrypt(pk, plaintext):
     if plaintext != 0 and plaintext != 1:
@@ -120,39 +122,44 @@ def inefficient_encrypt(pk, plaintext):
 
     a_prime = vector(a)
 
-    amodB = (vector(map(round, (a_prime * Binv))) * B)
+    amodB = (vector(map(c_round, (a_prime * Binv))) * B)
 
     ciphertext = a_prime - amodB
 
     print("a(r) mod d: {}. Is within required bounds ({}): {}".format(ciphertext[0], d//2, abs(ciphertext[0])< d//2))
 
-    return ciphertext, u, amodB
+    return ciphertext, u
 
 
 def decrypt(sk, ciphertext):
-    w_i, d, _, _, _ = sk
+    d, w_i, _, _, _ = sk
 
-    b = centered_mod(ciphertext * w_i, d).mod(2)
+    e = (ciphertext * w_i).mod(d)
+
+    b = e.mod(2)
+
+    if d % 2 == 1 and 2*e >= d:
+        b = 1 - b
 
     return b
 
 def inefficient_decrypt(sk, ciphertext):
-    _, d, N, w, v = sk
+    d, w_i, N, w, v = sk
 
     W = w.matrix()
     V = v.matrix()
 
-    print(ciphertext)
+    print("Received ciphertext: {}".format(ciphertext))
 
     c_prime = (ciphertext * W)/d
 
-    print(c_prime)
+    print("c * V^-1 = {}".format(c_prime))
 
-    c_prime = vector(map(round, c_prime))
-    print(c_prime)
+    c_prime = vector(map(c_round, c_prime))
+    print("Rounded: {}".format(c_prime))
 
     a = ciphertext - c_prime * V
-    print(a)
+    print("Fractional part is therefore {}".format(a))
 
     return a[0].mod(2)
 
@@ -162,3 +169,20 @@ def centered_mod(x, modulus):
     half_mod = (modulus + 1)//2
     return  res if res < half_mod else res - modulus
 
+
+def c_round(x):
+    return floor(x + 0.5)
+
+def test_ct(pk, sk, n = 100):
+
+    zero_counter = 0
+    one_counter = 0
+
+    for i in xrange(n):
+        if decrypt(sk, encrypt(pk, 0)) != 0:
+            zero_counter += 1
+        if decrypt(sk, encrypt(pk, 1)) != 1:
+            one_counter += 1
+
+    print("Encryptions of 0 failed {}/{}".format(zero_counter, n))
+    print("Encryptions of 1 failed {}/{}".format(one_counter, n))
