@@ -969,7 +969,8 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
     \If{$c = c_0$}{ \Return 0 }\Else{ \Return 1} \EndIf
     \State
   \end{algorithmic}
-  Since $\Enc$ is deterministic, $\A$ will guess correctly with probability 1,
+  Since $\Enc$ is deterministic, $m_0, m_1$ will always be encrypted to $c_0,
+  c_1$, respectively. This means that $\A$ will guess correctly with probability 1,
   and hence $\Pi$ is not IND-atk secure.
 \end{proof}
 \begin{corollary}
@@ -978,24 +979,26 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
 \end{corollary}
 \begin{proof}
   Assume $\Pi$ is NM-atk secure. By Theorem \ref{thm:nm_imply_ind} we have that
-  $\Pi$ is IND-atk secure, but by Theorem \ref{thm:determ_enc_insecure} we know
-  that $\Pi$ cannot be IND-atk secure, a contradiction, therefore our initial
+  $\Pi$ is IND-atk secure, but since $\Enc$ is deterministic, by Theorem \ref{thm:determ_enc_insecure} we have
+  that $\Pi$ cannot be IND-atk secure, a contradiction. Hence, our initial
   assumption must be false.
 \end{proof}
 \subsection{Security under multiple encryptions}
 \paragraph{} The reader might find that we focused solely on the case when the
 adversary is only observing a single ciphertext, and may wonder if it is perhaps
-unrealistic to only consider this simple case. Luckily, it can be shown that \textbf{goal-atk}
-security under a single encryption implies \textbf{goal-atk} security under
+unrealistic to only consider this simple case. Luckily, it can be shown that \textit{goal-atk}
+security under a single encryption implies \textit{goal-atk} security under
 \textbf{multiple} encryptions. Formalising the notion of multiple encryptions
 takes some effort and proving the above claim is non-trivial, however, we will
 only acknowledgeme the result and not prove it. For a rigorous treatment see
-Section 11 in \ref{katz2014introduction} (in particular Theorem 11.6).
+Section 11 in \cite{katz2014introduction} (in particular Theorem 11.6).
 \section{Public-Key Crypto Schemes}
 In this section we finally illustrate how the previously discussed ideas can be
 combined into a concrete scheme. However, before we can do that we must make a
 brief detour to prove some results we will be using later.
-\subsection{Mathematical set-up}
+\subsection{Hardness assumptions}
+\subsection{The RSA cryptoscheme}
+\subsubsection{Mathematical set-up}
 \begin{theorem}{Order}
   Let $G$ be a finite group and $g \in G$. Then, there exist positive integers
   $n$ such that $g^n = 1$. We shall call the smallest such integer the order of
@@ -1074,7 +1077,7 @@ Now, we are ready to state the theorem of our interest:
   By the above conditions $a \in \Int^*_n$. Then, the statement is a special
   case of Corollary \ref{thm:groupordpow}, where $(G, \circ) = (\Int^*_n, \times)$.
 \end{proof}
-\subsection{The Construction: RSA}
+\subsubsection{The Construction: RSA}
 \paragraph{}
 We are now ready to construct the well-known RSA scheme invented by Rivest,
 Shamir and Adleman in 1978 \cite{rivest1978method}. As mentioned above, computationally secure schemes rely on
@@ -1124,6 +1127,7 @@ Decrypting, we get
      &= m^1 \mod N \quad \text{Since $j$ is the multiplicative inverse of $i$ mod $N$ by definition}
 \end{align*}
 Since $m < N$ we may omit the mod $N$ on the last line. Therefore m = m' and so the scheme is correct.
+\subsubsection{Security of our construction}
 \section{Homomorphic Crypto Schemes}
 \paragraph{}
 At this point, we start to finally focus on the topic of the dissertation:
@@ -1133,7 +1137,8 @@ observe the operation take place, but both the inputs and the output of it
 remain secret. In this section we give the formal definition, construct an
 example scheme known as the Paillier scheme. Finally, we close with a discussion
 on the limitation of homomorphic schemes.
-\subsection{Definition}
+\subsection{What is homomorphic encryption?}
+\subsubsection{The definition}
 \begin{definition}{Homomorphic Encryption}
   Let $\Pi = (\Gen, \Enc, \Dec)$ be a cipher with message space $\M$ and cipher
   space $\C$. Furtermore, let $(\M, \circ)$ and $(\C, \oplus)$ be groups where
@@ -1144,6 +1149,9 @@ on the limitation of homomorphic schemes.
     m_1 \circ m_2 = \Dec_{k_\Dec}(c_1 \oplus c_2).
   \]
 \end{definition}
+\subsubsection{Limitations}
+Cannot be NM-atk secure
+\cite{Yasuda2018}
 \subsection{Paillier's Scheme}
 \paragraph{}
 Here we will give a concrete example of a homomorphic scheme, called the Paillier
@@ -1151,7 +1159,7 @@ cryptosystem, named after Pascal Paillier, who invented it in 1999
 \cite{paillier1999public}. Once again, however, before we discuss the
 construction of the scheme, we must familiarize ourselves with the theory upon
 which it is built.
-\subsection{Mathematical Set-up}
+\subsubsection{Mathematical Set-up}
 The cryptosystem is built on a particular isomorphism between two groups, that
 we will be proving here. However, before we can do that, we revisit the $\phi$
 function.
@@ -1357,7 +1365,7 @@ precisely $N$ elements mapping to the same residue, since all elements of the
 form $(a, b^d)$ map to $(0, b)$, and since $a\in \Int_N$, there are $N$ choices
 for $a$.
 \paragraph{} Now, we have all the tools required to construct the scheme.
-\subsection{The Construction: Paillier Cryptoscheme}
+\subsubsection{The Construction: Paillier Cryptoscheme}
 \paragraph{Key Generation}
 Pick two primes of length equal to the security parameter, i.e. $p, q$ primes,
 such that $|p| = |q| = |\lambda|$. Calculate $N = pq$, $N^2$ and $\phi(N) = (p -
@@ -1391,6 +1399,7 @@ Then, we have
 \end{align*}
 Thus, $m = \Enc_{pk}(\Dec_{sk}(m))$, and so the scheme is correct, and therefore
 a cipher.
+\subsubsection{The security of our construction}
 \section{Lattices}
 \paragraph{}
 In the previous section we have seen the motivating idea behind Gentry's scheme:
