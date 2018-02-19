@@ -770,6 +770,7 @@ illuminating in any way.
 \paragraph{} Now, how are frameworks of fixed threat model related? In this
 section, we give two results based on our definitions, both due to \cite{bellaresecurityrelations}.
 \begin{theorem}{NM-ATK $\Rightarrow$ IND-ATK}\\
+  \label{thm:nm_imply_ind}
   Let $\Pi$ be secure in the sense of NM-ATK then $\Pi$ is also secure in the
   sense of IND-ATK.
 \end{theorem}
@@ -948,6 +949,48 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
     \ref{sec:allrelations} for the explanation of the arrows.}
   \label{fig:secrelations}
 \end{figure}
+\subsection{Issues with deterministic schemes}
+\begin{theorem}
+  \label{thm:determ_enc_insecure}
+  Let $\Pi = (\Gen, \Enc, \Dec)$ be a (stateless) cipher, such that $\Enc$ is deterministic.
+  Then $\Pi$ cannot be IND-atk secure.
+\end{theorem}
+\begin{proof}
+  All we need is the encryption oracle in stage 1, which we do under every
+  threat model, since we are assuming that the publick key and $\Enc$ are known
+  to the adversary. Therefore, construct a $\PPT$ adversary $\A$ as follows:
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
+    \State $m_0, m_1 \leftarrow \M$.
+    \State Calculate $c_i = \Enc_{pk}(m_i)$ for $i \in \{0, 1\}$
+    \State \Return $(m_0, m_1)$
+    \State
+    \State \textbf{Algorithm} $\A(c)$ \textbf{Stage 2}
+    \If{$c = c_0$}{ \Return 0 }\Else{ \Return 1} \EndIf
+    \State
+  \end{algorithmic}
+  Since $\Enc$ is deterministic, $\A$ will guess correctly with probability 1,
+  and hence $\Pi$ is not IND-atk secure.
+\end{proof}
+\begin{corollary}
+  Let $\Pi = (\Gen, \Enc, \Dec)$ be a (stateless) cipher, such that $\Enc$ is deterministic.
+  Then $\Pi$ cannot be NM-atk secure.
+\end{corollary}
+\begin{proof}
+  Assume $\Pi$ is NM-atk secure. By Theorem \ref{thm:nm_imply_ind} we have that
+  $\Pi$ is IND-atk secure, but by Theorem \ref{thm:determ_enc_insecure} we know
+  that $\Pi$ cannot be IND-atk secure, a contradiction, therefore our initial
+  assumption must be false.
+\end{proof}
+\subsection{Security under multiple encryptions}
+\paragraph{} The reader might find that we focused solely on the case when the
+adversary is only observing a single ciphertext, and may wonder if it is perhaps
+unrealistic to only consider this simple case. Luckily, it can be shown that \textbf{goal-atk}
+security under a single encryption implies \textbf{goal-atk} security under
+\textbf{multiple} encryptions. Formalising the notion of multiple encryptions
+takes some effort and proving the above claim is non-trivial, however, we will
+only acknowledgeme the result and not prove it. For a rigorous treatment see
+Section 11 in \ref{katz2014introduction} (in particular Theorem 11.6).
 \section{Public-Key Crypto Schemes}
 In this section we finally illustrate how the previously discussed ideas can be
 combined into a concrete scheme. However, before we can do that we must make a
