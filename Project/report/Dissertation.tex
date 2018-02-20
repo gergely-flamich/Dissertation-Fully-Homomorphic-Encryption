@@ -61,6 +61,8 @@
 
 \newcommand{\Expr}[2]{\texttt{Expr}^{\texttt{#1}}_{#2}}
 \newcommand{\Adv}[2]{\texttt{Adv}^{\texttt{#1}}_{#2}}
+\newcommand{\GenModulus}{\texttt{GenModulus}}
+\newcommand{\GenRSA}{\texttt{GenRSA}}
 
 \newcommand{\norm}[1]{||#1||}
 
@@ -734,6 +736,7 @@ Ciphertext Attack (CCA2). Its definition is not very different from that of CCA1
   $\A$ may not query the decryption oracle on the challenge ciphertext.
 \end{definition}
 \subsection{Putting in together: Security frameworks}
+\label{sec:security_frameworks}
 \paragraph{} We can now put what we know together, and obtain valid security
 frameworks! Namely, the 6 we can get from what we have seen above are: IND-CPA,
 IND-CCA1, IND-CCA2, NM-CPA, NM-CCA1 and NM-CCA2. A natural question to ask then,
@@ -974,6 +977,7 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
   and hence $\Pi$ is not IND-atk secure.
 \end{proof}
 \begin{corollary}
+  \label{cor:determ_nm_insecure}
   Let $\Pi = (\Gen, \Enc, \Dec)$ be a (stateless) cipher, such that $\Enc$ is deterministic.
   Then $\Pi$ cannot be NM-atk secure.
 \end{corollary}
@@ -993,10 +997,102 @@ takes some effort and proving the above claim is non-trivial, however, we will
 only acknowledgeme the result and not prove it. For a rigorous treatment see
 Section 11 in \cite{katz2014introduction} (in particular Theorem 11.6).
 \section{Public-Key Crypto Schemes}
-In this section we finally illustrate how the previously discussed ideas can be
-combined into a concrete scheme. However, before we can do that we must make a
-brief detour to prove some results we will be using later.
+\paragraph{} When one first encounters the concept ciphers it is tempting to believe that
+the only way of obfuscated information exchange may only work if the method that
+decrypts some text is the ``inverse'' of the method that was used to encrypt it.
+The analogy being here that a cipher is a ``chest'' into which the honest
+parties can place their information and ``lock'' it and ``unlock'' it with the
+same key. Indeed, this general belief was held until quite recently, until the
+groundbreaking work of Diffie and Hellman \cite{diffie1976new} and Rivest,
+Shamir and Adleman \cite{rivest1978method}. They introduced the concept of
+asymmetric encryption, where, continuing with the chest analogy, the party who
+wished send a message could still place the message in the chest, however, they
+would lock it with a padlock (the public key) and only the receiving party would
+have the key to the padlock (the private key). Formally, this meant that the
+secret key could not be obtained from the public key in polynomial time with
+better than negligible probability. Next, we will discuss this idea and then
+give a basic example of an asymmetric cipher.
 \subsection{Hardness assumptions}
+\paragraph{} All asymmetric schemes rely on certain assumptions about computing
+values of some functions with or without the knowledge of some secret piece of
+information is either ``easy'' or ``hard''. We will call such functions
+\textbf{trapdoors} or \textbf{trapdoor functions}. The idea then is use the
+function without the secret to perform encryption and use its inverse with the
+secret to decrypt. Sadly, we do not have space for a
+full formal discussion on these objects (namely one-way functions, trapdoor
+functions and hard-core predicates). For a rigorous treatment, see Chapter 7 in \cite{katz2014introduction}.
+Instead, we focus on exposing a few examples, to which we will come back in
+later sections.
+\paragraph{} The way we will approach defining our hardness assumptions will be
+familiar to the reader: it is in the same vein as our definitions of security
+frameworks! In particular, we will rely on the notion of experiments. Thus, we
+begin with our first experiment:
+\begin{definition}{The Factoring Experiment} The factoring experiment
+  $\Expr{factor}{\A, \GenModulus}(n)$ involving a $\PPT$ adversary $\A$ and
+  $\PPT$ algorithm $\GenModulus$ is as follows:
+  \begin{enumerate}
+  \item We run $\GenModulus(1^n)$, obtaining the tuple $(N, p, q)$, with $p, q$
+    primes, $|p| = |q| = n$ and $N = pq$.
+  \item $\A$ is given $N$, and outputs some $p', q' > 1$.
+  \item We set $\Expr{factor}{\A, \GenModulus}(n) = 1$ if $p'q' = N$ and $0$ otherwise.
+  \end{enumerate}
+\end{definition}
+There are two details in the above definition that are currently unclear: do
+there always exist two primes of equal (binary) length and does such a
+$\PPT$ algorithm $\GenModulus$ exist? Luckily for us the answer to both
+questions is ``yes''. The first follows from the (improved) Bertrand-Chebyshev
+theorem. As for the second problem, one such algorithm uses the so-called
+\textit{Miller-Rabin prime test}, which runs
+in polynomial time in $n$ and fails with negligible probability $\negl(n)$. For
+a detailed discussion on $\PPT$ prime testing, see Chapter 3 Section 4 in \cite{hoffstein2014introduction}.
+Now, we can formally define the factoring assumption:
+\begin{definition}{The Factoring Assumption}
+  Factoring is hard relative to $\GenModulus$ if for all $\PPT$ adversaries $\A$
+  we have
+  \[
+    \Prob(\Expr{factor}{\A, \GenModulus}(n) = 1) \leq \negl(n).
+  \]
+\end{definition}
+Essentially, the above definition says that factoring gets very hard as the
+length of the primes used increases. Although this problem has been known and
+studied for a very long time, it does not yield a straightforward trapdoor.
+Instead, we will rely (for now) on the following experiment and hardness assumption:
+\begin{definition}{The RSA Experiment}
+The RSA experiment $\Expr{RSA-inv}{\A, \GenRSA}(n)$ involving a $\PPT$ adversary $\A$ and
+  $\PPT$ algorithm $\GenRSA$ is as follows:
+  \begin{enumerate}
+  \item We run $\GenRSA(1^n)$, obtaining the tuple $(N, e, d)$
+  \item We choose uniformly a $y \leftarrow \Int_N^*$.
+  \item $\A$ is given $N, e, y$, and outputs some $x \in \Int_N^*$.
+  \item We set $\Expr{RSA-inv}{\A, \GenRSA}(n) = 1$ if $x^e = y \mod N$ and $0$ otherwise.
+  \end{enumerate}
+\end{definition}
+  We have our experiment, now we can define our assumption:
+ \begin{definition}{The RSA Assumption}
+  The RSA problem is hard relative to $\GenRSA$ if for all $\PPT$ adversaries $\A$
+  we have
+  \[
+    \Prob(\Expr{RSA-inv}{\A, \GenRSA}(n) = 1) \leq \negl(n).
+  \]
+\end{definition}
+\paragraph{} Now, crucially, we will relate the RSA assumption to the factoring
+assumption, meaning we can rely on the hardness assumption of a much better
+studied problem. To do this, we will now show how to obtain the algorithm
+$\GenRSA$ from $\GenModulus$. Therefore, consider the following algorithm:
+  \begin{algorithmic}
+    \State $\GenRSA(1^n)$
+    \State $(N, p, q) \leftarrow \GenModulus(1^n)$
+    \State $\phi(N) := (p - 1)(q - 1)$
+    \State Choose $e > 1$ such that $\gcd(e, \phi(N)) = 1$
+    \State Compute $d := e^{-1} \mod N \quad$ (note $e^{-1} \mod N$ exists since
+    by the above step $e \in \Int^*_N$) 
+    \State \Return $(N, e, d)$
+    \State
+  \end{algorithmic}
+Therefore, we can now say that the RSA assumption holds, as long as the
+factoring assumption does! The great thing about the RSA assumption, however, is
+that it will give us a really nice trapdoor, that we will present in the next
+part of this section.
 \subsection{The RSA cryptoscheme}
 \subsubsection{Mathematical set-up}
 \begin{theorem}{Order}
@@ -1082,7 +1178,7 @@ Now, we are ready to state the theorem of our interest:
 We are now ready to construct the well-known RSA scheme invented by Rivest,
 Shamir and Adleman in 1978 \cite{rivest1978method}. As mentioned above, computationally secure schemes rely on
 a security parameter $\lambda \in \Nat$. Increasing it will make the scheme run
-slower, but will also make it more resilient.
+slower, but will also make it more resilient. 
 \paragraph{Key generation}
 \begin{enumerate}
 \item Pick 2 primes $p, q$ such that $2^\lambda < p, q <
@@ -1103,7 +1199,7 @@ Our message and cipher space are the binary string representations of naturals s
 \end{enumerate}
 \paragraph{Decryption}
 \begin{enumerate}
-\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'= c^j \mod
+\item Given private key $(N, j)$, and ciphertext $c \in \C$ calculate $m'''''''''= c^j \mod
   N$.
 \item Output $m'$.
 \end{enumerate}
@@ -1127,7 +1223,20 @@ Decrypting, we get
      &= m^1 \mod N \quad \text{Since $j$ is the multiplicative inverse of $i$ mod $N$ by definition}
 \end{align*}
 Since $m < N$ we may omit the mod $N$ on the last line. Therefore m = m' and so the scheme is correct.
-\subsubsection{Security of our construction}
+\subsubsection{Security of RSA}
+\paragraph{} Our construction above is what is usually referred to as ``textbook
+RSA'' since it presents the cipher's underlying mechanism in its purest form,
+with all technical improvements stripped away. Sadly, this also means that in
+the security framework we set up, our construction is insecure. In particular, we note that
+$\Enc$ is deterministic and that $\Pi$ is stateless, hence by Theorem
+\ref{thm:determ_enc_insecure} and Corollary \ref{cor:determ_nm_insecure} our
+construction is insecure in every security framework. This issue has been first
+pointed out by Goldwasser and Micali in \cite{goldwasser1984probabilistic}. 
+\paragraph{} However, the above does not mean that RSA is useless, in fact,
+quite the contrary. Under some (reasonable) assumptions an improved version of
+RSA using a method called Optimal Asymmetric Encryption Padding (OAEP) can be
+proven to be IND-CCA2 secure. See Section 11.5 in \cite{katz2014introduction}
+for a detailed discussion on the matter.
 \section{Homomorphic Crypto Schemes}
 \paragraph{}
 At this point, we start to finally focus on the topic of the dissertation:
@@ -1139,7 +1248,7 @@ example scheme known as the Paillier scheme. Finally, we close with a discussion
 on the limitation of homomorphic schemes.
 \subsection{What is homomorphic encryption?}
 \subsubsection{The definition}
-\begin{definition}{Homomorphic Encryption}
+\begin{definition}{Homomorphic Cipher}
   Let $\Pi = (\Gen, \Enc, \Dec)$ be a cipher with message space $\M$ and cipher
   space $\C$. Furtermore, let $(\M, \circ)$ and $(\C, \oplus)$ be groups where
   $\circ, \oplus$ are binary operations.
@@ -1150,8 +1259,52 @@ on the limitation of homomorphic schemes.
   \]
 \end{definition}
 \subsubsection{Limitations}
-Cannot be NM-atk secure
-\cite{Yasuda2018}
+\paragraph{} The reader may not yet see the advantages of homomorphic schemes,
+however, one aspect will be clear immediately: these ciphers are
+\textit{extremely} malleable. We formalise this in the theorem below:
+\begin{theorem}
+  Let $\Pi = (\Gen, \Enc, \Dec)$ be a homomorphic cipher. Then $\Pi$ cannot be
+  secure in the NM-atk sense. 
+\end{theorem}
+\begin{proof}
+  We prove the above claim by exhibiting a $\PPT$ adversary $\A$ which breaks
+  NM-atk security with non-negligable advantage. Concretely, define $\A$ as
+  follows:
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
+    \State Pick $M := \M \setminus \{1_\M\}$ such that $M$ samples uniformly,
+    i.e. every element has a $\frac1{|\M| - 1}$ chance of being picked.
+    \State \Return M
+    \State
+    \State \textbf{Algorithm} $\A(c)$ \textbf{Stage 2}
+    \State Calculate $c'' = c \oplus c$.
+    \State \Return $(c', R)$ where $R$ is the quadratic residue relation, i.e. $R(a,
+    b) = True$ iff $a \circ a = a^2 = b$.
+    \State
+  \end{algorithmic}
+  Let $m, \textbf{m}'$ as defined in the NM-atk security experiment. We note
+  that in our case we have $\textbf{m}' = \Dec_{sk}(c \oplus c) = m \circ m =
+  m^2$, where the penultimate equality follows, since $\Pi$ is a homomorphic cipher. 
+  \paragraph{Claim} $m \not\in \textbf{m}'$. \\
+  The above is equivalent to stating that $m \neq m^2$. Assume the contrary,
+  i.e. that $m = m^2$. Since $\M$ is a group, we have inverses. Multiplying by
+  $m^{-1}$ on both sides then, we get $1_\M = m$, which is impossible by the
+  definition of $\A$, hence our claim holds.
+  \paragraph{}
+  Since $\textbf{m}' = m^2$, we have $R(m, \textbf{m}') = True$ for any input.
+  Putting this together with our claim above, we have that $\A$ succeeds with
+  probability 1, hence clearly $\A$ has non-negligable advantage, thus $\Pi$
+  is not NM-atk secure.
+\end{proof}
+Now, the reader may assume that this must mean that the highest security level a
+homomorphic cipher may obtain is IND-CPA security. However, this assumption is
+not true! In particular, recall Section \ref{sec:security_frameworks} Figure
+\ref{fig:secrelations}, based on the results of \cite{bellaresecurityrelations}.
+We see that IND-CCA1 does not imply NM-CPA security, leaving open the
+possibility of IND-CCA1 secure homomorphic ciphers. A somewhat surprising recent
+result result is achieved by Yasuda et al. \cite{Yasuda2018}, where they construct a
+cipher where in fact the relationship between the message and the cipherspace is
+a ring homomorphism, and they show that their scheme is IND-CCA1 secure!
 \subsection{Paillier's Scheme}
 \paragraph{}
 Here we will give a concrete example of a homomorphic scheme, called the Paillier
@@ -1400,6 +1553,7 @@ Then, we have
 Thus, $m = \Enc_{pk}(\Dec_{sk}(m))$, and so the scheme is correct, and therefore
 a cipher.
 \subsubsection{The security of our construction}
+\paragraph{}
 \section{Lattices}
 \paragraph{}
 In the previous section we have seen the motivating idea behind Gentry's scheme:
