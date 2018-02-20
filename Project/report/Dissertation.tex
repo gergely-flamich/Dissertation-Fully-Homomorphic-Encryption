@@ -6,7 +6,6 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{mathtools}
-\usepackage[noend]{algpseudocode}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{scrextend}
@@ -14,7 +13,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
  \usepackage{booktabs}
- \usepackage{algpseudocode}
+ \usepackage{algorithm, algpseudocode}
  \usepackage{enumerate}
 \usepackage[table,xcdraw]{xcolor}
 \usepackage{tikz}
@@ -1068,7 +1067,8 @@ The RSA experiment $\Expr{RSA-inv}{\A, \GenRSA}(n)$ involving a $\PPT$ adversary
   \end{enumerate}
 \end{definition}
   We have our experiment, now we can define our assumption:
- \begin{definition}{The RSA Assumption}
+  \begin{definition}{The RSA Assumption}
+    \label{def:rsa_assumption}
   The RSA problem is hard relative to $\GenRSA$ if for all $\PPT$ adversaries $\A$
   we have
   \[
@@ -1079,8 +1079,9 @@ The RSA experiment $\Expr{RSA-inv}{\A, \GenRSA}(n)$ involving a $\PPT$ adversary
 assumption, meaning we can rely on the hardness assumption of a much better
 studied problem. To do this, we will now show how to obtain the algorithm
 $\GenRSA$ from $\GenModulus$. Therefore, consider the following algorithm:
+\begin{algorithm}
   \begin{algorithmic}
-    \State $\GenRSA(1^n)$
+    \State $\GenRSA(1^n):$
     \State $(N, p, q) \leftarrow \GenModulus(1^n)$
     \State $\phi(N) := (p - 1)(q - 1)$
     \State Choose $e > 1$ such that $\gcd(e, \phi(N)) = 1$
@@ -1089,6 +1090,9 @@ $\GenRSA$ from $\GenModulus$. Therefore, consider the following algorithm:
     \State \Return $(N, e, d)$
     \State
   \end{algorithmic}
+  \caption{GenRSA using GenModulus}
+  \label{alg:genrsa}
+\end{algorithm}
 Therefore, we can now say that the RSA assumption holds, as long as the
 factoring assumption does! The great thing about the RSA assumption, however, is
 that it will give us a really nice trapdoor, that we will present in the next
@@ -1179,17 +1183,20 @@ We are now ready to construct the well-known RSA scheme invented by Rivest,
 Shamir and Adleman in 1978 \cite{rivest1978method}. As mentioned above, computationally secure schemes rely on
 a security parameter $\lambda \in \Nat$. Increasing it will make the scheme run
 slower, but will also make it more resilient. 
+\paragraph{}
+We first look at the trapdoor that we wish to use. We will take the function $f_e:
+\Int_N \to \Int_N$ defined by
+\[
+  f_e: m \mapsto m^e \mod N 
+\]
+for some $e \in\Nat$.
+It is clear that $f$ may be computed in polynomial time for arbitrary $e$. From Definition
+\ref{def:rsa_assumption} and its following discussion that using an appropriate
+$\GenModulus$, inverting $f$ is hard. However, if $d = e^{-1} \mod N$ is known,
+inverting $f$ becomes easy. (See below for a proof of this.)
 \paragraph{Key generation}
-\begin{enumerate}
-\item Pick 2 primes $p, q$ such that $2^\lambda < p, q <
-2^{\lambda + 1}$.
-\item Calculate $N = pq$ and $\phi(N) = (p - 1)(q - 1)$.
-\item Pick a number $i \in \Nat$ such that $\gcd(i, N) = 1$. Then $i \in
-  \Int^*_N$.
-\item Calculate $j = i^{-1}$ in $\Int^*_N$. This can be done by using the
-  Extended Euclidean Algorithm to calculate $\gcd(i, \phi(N))$.
-\item Output $k_\Enc = (N, i)$ and $k_\Dec = (N, j)$.
-\end{enumerate}
+Run $(N, e, d) \leftarrow\GenRSA$ as defined in Algorithm \ref{alg:genrsa}. Set
+$pk = (N, e)$ and $sk = (N, d)$ and output $(pk, sk)$.
 \paragraph{Encryption}
 Our message and cipher space are the binary string representations of naturals such that $m
 < N$. Formally, $\M = \C = \{0, 1\}^{\lfloor {\log_2N} \rfloor}$.
@@ -1481,8 +1488,8 @@ write
 \end{proof}
 Finally, we look at the particular set of elements used in Paillier's scheme:
 $N$th residues.
-\begin{definition}{Nth residue:} Let $G$ be a group and let $x, y \in G$. Then, we call $x$
-  an Nth residue, if $x^N = y$, and write $x \in \texttt{Res}(G)$.
+\begin{definition}{Nth residue:} Let $G$ be a group and let $x, y \in G$. Then, we call $y$
+  an Nth residue, if $x^N = y$, and write $y \in \texttt{Res}(G)$.
 \end{definition}
 We now characterise Nth residues in $\Int_{N^2}^*$.
 \begin{theorem}
@@ -1516,9 +1523,33 @@ We now characterise Nth residues in $\Int_{N^2}^*$.
 \paragraph{} We also note that it is easy to see from the above that there are
 precisely $N$ elements mapping to the same residue, since all elements of the
 form $(a, b^d)$ map to $(0, b)$, and since $a\in \Int_N$, there are $N$ choices
-for $a$.
+for $a$. However, this means that sampling $\Int_{N^2}^*$ uniformly means that
+we are sampling \texttt{Res}($\Int_{N^2}^*$) uniformly too!
+\paragraph{} Finally, in this section we consider a new hardness assumption:
+   \begin{definition}{The Decisional Composite Residuosity Problem (DCRP):} The
+     DCRP is hard relative to $\GenModulus$ if for all $\PPT$ adversaries $\A$
+     we have
+     \[
+       \left| \Prob(\A(N, [r^N amod N^2]) = 1) - \Prob(\A(N, r) = 1) \right|
+       \leq negl(n)
+     \]
+     where we run $(N, p, q) \leftarrow\GenModulus(1^n)$ and the pick $r$
+     uniformly from $\Int_{N^2}^*$.
+   \end{definition}
+   Essentially, the DCRP states that for the appropriate $\GenModulus$ deciding
+   if we picked an Nth residue or we sampled the whole group uniformly is hard.
 \paragraph{} Now, we have all the tools required to construct the scheme.
 \subsubsection{The Construction: Paillier Cryptoscheme}
+\paragraph{} As with RSA, we first expose the trapdoor we will be using. Define
+$f_y: \Int_N \to \Int_{N^2}^*$ by
+\[
+  f_y: m \mapsto (1 + N)^m \cdot y \mod N^2 
+\]
+for some $y \in \Int_N^*$. Again, it is clear that computing $f$ can be
+performed in polynomial time for arbitrary $y$. However, by the DCRP assumption
+$f$ is hard to invert, since we would need to invert $y \in \texttt{Res}(N^2)$
+to be able to calculate $m$ from $f(m)$. However, if we are given $\phi(N)$,
+inverting $f$ becomes easy! (See below for proof.)
 \paragraph{Key Generation}
 Pick two primes of length equal to the security parameter, i.e. $p, q$ primes,
 such that $|p| = |q| = |\lambda|$. Calculate $N = pq$, $N^2$ and $\phi(N) = (p -
@@ -1553,7 +1584,14 @@ Then, we have
 Thus, $m = \Enc_{pk}(\Dec_{sk}(m))$, and so the scheme is correct, and therefore
 a cipher.
 \subsubsection{The security of our construction}
-\paragraph{}
+\paragraph{} Here we show that Paillier encryption is IND-CPA secure.
+\begin{theorem}
+  Let $\Pi = (\Gen, \Enc, \Dec)$ as in Paillier's scheme. If the DCRP assumption
+  holds with respect to $\GenModulus$, then $\Pi$ is IND-CPA secure.
+\end{theorem}
+\begin{proof}
+  Let $\A$ be an arbitrary $\PPT$ adversary.
+\end{proof}
 \section{Lattices}
 \paragraph{}
 In the previous section we have seen the motivating idea behind Gentry's scheme:
