@@ -516,14 +516,14 @@ and $sk$ is called the \textbf{private} or \textbf{secret key}.
  is a probabilistic polynomial-time ($\PPT$) algorithm iff for every input of size
  $n$ $\A$ terminates in $\Oh(n)$ steps. 
 \end{definition}
-\begin{definition}{Negligable function}
+\begin{definition}{Negligible function}
   Let $f: \Nat \mapsto \Reals$ be a function. Then, we say that $f$ is
-  \textbf{negligable} iff $\forall p: \Nat \mapsto \Reals$ polynomials $\exists
+  \textbf{negligible} iff $\forall p: \Nat \mapsto \Reals$ polynomials $\exists
   N \in \Nat$ such that $\forall n \geq N$ we have
   \[
     f(n) < \frac{1}{p(n)}. 
   \]
-  We shall write $\negl(n)$ when referring to some arbitrary negligable function.
+  We shall write $\negl(n)$ when referring to some arbitrary negligible function.
 \end{definition}
 \subsection{How do we define security?}
 \label{sec:howdefsec}
@@ -578,7 +578,7 @@ it does not, including when some part of the algorithm fails.
 \paragraph{Advantages} will be our formalisation of how well an adversary can
 take advantage of certain properties of the system to increase their chances in
 successfully breaking the scheme. The aim of our security proofs will be to show
-that any attacker attempting to break our cipher can only have negligable
+that any attacker attempting to break our cipher can only have negligible
 advantage. Formally, the general framework will be to conclude that for a scheme
 $\Pi$ for any $\PPT$ adversary $\A$ in the \textit{atk} threat model
 \[
@@ -780,7 +780,7 @@ section, we give two results based on our definitions, both due to \cite{bellare
   Let $\Pi$ be a cipher that is secure in the sense of NM-ATK. Let $\A'$ be
   a $\PPT$ IND-ATK adversary, who is attacking $\Pi$. Then, recall from Section
   \ref{sec:secgoals} that now we must show that the advantage of $\A'$ in
-  breaking $\Pi$ is negligable. Formally, we wish to establish that
+  breaking $\Pi$ is negligible. Formally, we wish to establish that
   \[
     \Adv{ind-atk}{\Pi, \A'}(n) = \negl(n).
   \]
@@ -837,8 +837,8 @@ section, we give two results based on our definitions, both due to \cite{bellare
                           &= \Prob(\Expr{ind-atk}{\Pi, \A'}(n) = b) - \frac12 \quad\text{by Claim 1 and 2.}\\
                           &= \frac12 \Adv{ind-atk}{\Pi, \A'}\quad\text{by Definition \ref{def:adv_ind}}.
   \end{align*}
-  Since $\Pi$ is NM-ATK secure $\Adv{nm-atk}{\Pi, \A}$ is negligable, hence by
-  the above equation $\Adv{ind-atk}{\Pi, \A'}$ is negligable also. Since $\A'$ can
+  Since $\Pi$ is NM-ATK secure $\Adv{nm-atk}{\Pi, \A}$ is negligible, hence by
+  the above equation $\Adv{ind-atk}{\Pi, \A'}$ is negligible also. Since $\A'$ can
   be any IND-ATK adversary, $\Pi$ is IND-ATK secure.
 \end{proof}
 \begin{theorem}{IND-CCA2 $\Rightarrow$ NM-CCA2}\\
@@ -852,7 +852,7 @@ section, we give two results based on our definitions, both due to \cite{bellare
   adversary to output some modified ciphertext instead of a guess about
   plaintexts does not really matter.\\
   Formally, let $\A'$ be an NM-CCA2 adversary attacking $\Pi$. We would like to
-  show that its advantage to break the cipher is negligable. To do this, we will
+  show that its advantage to break the cipher is negligible. To do this, we will
   describe an IND-CCA2 adversary $\A$ attacking $\Pi$ that incorporates $\A'$.\\
   \begin{algorithmic}
     \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
@@ -914,7 +914,7 @@ section, we give two results based on our definitions, both due to \cite{bellare
   \[
     \Adv{nm-cca2}{\Pi, \A'}(n) = p'_k(0) - p'_k(1) = 2\cdot\Adv{ind-cca2}{\Pi, \A}(n).
   \]
-  Since $\Pi$ is IND-CCA2 secure, $\Adv{ind-cca2}{\Pi, \A}$ is negligable and
+  Since $\Pi$ is IND-CCA2 secure, $\Adv{ind-cca2}{\Pi, \A}$ is negligible and
   hence so is $\Adv{nm-cca2}{\Pi, \A'}$. Since $\A'$ was arbitrary, $\Pi$ is
   NM-CCA2 secure.
 \end{proof}
@@ -1275,7 +1275,7 @@ however, one aspect will be clear immediately: these ciphers are
 \end{theorem}
 \begin{proof}
   We prove the above claim by exhibiting a $\PPT$ adversary $\A$ which breaks
-  NM-atk security with non-negligable advantage. Concretely, define $\A$ as
+  NM-atk security with non-negligible advantage. Concretely, define $\A$ as
   follows:
   \begin{algorithmic}
     \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
@@ -1300,7 +1300,7 @@ however, one aspect will be clear immediately: these ciphers are
   \paragraph{}
   Since $\textbf{m}' = m^2$, we have $R(m, \textbf{m}') = True$ for any input.
   Putting this together with our claim above, we have that $\A$ succeeds with
-  probability 1, hence clearly $\A$ has non-negligable advantage, thus $\Pi$
+  probability 1, hence clearly $\A$ has non-negligible advantage, thus $\Pi$
   is not NM-atk secure.
 \end{proof}
 Now, the reader may assume that this must mean that the highest security level a
@@ -1590,7 +1590,49 @@ a cipher.
   holds with respect to $\GenModulus$, then $\Pi$ is IND-CPA secure.
 \end{theorem}
 \begin{proof}
-  Let $\A$ be an arbitrary $\PPT$ adversary.
+  Let $\A$ be an arbitrary $\PPT$ adversary. We will now define a $\PPT$
+  algorithm $\A'$ such that it attempts to solve DCRP with $\A$ as a subroutine,
+  with respect to $\GenModulus$.
+  Hence, define $\A'$ as
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A'(N, y)$
+    \State Obtain $(m_0, m_1) \leftarrow \A$ Stage 1
+    \State Generate a bit $b \in \{0, 1\}$ uniformly.
+    \State Compute $c = (1 + N)^{m_b} \cdot y \mod N^2$.
+    \State Set $b' = \A(c)$ Stage 2.
+    \State \Return $1$ if $b = b'$ and $0$ otherwise.
+    \State
+  \end{algorithmic}
+
+We will now analyse the behaviour of $\A'$ under the two possibilities that may
+happen in the DCRP.
+\paragraph{Case 1.} We ran $(N, p, q) \leftarrow \GenModulus(1^n)$, chose an $r
+\in \Int_{N^2}^*$ uniformly and set $y = r^N \mod N^2$. Then, we called $\A'(N,
+y)$. \\
+Here we will be passing $c = (1 + N)^{m_b} \cdot r^N \mod N^2$ to the second
+stage of $\A$. Since here we will have $c = \Enc(m_b)$, by the definition of the
+indistinguishability experiment we will have
+\[
+  \Prob(\Expr{ind-cpa}{\Pi, \A} = 1) = \Prob(\A \text{ outputs } b | B = b) =
+  \Prob(\A'(N, [r^N \mod N^2]) = 1).
+\]
+\paragraph{Case 2.} We ran $(N, p, q) \leftarrow \GenModulus(1^n)$, chose an $r
+\in \Int_{N^2}^*$ uniformly and set $y = r$. Then, we called $\A'(N, y)$.
+Here, since $y$ is just uniformly picked from the ambient group, the output of
+$\A$ does not depend on $b$. Hence $\Prob(\A'(N, r) = 1) = \frac12$.
+\paragraph{} By the DCRP assumption, we have
+\[
+  \left| \Prob(\A'(N, [r^N \mod N^2]) = 1) - \Prob(\A'(N, r) = 1) \right| \leq \negl(n).
+\]
+By the two above case analyses we get
+\[
+\left| \Prob(\Expr{ind-cpa}{\Pi, \A} = 1) - \frac12 \right| \leq \negl(n)
+\]
+and hence
+\[
+  \Adv{ind-cpa}{\Pi, \A} = 2 \cdot \Prob(\Expr{ind-cpa}{\Pi, \A} = 1) - 1 \leq \negl(n).
+\]
+Thus, $\Pi$ is IND-CPA secure.
 \end{proof}
 \section{Lattices}
 \paragraph{}
