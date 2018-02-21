@@ -31,6 +31,7 @@
 \newcommand{\Enc}{\texttt{Enc}}
 \newcommand{\Dec}{\texttt{Dec}}
 \newcommand{\Gen}{\texttt{Gen}}
+\newcommand{\Evaluate}{\texttt{Evaluate}}
 
 \newcommand{\Vol}{\text{Vol}}
 
@@ -1876,15 +1877,27 @@ We note that by the above theorem $0 < \H(B) \leq 1$.
                   &= \Vol(\F_{B_2}).
   \end{align*}
 \end{proof}
-\subsection{Mathematical Set-up III: Computational Lattice Problems}
+\subsubsection{Ideal Lattices}
+\label{sec:ideal_lattices}
+\subsection{Mathematical Set-up III: Computational Considerations for Lattices and Rings}
 \paragraph{} Up to now, we only considered structures in the context of the
 properties that their axioms give rise to. In this section, we now switch
 contexts, and consider them from a computational point of view. In particular,
 we consider computational problems that arise from lattices that can be used to
 construct public-key ciphers.
-\subsubsection{Shortest Vector Problem}
-\subsubsection{Closest Vector Problem}
-\subsubsection{Ideal Coset Problem}
+\subsubsection{Computational Lattice Problems}
+\label{sec:comp_lattice_prob}
+\begin{definition}{$\gamma(n)$-Shortest Vector Problem (SVP)}
+\end{definition}
+\begin{definition}{$\gamma(n)$-Closest Vector Problem (CVP)}
+\end{definition}
+\begin{definition}{$\gamma(n)$-Bounded Distance Decoding Problem (BDDP)}
+\end{definition}
+\subsubsection{Computational Ring Problems}
+\begin{definition}{Ideal Membership Problem (IMP)}
+\end{definition}
+\begin{definition}{Ideal Coset Problem (ICP)}
+\end{definition}
 \cite{Babai1986}
 \cite{AjtaiLatticeAvgWorst}
 \subsection{The Construction: GGH}
@@ -1917,11 +1930,95 @@ the left, we get
 Hence the cipher is correct.
 \paragraph{Security}
 \section{Fully Homomorphic Encryption}
-\subsection{Dr Craig Gentry's Scheme}
-\cite{gentryImplementation}
-\cite{smartImplementation}
+\paragraph{} At last, we have arrived at the crowning jewel of obfuscated
+computation: \textbf{fully homomorphic encryption}, which will allow us to
+compute the result of arbitrary functions on encrypted data! Here the author
+aims to expose the core ideas that are involved in achieving such a scheme. Due
+to its youth, there is rather limited literature available on the topic, hence
+our narrative will be mostly following the footsteps of the inventor of the first
+ever such scheme: the PhD thesis of Dr Craig Gentry \cite{gentry2009fully}.
+Here, however, we run into a problem: the full description and justification of
+the scheme draws on so many topics from different parts of mathematics, that
+attempting to present the whole work would take a much longer work then this
+one. Instead, our goal is to distill the core concepts and put them in the
+context of what we already know. When this is not possible, we will point the
+reader to the appropriate source.
+\paragraph{}
+This section takes a top-down approach to the explanation. That is, after the mathematical
+preamble we will provide insight starting from the most abstract approach to the
+concrete, implemented cipher. 
+\subsection{Motivation, Definitions and Approach}
+\paragraph{}
+We begin with a bunch of definitions that we will make use of later.
 \begin{definition}
 \end{definition}
+\paragraph{} Whenever one is designing a cipher, they would obviously want it to
+be as quick as possible, whilst retaining security. In our case, as the reader
+will see below this is an even more burning issue. For this reason, we look to
+lattices as our solution, as the complexity of encryption and decryption
+procedures which are yielded by their appropriate trapdoors in lattice based
+schemes outperforms other currently known trapdoors and they are also better
+parallelisable.
+\paragraph{} This is complemented by the fact discussed in Section
+\ref{sec:ideal_lattices}, that ideals in polynomial rings automatically
+induce lattices. This dual nature of ideal lattices will immediately yield us
+the ring homomorphisms between the message and the cipherspace that we need to
+achieve FHE.
+\paragraph{} However, there is an issue with lattices which we must patch: we
+saw in Section \ref{sec:comp_lattice_prob} that checking ideal membership in
+(ideal) lattices may be performed in polynomial time! In particular, all we need
+to do is check for some $\vec{v} \in \L(B)$ for some lattice $\L$ with basis $B$
+is whether $\vec{v} = 0 \mod B$. Therefore, we will rely on the slightly
+different problem of the ideal coset problem (ICP), which will yield us a nice trapdoor.
+\paragraph{} So how will all the above come together to give us FHE?
+We first define a cipher that will be allow computation \textit{up to a certain
+  level}. At this point, it is important to pause and identify the reason that
+causes this limitation, because if the limitation is inherent to the scheme,
+then any improvement upon it will be obviously futile. In our case, however, we
+can ``tune'' the limitation, i.e. we can sacrifice computation time and memory
+space to push our limitation further. In particular, our limitation will come
+from the fact that the trapdoor the ICP in ideal lattices gives us is such that
+each new ciphertext has some ``error'' associated with it in which we embed our
+message, that can be thought of as an offset from a lattice point. Then, adding
+and multiplying ciphertexts will increase the error associated with their sum/
+product, and at some point it grows so much that the offset will push the
+ciphertext vector so far from its original lattice point that it will be closer
+to another one, causing decryption failure. The question then is, can we
+``reset'' this error somehow while preserving the correctness of the scheme.
+The solution is to create a scheme that can evaluate a sufficiently complex
+combination of operations so that it is capable of \textit{computing its own decryption function} (augmented with some operation at
+the end)! The term we will use to describe a cipher with such a property is that
+the cipher is \textbf{bootstrappable}.  Once we have a bootstrappable scheme, we
+can use it to construct an (almost) fully homomorphic scheme! (The caveat being
+that the length of the public key will depend on the complexity of the function
+we wish to evaluate). Here is the core of the construction: Let $\Pi = (\Gen,
+\Enc, \Dec)$ be a bootstrappable cipher. Let $m$ be our message and $c =
+\Enc(pk_1, m)$ its encryption under some public key $pk_1$ (with corresponding
+secret key $sk_1$).
+\begin{enumerate}
+  \item Calculate $c_0 = \Enc(pk_2, c) = \Enc(pk_2, \Enc(pk_1, m))$, the encryption of
+    of $c$ under some public key $pk_2$.
+  \item Calculate $c_1 = \Evaluate(\Dec, \{sk_1\, c_0\})$, i.e. we homomophically
+  decrypt $c$ under $sk_1$. Hence, we will have $c_1 = \Enc(pk_2, m)$ (with
+  some technical caveats).
+\end{enumerate}
+This is great, however, we have not made any progress, we just switched keys on
+the encryption of $m$. This is why we will also require a bootstrappable cipher
+to be able to evaluate its decryption function \textbf{together with some
+  operation}. Hence, in step two we can actually call this augmented function
+$\Dec^{op}$ with more than one ciphertext and make progress at the same time as
+resetting the error.
+\subsection{The Scheme, Abstractly}
+\subsubsection{Definition of the Scheme}
+\paragraph{Key Generation}
+\paragraph{Encryption}
+\paragraph{Decryption}
+\paragraph{Evaluation}
+\subsubsection{Security of the construction}
+\subsection{The Scheme, Concretely}
+\subsection{The Scheme, Implemented}
+\cite{gentryImplementation}
+\cite{smartImplementation}
 
 \printbibliography
 
