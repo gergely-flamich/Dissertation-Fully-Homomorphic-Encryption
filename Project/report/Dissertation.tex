@@ -50,10 +50,12 @@
 
 \newcommand{\Int}{\mathbb{Z}}
 \newcommand{\Nat}{\mathbb{N}}
+\newcommand{\Rat}{\mathbb{Q}}
 \newcommand{\Reals}{\mathbb{R}}
 \renewcommand{\H}{\mathcal{H}}
 %\renewcommand{\vec}[1]{\textbf{#1}}
 
+\newcommand{\GL}{\text{GL}}
 \newcommand{\Span}{\text{Span}}
 \newcommand{\PPT}{\texttt{PPT}}
 \newcommand{\negl}{\text{negl}}
@@ -63,6 +65,8 @@
 \newcommand{\Adv}[2]{\texttt{Adv}^{\texttt{#1}}_{#2}}
 \newcommand{\GenModulus}{\texttt{GenModulus}}
 \newcommand{\GenRSA}{\texttt{GenRSA}}
+\newcommand{\GenBasis}{\texttt{GenBasis}}
+\newcommand{\GenCVP}{\texttt{GenCVP}}
 
 \newcommand{\norm}[1]{||#1||}
 
@@ -1013,6 +1017,7 @@ secret key could not be obtained from the public key in polynomial time with
 better than negligible probability. Next, we will discuss this idea and then
 give a basic example of an asymmetric cipher.
 \subsection{Hardness assumptions}
+\label{sec:hardness_assumptions}
 \paragraph{} All asymmetric schemes rely on certain assumptions about computing
 values of some functions with or without the knowledge of some secret piece of
 information is either ``easy'' or ``hard''. We will call such functions
@@ -1811,6 +1816,14 @@ from $R$:
   If $S = \{i\}$ is a singleton set, we write $I = (i)$ and say that $I$ is a
   \textbf{principal ideal}.
 \end{definition}
+\begin{definition}{Modding by an ideal:}
+  Let $R$ be a ring and $I$ an ideal of $R$. Let $\pi + I$ be a coset of $I$ and
+  $\psi \in \pi + I$. Assume that $\pi$ is in some sense a unique ``special''
+  element. We will call $\pi$ a \textbf{distinguished representative} of $I$.
+  Then, we will define
+  \[
+    \psi \mod I := \pi.
+  \]
 \begin{definition}{Quotient Ring:}
   Let $R$ be a ring and $I$ be an ideal of $R$. Then, the set
   \[
@@ -2045,19 +2058,100 @@ we consider computational problems that arise from lattices that can be used to
 construct public-key ciphers.
 \subsubsection{Computational Lattice Problems}
 \label{sec:comp_lattice_prob}
-\begin{definition}{$\gamma(n)$-Shortest Vector Problem (SVP)}
+\begin{definition}
+  Let $\L$ be a lattice. Then, define $\lambda_i(\L)$ called the $i$th
+  successive minimum of $\L$ as the smallest radius $r > 0 $ such that $\L$
+  contains at least $i$ linearly independent (non-zero) vectors with norm at most $r$.
 \end{definition}
-\begin{definition}{$\gamma(n)$-Closest Vector Problem (CVP)}
+The reader should think about the above definition as a ball around the origin
+with the smallest such radius that (at least) $i$ non-collinear points fall in
+the ball. In particular, the ball with radius $\lambda_1(\L)$ will only contain
+one point, the shortest vector in $\L$. (Actually, the ball may contain more
+than one point as long as they all have the same norm.)
+\begin{definition}{The $\gamma(n)$-SVP Experiment} The SVP experiment
+  $\Expr{SVP}{\A, \GenBasis}(n)$ with factor $\gamma(n)$ involving a $\PPT$ adversary $\A$ and
+  $\PPT$ algorithm $\GenBasis$ is as follows:
+  \begin{enumerate}
+  \item We run $\GenBasis(1^n)$, obtaining the tuple $(P, S)$, with $P, S \in
+    \GL_n(\Rat)$ such that there exists a unimodular matrix $U$ with integer
+    coefficients (i.e. $U \in \GL_n(\Int)$ with $|\det(U)| = 1$) such that $US =
+    P$.
+  \item $\A$ is given $P$, and outputs some $\vec{v} \in \L(P)$.
+  \item We set $\Expr{SVP}{\A, \GenBasis}(n) = 1$ if $\vec{v} \leq \gamma(n)
+    \cdot \lambda_1(\L(P))$ and $0$ otherwise.
+  \end{enumerate}
 \end{definition}
+\begin{definition}{$\gamma(n)$-Shortest Vector Problem (SVP) Assumption}
+  $\gamma(n)$-SVP is hard relative to $\GenBasis$ if for all $\PPT$ adversaries $\A$ we
+  have
+  \[
+    \Prob(\Expr{SVP}{\A, \GenBasis}(n) = 1) \leq \negl(n).
+  \]
+\end{definition}
+\begin{definition}{The $\gamma(n)$-CVP Experiment} The CVP experiment
+  $\Expr{CVP}{\A, \GenCVP}(n)$ with factor $\gamma(n)$ involving a $\PPT$ adversary $\A$ and
+  $\PPT$ algorithm $\GenCVP$ is as follows:
+  \begin{enumerate}
+  \item We run $\GenCVP(1^n)$, obtaining the tuple $(\vec{w}, P, S)$, with $P, S \in
+    \GL_n(\Rat)$ such that there exists a unimodular matrix $U$ with integer
+    coefficients (i.e. $U \in \GL_n(\Int)$ with $|\det(U)| = 1$) such that $US =
+    P$ and $\vec{w} \in \Span(P)$.
+  \item $\A$ is given $P$ and $\vec{w}$, and outputs some $\vec{v} \in \L(P)$.
+  \item We set $\Expr{CVP}{\A, \GenCVP}(n) = 1$ if $\norm{\vec{v} - \vec{w}} \leq \gamma(n)
+    \cdot \norm{\vec{v} - \vec{u}}$ for any other $\vec{u} \in \L(P)$ and $0$ otherwise.
+  \end{enumerate}
+\end{definition}
+
+
+\begin{definition}{$\gamma(n)$-Closest Vector Problem (CVP) Assumption}
+   $\gamma(n)$-CVP is hard relative to $\GenCVP$ if for all $\PPT$ adversaries $\A$ we
+  have
+  \[
+    \Prob(\Expr{CVP}{\A, \GenCVP}(n) = 1) \leq \negl(n).
+  \]
+\end{definition}
+\paragraph{} There are two details that are currently unclear. Firstly, are
+there $\PPT$ algorithms $\GenBasis$ and $\GenCVP$ as specified in the above
+definitios, with respect to which our hardness assumptions hold? Secondly, is
+there a connection between CVP and SVP so that we can base the hardness
+assumption of one problem on the assumption of the other (as we did with the
+factoring and RSA assumptions in Section \ref{sec:hardness_assumptions})? The answer in both
+questions is fortunately ``yes''. In particular, Ajtai shows in
+\cite{AjtaiLatticeAvgWorst} that essentially solving average-case (i.e. randomly
+generated instances of) SVP is polynomially equivalent to solving a different,
+worst-case lattice problem, the Short Basis Problem (SBP). In the framework of
+this text, this means for us that the SBP yields a $\PPT$ algorithm $\GenBasis$
+with respect to which our SVP assumption holds. As for the connection between
+CVP and SVP, they can both be reduced into each other with the lattice dimension
+of the problems changing at most very slightly after the reduction. See the
+paper by Goldreich et al. for the SVP to CVP reduction \cite{GOLDREICH199955}
+and Section 6.5 in \cite{hoffstein2014introduction} for the other direction as
+well as a discussion on connections between other lattice problems. Again,
+interpreting this within our framework, we can base our CVP hardness assumption
+on $\GenBasis$ also.
 \begin{definition}{$\gamma(n)$-Bounded Distance Decoding Problem (BDDP)}
 \end{definition}
 \subsubsection{Computational Ring Problems}
+\begin{definition}{The Ideal Membership Experiment} The ideal membership experiment
+  $\Expr{IMP}{\A, \GenIdeal}(n)$ involving a $\PPT$ adversary $\A$ and
+  $\PPT$ algorithm $\GenIdeal$ is as follows:
+  \begin{enumerate}
+  \item We run $\GenIdeal(1^n)$, obtaining the tuple $(I)$, with $P, S \in
+    \GL_n(\Rat)$ such that there exists a unimodular matrix $U$ with integer
+    coefficients (i.e. $U \in \GL_n(\Int)$ with $|\det(U)| = 1$) such that $US =
+    P$ and $\vec{w} \in \Span(P)$.
+  \item $\A$ is given $P$ and $\vec{w}$, and outputs some $\vec{v} \in \L(P)$.
+  \item We set $\Expr{CVP}{\A, \GenCVP}(n) = 1$ if $\norm{\vec{v} - \vec{w}} \leq \gamma(n)
+    \cdot \norm{\vec{v} - \vec{u}}$ for any other $\vec{u} \in \L(P)$ and $0$ otherwise.
+  \end{enumerate}
+\end{definition}
+
 \begin{definition}{Ideal Membership Problem (IMP)}
+
 \end{definition}
 \begin{definition}{Ideal Coset Problem (ICP)}
 \end{definition}
 \cite{Babai1986}
-\cite{AjtaiLatticeAvgWorst}
 \subsection{The Construction: GGH}
 \paragraph{} To see the ideas presented above work in practice, we give a
 straightforward application of them in a cryptosystem developed due to
@@ -2083,7 +2177,7 @@ Hadamard ratio is high we will have decoded to the closest lattice point, hence
 we will now have $\hat{m}V = mW$. Hence by multiplying $\hat{m}$ by $VW^{-1}$ on
 the left, we get
 \[
-  m' = \hat{m}VW^{-1} = mWW^{-1} = m.
+  m'' = \hat{m}VW^{-1} = mWW^{-1} = m.
 \]
 Hence the cipher is correct.
 \paragraph{Security}
