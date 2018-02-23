@@ -27,6 +27,8 @@
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}[section]
 
+\theoremstyle{example}
+\newtheorem{example}{Example}[section]
 
 \newcommand{\Enc}{\texttt{Enc}}
 \newcommand{\Dec}{\texttt{Dec}}
@@ -67,6 +69,8 @@
 \newcommand{\GenRSA}{\texttt{GenRSA}}
 \newcommand{\GenBasis}{\texttt{GenBasis}}
 \newcommand{\GenCVP}{\texttt{GenCVP}}
+\newcommand{\GenIdeal}{\texttt{GenIdeal}}
+\newcommand{\Samp}{\texttt{Samp}}
 
 \newcommand{\norm}[1]{||#1||}
 
@@ -1824,6 +1828,7 @@ from $R$:
   \[
     \psi \mod I := \pi.
   \]
+\end{definition}
 \begin{definition}{Quotient Ring:}
   Let $R$ be a ring and $I$ be an ideal of $R$. Then, the set
   \[
@@ -1886,10 +1891,11 @@ of rings.
 \end{definition}
 \begin{definition}{Irreducibility}
   Let $R$ be a ring with a multiplicative identity. Then, we say that an element
-  $r$ is irreducible if all of its divisor pairs have a unit in them. In other
+  $r \in R^*$ is irreducible if $r$ is not a unit and all of its divisor pairs have a unit in them. In other
   words, if we have $r = uv$ for some $u, v \in R$, then either $u$ or $v$ is a unit.
 \end{definition}
 \subsection{Mathematical Set-up II: Introduction to Lattices}
+\label{sec:lattice_intro}
 \paragraph{} We shall begin by a basic introduction to lattices in general, then
 turn our attention to computational problems involving lattices. In the
 following section, we construct a very simple cryptosystem that relies on the
@@ -1907,8 +1913,8 @@ ideas we explore here.
   Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots, \vec{v}_n\}$. Then, the
   \textbf{fundamental domain of $\L$ with respect to $B$} is
   \[
-    \F_B = \{t_1\vec{v}_1 + t_2\vec{v}_2 + \hdots + t_n\vec{v}_n \,\,|\,\, \vec{v}_i \in B, t_i \in [0,
-    1)\} \subseteq \Reals^n.
+    \F_B = \{t_1\vec{v}_1 + t_2\vec{v}_2 + \hdots + t_n\vec{v}_n \,\,|\,\, \vec{v}_i \in B, t_i \in [-\frac12,
+    \frac12)\} \subseteq \Reals^n.
   \]
 \end{definition}
 The following theorem is key for cryptographic application of lattices:
@@ -1927,9 +1933,9 @@ The following theorem is key for cryptographic application of lattices:
   \[
     x = a_1\vec{v}_1 + \hdots + a_n\vec{v}_n.
   \]
-  For all $i$ let $\alpha_i = \lfloor a_i \rfloor$ and $t_i = a_i - \lfloor a_i
-  \rfloor$. We note that by the definition of the floor function, $0 \leq t_i <
-  1$ for all $i$. Then, letting $\ell = \sum_{i = 1}^n \alpha_i\vec{v}_i$ and $f
+  For all $i$ let $\alpha_i = \lfloor a_i \rceil$ and $t_i = a_i - \lfloor a_i
+  \rceil$. We note that by the definition of the round function, $-\frac12 \leq t_i <
+  \frac12$ for all $i$. Then, letting $\ell = \sum_{i = 1}^n \alpha_i\vec{v}_i$ and $f
   = \sum_{i = 1}^n t_i\vec{v}_i$, we clearly have $\ell \in \L$ and $f \in
   \F_B$. Now, from the above equation we get
   \begin{align*}
@@ -1938,6 +1944,33 @@ The following theorem is key for cryptographic application of lattices:
       &= \ell + f \quad \text{as required.}
   \end{align*}
 \end{proof}
+We can use the above result we make the following observation: given a point in
+a lattice $\L(B)$'s ambient space $\vec{v} \in \Span(B)$, we can ``distil''
+it's offset. We can write up $\vec{v} = \ell + \vec{f}$ for some $\ell\in
+\L(B)$ and $f \in \F(B)$, then calculate
+\[
+  \vec{v}\times B^{-1} = (\ell + \vec{f}) \times B^{-1} = \ell\times B^{-1} +
+  \vec{f}\times B^{-1}.
+\]
+Since $\ell = \vec{a} \times B$ and $\vec{f} = \vec{t} \times B$ for $\vec{a}
+\in \Int^n$ and $\vec{t} \in \left[-\frac12, \frac12\right)^n$, from the above we have
+\[
+  \vec{v}\times B^{-1} = \vec{a} + \vec{t}.
+\]
+Now, since $\vec{a}$ is an integer vector, the entire fractional part must come
+from $\vec{t}$. Thus rounding both sides, since every entry in $\vec{t}$ rounds
+to 0 by its definition, we get
+\[
+  \lfloor \vec{v}\times B^{-1} \rceil = \lfloor \vec{a} + \vec{t} \rceil = \vec{a}.
+\]
+Hence, we define the following:
+\begin{align*}
+  \vec{v} \mod B &= \vec{v} - \lfloor \vec{v} \times B^{-1} \rceil \times B \\
+                 &= \ell + \vec{f} - \vec{a} \times B \\
+                 &= \ell + \vec{f} - \ell = \vec{f}.
+\end{align*}
+This gives a really nice way of testing whether a point in the ambient space is
+also in the lattice, since if $\vec{v} \in \L(B)$, then $\vec{v} \mod B = 0$!
 \begin{definition}
   Let $\L$ be an $n$-dimensional lattice with basis $B$ and fundamental domain
   $\F_B$. Then, the $n$-dimensional volume of $\F_B$ is called the determinant
@@ -2129,29 +2162,104 @@ and Section 6.5 in \cite{hoffstein2014introduction} for the other direction as
 well as a discussion on connections between other lattice problems. Again,
 interpreting this within our framework, we can base our CVP hardness assumption
 on $\GenBasis$ also.
-\begin{definition}{$\gamma(n)$-Bounded Distance Decoding Problem (BDDP)}
-\end{definition}
+\paragraph{} An interesting other approach relies on the idea of modding a
+vector by a lattice basis that we saw in Section \ref{sec:lattice_intro}. We define the
+following algorithm:
+\begin{algorithm}[H]
+  \caption{}
+  \label{alg:babais_alg}
+  \begin{algorithmic}
+    \State On input $\vec{v}, B$
+    \State Calculate $\vec{u} = \vec{v} - (\vec{v} \mod B)$
+    \State \Return $\vec{u}$
+  \end{algorithmic}
+\end{algorithm}
+Then, the vector $\vec{u}$ returned by Algorithm \ref{alg:babais_alg} is in $\L(B)$. Since
+the input $\vec{v}$ is in the fundamental domain that surrounds $\vec{u}$, it is
+certainly true that $\vec{v}$ is not very far from $\vec{u}$. In particular,
+$\norm{\vec{v} - \vec{u}} \leq \norm{B}$. But how close are they actually? Is
+$\vec{u}$ the closest lattice point to $\vec{v}$? If it is not in general, for
+what bases of $\L$ is it? L\'aszl\'o B\'abai answered these questions in his
+influential paper \cite{Babai1986} in 1983. He showed that for any lattice as long as vectors in $B$ are sufficiently
+orthogonal to each other (Lov\a'sz reduced, see \cite{lenstra1982factoring} for
+precise details), then Algorithm \ref{alg:babais_alg} will indeed return the closest lattice
+vector within an approximation factor of $\gamma(n) = 1 + 2n \cdot
+(\frac92)^{n/2}$ where $n$ is the dimension of the lattice. However, if the
+vectors in $B$ are not very orthogonal, there is a large number of lattice points that
+are closer to $\vec{v}$ than $\vec{u}$. Due to these results, this algorithm is
+named B\'abai's algorithm in his honour. What is great about this approach, is
+not only does it put precise conditions on the parameters of the lattice, but it
+immediately yields a trapdoor for a cipher: generate two bases for a lattice,
+one with very orthogonal vectors, and another with quite parallel vectors in it,
+and use them as our secret and public key, respectively. Then, a message can be
+encoded using the public basis and can be recovered using the secret basis.
 \subsubsection{Computational Ring Problems}
+\paragraph{} In the above section we have seen concrete computational problems
+involving lattices. We now take a step back, and consider two more abstract
+problems, defined with rings. This approach will help us understand
+relationships between the ciphers presented in this work. We begin with the
+simpler one.
 \begin{definition}{The Ideal Membership Experiment} The ideal membership experiment
-  $\Expr{IMP}{\A, \GenIdeal}(n)$ involving a $\PPT$ adversary $\A$ and
-  $\PPT$ algorithm $\GenIdeal$ is as follows:
+  $\Expr{IMP}{\A, R, I, \Samp_I}(n)$ involving a $\PPT$ adversary $\A$, ring $R$, $I$ an
+  ideal of $R$ and $\PPT$ algorithm $\Samp_I$ that samples from $I$
+  according to some distribution is as follows:
   \begin{enumerate}
-  \item We run $\GenIdeal(1^n)$, obtaining the tuple $(I)$, with $P, S \in
-    \GL_n(\Rat)$ such that there exists a unimodular matrix $U$ with integer
-    coefficients (i.e. $U \in \GL_n(\Int)$ with $|\det(U)| = 1$) such that $US =
-    P$ and $\vec{w} \in \Span(P)$.
-  \item $\A$ is given $P$ and $\vec{w}$, and outputs some $\vec{v} \in \L(P)$.
-  \item We set $\Expr{CVP}{\A, \GenCVP}(n) = 1$ if $\norm{\vec{v} - \vec{w}} \leq \gamma(n)
-    \cdot \norm{\vec{v} - \vec{u}}$ for any other $\vec{u} \in \L(P)$ and $0$ otherwise.
+  \item We generate $r_0 \leftarrow \Samp_I$ and $r_1 \leftarrow R$ (uniformly).
+    We also generate a bit $b \leftarrow \{0, 1\}$. 
+  \item $\A$ is given $R, I, \Samp_I$ and $r_b$, and outputs some bit $b' \in \{0, 1\}$.
+  \item We set $\Expr{IMP}{\A, \GenIdeal}(n) = 1$ if $b = b''''$ and $0$ otherwise.
+  \end{enumerate}
+\end{definition}
+Hence, we are asking that given a ring $R$ and $I$ and some sampling function
+$\Samp_I$, is it easy to determine if a randomly chosen element of $R$ is in
+$I$. While this problem may seem very far removed from practicalities, we
+consider the following two examples.
+\paragraph{Example 1}
+  Let $N$ be an integer such that it is a product of two primes of equal length.
+  Then, set $R = \Int_N$ under addition and multiplication modulo $N$. Let $e$
+  be a unit in $R$, and set $I = (e)$ and let $\Samp_I$ sample $I$ uniformly. Then,
+  solving this instance of the IMP is exactly equivalent to solving the RSA
+  problem. 
+\paragraph{Example 2}
+  Let $N = pq$ such that $p, q$ are primes of equal length. Set $R =
+  \Int_{N^2}$, and set $I = (N)$ and let $\Samp_I$ sample $I$ uniformly. Then,
+  noticing that $I = \texttt{Res}(N^2)$, solving this instance of the IMP is equivalent to solving the DCRP! Hence
+  Paillier's scheme is also just a special case of the IMP.
+\begin{definition}{Ideal Membership Problem (IMP) Assumption}
+  IMP is hard relative to $(R, I, \Samp_I)$ if for all $\PPT$ adversaries $\A$ we have
+  \[
+    \Adv{IMP}{\A, R, I, \Samp_I}(n) = 2 \cdot \Prob(\Expr{IMP}{\A, R, I, \Samp_I}(n) = 1) - 1 = \negl(n)
+  \]
+\end{definition}
+In ideal lattices, however, we are in trouble. It is because testing ideal
+membership can be performed in polynomial time, in particular, given an ideal basis
+$B_I$ and a vector $\vec{v} \in \L(B_I)$, it is enough to check if $\vec{v}
+\mod B_I = 0$. Hence, if we wish to use ideal lattices as our source of hard
+problems, we cannot use any that can be reduced into the IMP. This observation
+motivates our second ring problem.
+\begin{definition}{The Ideal Coset Experiment} The ideal coset experiment
+  $\Expr{ICP}{\A, R, I, \Samp_R, \GenIdeal_I}(n)$ involving a $\PPT$ adversary $\A$, ring
+  $R$, $I$ an ideal of $R$, $\PPT$ algorithm $\Samp_R$ that samples $R$
+  according to some distribution and $\PPT$ algorithm $\GenIdeal$, assuming that modding by ideals may be performed
+  in polynomial time, is as follows:
+  \begin{enumerate}
+  \item We run $\GenIdeal(1^n, R, I)$, obtaining the tuple $(J^{pk}, J^{sk})$,
+    with $J^{pk}, J^{sk}$ descriptions of the same ideal $J$ in $R$.
+  \item We generate $r_0 \leftarrow \Samp_R$ and $r_1 \leftarrow R$.
+    We also generate a bit $b \leftarrow \{0, 1\}$. Then, we calculate $r = r_b
+    \mod J^{pk}$.
+  \item $\A$ is given $R, I, J^{pk}, \Samp_R$ and $r$, and outputs some bit $b' \in \{0, 1\}$.
+  \item We set $\Expr{ICP}{\A, R, I, \Samp_R, \GenIdeal}(n) = 1$ if $b = b'$ and $0$ otherwise.
   \end{enumerate}
 \end{definition}
 
-\begin{definition}{Ideal Membership Problem (IMP)}
-
+\begin{definition}{Ideal Coset Problem (ICP) Assumption}
+  The ICP is hard relative to $(R,I,\Samp_R,\GenIdeal)$ if for all $\PPT$ adversaries $\A$ we have
+  \[
+    \Adv{ICP}{\A, R, I, \Samp_R, \GenIdeal}(n) = 2 \cdot \Prob(\Expr{ICP}{\A, R,
+      I, \Samp_R, \GenIdeal}(n) = 1) - 1 = \negl(n).
+  \]
 \end{definition}
-\begin{definition}{Ideal Coset Problem (ICP)}
-\end{definition}
-\cite{Babai1986}
 \subsection{The Construction: GGH}
 \paragraph{} To see the ideas presented above work in practice, we give a
 straightforward application of them in a cryptosystem developed due to
@@ -2180,7 +2288,8 @@ the left, we get
   m'' = \hat{m}VW^{-1} = mWW^{-1} = m.
 \]
 Hence the cipher is correct.
-\paragraph{Security}
+\subsubsection{Security of GGH}
+\paragraph{} IND-CPA
 \section{Fully Homomorphic Encryption}
 \paragraph{} At last, we have arrived at the crowning jewel of obfuscated
 computation: \textbf{fully homomorphic encryption}, which will allow us to
@@ -2192,7 +2301,7 @@ ever such scheme: the PhD thesis of Dr Craig Gentry \cite{gentry2009fully}.
 Here, however, we run into a problem: the full description and justification of
 the scheme draws on so many topics from different parts of mathematics, that
 attempting to present the whole work would take a much longer work then this
-one. Instead, our goal is to distill the core concepts and put them in the
+one. Instead, our goal is to distil the core concepts and put them in the
 context of what we already know. When this is not possible, we will point the
 reader to the appropriate source.
 \paragraph{}
@@ -2203,6 +2312,7 @@ concrete, implemented cipher.
 \paragraph{}
 We begin with a bunch of definitions that we will make use of later.
 \begin{definition}
+  haha
 \end{definition}
 \paragraph{} Whenever one is designing a cipher, they would obviously want it to
 be as quick as possible, whilst retaining security. In our case, as the reader
@@ -2271,7 +2381,8 @@ resetting the error.
 \subsection{The Scheme, Implemented}
 \cite{gentryImplementation}
 \cite{smartImplementation}
-
+\subsection{Discussion about the capabilities of the scheme}
+\section{Conclusion}
 \printbibliography
 
 \end{document}
