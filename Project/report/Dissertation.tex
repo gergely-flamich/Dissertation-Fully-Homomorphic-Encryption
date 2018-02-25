@@ -62,6 +62,9 @@
 \newcommand{\PPT}{\texttt{PPT}}
 \newcommand{\negl}{\text{negl}}
 \renewcommand{\mod}{\,\,\text{mod}\,\,}
+\newcommand{\NAND}{\texttt{NAND}}
+\newcommand{\Add}{\texttt{Add}}
+\newcommand{\Mult}{\texttt{Mult}}
 
 \newcommand{\Expr}[2]{\texttt{Expr}^{\texttt{#1}}_{#2}}
 \newcommand{\Adv}[2]{\texttt{Adv}^{\texttt{#1}}_{#2}}
@@ -1829,6 +1832,23 @@ from $R$:
     \psi \mod I := \pi.
   \]
 \end{definition}
+\begin{definition}{Sum of ideals}
+  Let $R$ be a ring and $I$, $J$ be ideals in $R$. Then, we can define a new set
+  \[
+    I + J = \{i + j \,\,|\,\, i \in I, j \in J\}.
+  \]
+  Then, $I + J$ is again an ideal of $R$.
+\end{definition}
+\begin{definition}{Relatively prime ideals}
+  Let $R$ be a ring and $I$, $J$ be ideals in $R$. Then, we say that $I$ and $J$
+  are relatively prime, iff
+  \[
+    I + J = R.
+  \]
+\end{definition}
+\paragraph{Example} For the ring of integers $R = \Int$ the ideal of even numbers
+$I = (2)$ and the ideal of numbers divisible by 5 $J = (5)$ are relatively
+prime, i.e. $(2) + (5) = (1) = \Int$.
 \begin{definition}{Quotient Ring:}
   Let $R$ be a ring and $I$ be an ideal of $R$. Then, the set
   \[
@@ -2181,7 +2201,7 @@ $\norm{\vec{v} - \vec{u}} \leq \norm{B}$. But how close are they actually? Is
 $\vec{u}$ the closest lattice point to $\vec{v}$? If it is not in general, for
 what bases of $\L$ is it? L\'aszl\'o B\'abai answered these questions in his
 influential paper \cite{Babai1986} in 1983. He showed that for any lattice as long as vectors in $B$ are sufficiently
-orthogonal to each other (Lov\a'sz reduced, see \cite{lenstra1982factoring} for
+orthogonal to each other (Lov\'asz reduced, see \cite{lenstra1982factoring} for
 precise details), then Algorithm \ref{alg:babais_alg} will indeed return the closest lattice
 vector within an approximation factor of $\gamma(n) = 1 + 2n \cdot
 (\frac92)^{n/2}$ where $n$ is the dimension of the lattice. However, if the
@@ -2244,7 +2264,7 @@ motivates our second ring problem.
   in polynomial time, is as follows:
   \begin{enumerate}
   \item We run $\GenIdeal(1^n, R, I)$, obtaining the tuple $(J^{pk}, J^{sk})$,
-    with $J^{pk}, J^{sk}$ descriptions of the same ideal $J$ in $R$.
+    with $J^{pk}, J^{sk}$ generators of the same ideal $J$ in $R$.
   \item We generate $r_0 \leftarrow \Samp_R$ and $r_1 \leftarrow R$.
     We also generate a bit $b \leftarrow \{0, 1\}$. Then, we calculate $r = r_b
     \mod J^{pk}$.
@@ -2309,11 +2329,9 @@ This section takes a top-down approach to the explanation. That is, after the ma
 preamble we will provide insight starting from the most abstract approach to the
 concrete, implemented cipher. 
 \subsection{Motivation, Definitions and Approach}
+\label{sec:fhe_motivation}
 \paragraph{}
 We begin with a bunch of definitions that we will make use of later.
-\begin{definition}
-  haha
-\end{definition}
 \paragraph{} Whenever one is designing a cipher, they would obviously want it to
 be as quick as possible, whilst retaining security. In our case, as the reader
 will see below this is an even more burning issue. For this reason, we look to
@@ -2340,7 +2358,8 @@ then any improvement upon it will be obviously futile. In our case, however, we
 can ``tune'' the limitation, i.e. we can sacrifice computation time and memory
 space to push our limitation further. In particular, our limitation will come
 from the fact that the trapdoor the ICP in ideal lattices gives us is such that
-each new ciphertext has some ``error'' associated with it in which we embed our
+each new ciphertext has some ``error'' associated with it (in particular it is the
+coset representative) in which we embed our
 message, that can be thought of as an offset from a lattice point. Then, adding
 and multiplying ciphertexts will increase the error associated with their sum/
 product, and at some point it grows so much that the offset will push the
@@ -2370,14 +2389,300 @@ to be able to evaluate its decryption function \textbf{together with some
   operation}. Hence, in step two we can actually call this augmented function
 $\Dec^{op}$ with more than one ciphertext and make progress at the same time as
 resetting the error.
+\paragraph{} In the upcoming few sections, we will present the scheme that is
+\textit{almost bootstrappable} (in Gentry's terminology, it is \textit{somewhat
+  homomorphic}). This scheme, with some tweaks can then be made bootstrappable
+and thus will yield us FHE.
+\paragraph{}
+Before we can move on, however, we are obliged to
+clarify what we mean by being able to compute arbitrary functions on encrypted data.
+What we will in fact show is that we are capable of evaluating arbitrary
+(binary) circuits on ciphertexts. We will then rely on a theorem by Fischer
+and Pippenger \cite{Fischer96lectureson}, which states that a \textit{family of circuits over a set functionally complete gates} can
+simulate any Turing Machine. Then, by Church-Turing Thesis we have that we can
+compute anything that is computable. We will now clarify functional
+completeness:
+\begin{definition}{(Informal) Functionally complete set:}
+  Let $\Gamma$ be a set of boolean gates, such that every gate in the set is a
+  binary operation, i.e $\forall g \in \Gamma$ we have $g: \{0, 1\} \times \{0,
+  1\} \to \{0, 1\}$. Then, $\Gamma$ is functionally complete, if every Boolean
+  function $f: \{0, 1\}^n \to \{0, 1\}$ may be expressed as a circuit of
+  the elements of $\Gamma$. (Here the term circuit is left vague as it
+  needs some care to define formally. The reader should think of it as the
+  intuitive way of combining boolean gates.)
+\end{definition}
+Hence, all we need to show now is that our scheme can evaluate a functionally
+complete set of gates. It is easy to show that given the function $\NAND(x, y)
+\mapsto \neg (x \land y)$ the set $\{\NAND\}$ is functionally complete. The last
+question remaining then is, how can we represent circuits in our scheme? To
+answer this question, we need to know how the scheme works, so we will get the
+answer to this question at the end of the next section.
 \subsection{The Scheme, Abstractly}
+\paragraph{} We are now going to present the somewhat homomorphic scheme that is
+used to obtain a bootstrappable one. There are two reasons for presenting it
+abstractly. Firstly, following our aim and convention in this work to present
+the underlying mechanism of the cipher in its purest form, and secondly, because
+we can base our security proofs on the abstract scheme. This means that if we
+can ``substitute in'' more concrete objects that satisfy our assumptions, we
+will not need to worry about security!
 \subsubsection{Definition of the Scheme}
-\paragraph{Key Generation}
-\paragraph{Encryption}
-\paragraph{Decryption}
-\paragraph{Evaluation}
+\paragraph{} For what follows, we will assume that given a ring $R$ and ideals
+$I$ and $J$ of $R$, modding by the ideals may be performed in polynomial time.
+\paragraph{Key Generation} We are given a security parameter $\lambda = 1^n$. We
+generate a (description of) ring $R$ appropriate to $\lambda$. Also fix an ideal
+$I$ in $R$. Now, run $\GenIdeal(\lambda, R, I)$, such that we obtain $(J^{pk},
+J^{sk})$, such that $(J^{sk})$ and $I$ are relatively prime. Set $pk = (R, I,
+J^{pk}, \Samp_R)$ as the public key and $sk = (R, I, J^{sk})$ as the secret key.
+Output $(pk, sk)$.
+\paragraph{Encryption} Given a public key $pk = (R, I, J^{pk}, \Samp_R)$ and a
+message $m$ perform the following: calculate $c' = \Samp_R(I, m)$. Here,
+$\Samp_R(I, m)$ samples an element from the coset $m + I$ in the ring $R/I$.
+Then, calculate $c = c' \mod J^{pk}$. Output $c$.
+\paragraph{Decryption} Given a secret key $sk = (R, I, J^{sk})$ and some
+ciphertext $c$, calculate
+\[
+  m' = (c \mod J^{sk}) \mod I.
+\]
+Output $m'$.
+\paragraph{Evaluation} We are given a public key $pk = (R, I, J^{pk}, \Samp_R)$, a
+circuit $C \in \Sigma_\Pi$ for some permitted set of circuits $\Sigma_\Pi$ (see
+below for the definition of ``permitted circuit'') composed of $\Add_I$ and $\Mult_I$ gates and a ciphertext vector
+$\vec{c}$. Then, it performs the circuit operations in the correct order on the
+input $\vec{c}$ and outputs the resulting ciphertext $c'$.
+\paragraph{Add} Given a public key $pk = (R, I, J^{pk}, \Samp_R)$ and two
+ciphertexts $c_1, c_2$, calculate and output
+\[
+  c_1 + c_2 \mod J^{pk}.
+\]
+\paragraph{Mult} Given a public key $pk = (R, I, J^{pk}, \Samp_R)$ and two
+ciphertexts $c_1, c_2$, calculate and output
+\[
+  c_1 \times c_2 \mod J^{pk}.
+\]
+\paragraph{} Now we may return to the question posed at the end of the previous
+section. How can we represent circuits in our scheme? Take the ring $R$ and
+ideals $I, J$ output by key generation. Then, it is enough to show that $R/I$ is
+isomorphic to a functionally complete set of gates. In our concrete case we shall show that
+\[
+  (R/I, +_I, \times_I) \cong (\{0, 1\}, \land, \oplus),
+\]
+where $\oplus$ denotes the $\texttt{XOR}$ operation. Then, if $R = S[\vec{x}]$ is a (multivariate)
+polynomial ring (which it will be), then there is a one-to-one correspondance
+between the circuits that may be built from our circuits in $\Gamma$ and the
+polynomials in $R$. In particular, if $x, y \in S \leftrightarrow a, b \in \{0, 1\}$
+respectively, we will have
+\[
+  p(x, y) + q(x, y) \leftrightarrow f(a, b) \oplus g(a, b)
+\]
+where $p, q$ are polynomials in $x, y$ and $f, g$ are circuits over
+$\{\texttt{AND}, \texttt{XOR}\}$ in $a,
+b$. Similarly,
+\[
+  p(x, y) \times q(x, y) \leftrightarrow f(a, b) \land g(a, b).
+\]
+We note that the set $\{\texttt{AND}, \texttt{XOR}\}$ is also functionally complete.
+\paragraph{Note:} the above is already a specialisation of the general scheme,
+and is not necessarily the way circuits must be implemented. However, the above
+is quite a natural way and it is the one that will be used in the actual implementation.
+\subsubsection{Correctness}
+\paragraph{} Now we consider the correctness of the above scheme. However, we
+will first rely on a few definitions to reduce the verbosity of the proof.
+\begin{definition}
+  Let $R$ and $I$ be as in our cipher and $C$ be a mod-$I$ circuit. Then, the \textbf{generalised circuit} $g(C)$ of
+  $C$ is formed by lifting the mod-I operations of $C$ to the operations of $R$.
+\end{definition}
+\begin{definition}
+  $X_\Enc$ be the image of $\Samp$. Then, all ciphertexts output by $\Enc$
+  are in $X_\Enc + J$ (by definition). Let $X_\Dec := R \mod J^{sk}$, the set of
+  all distinguished representatives of $J$ with respect to $J^{sk}$.  
+\end{definition}
+\begin{definition}
+\label{def:perm_circuits}
+  Let
+  \[
+    \Sigma'_\Pi = \{C | \forall \vec{x} \in X_\Enc^t \,\,\text{ we have }\,\,
+    g(C)(\vec{x}) \in X_\Dec\}.
+  \]
+  Then, call the subsets $\Sigma_\Pi \subseteq \Sigma_\Pi'$ the set of \textbf{permitted
+  circuits} of $\Pi$.
+\end{definition}
+\paragraph{} The above definition may seem quite technical and mysterious at
+first glance. However, it is a very natural one in fact: it encapsulates the
+idea of ``sensible'' circuits for $\Pi$. What we mean by sensible, is that no matter
+what input we give the circuit, the output is always decryptable. The set of all
+sensible circuits is precisely $\Sigma_\Pi'$. The need for the generalisation arises
+because during decryption we want to mod by $J^{sk}$ first and not $I$. We need
+one more definition still.
+\begin{definition}
+  We say that a ciphertext $c$ is \textbf{valid} with respect to $\Pi$, public
+  key $pk$ and permitted circuits $\Sigma_\Pi$ iff there exists some $C \in \Sigma_\Pi$
+  and $\vec{c} \in \C^t, t \in \Nat$ such that
+  \[
+    c = \Evaluate(pk, C, \vec{c}).
+  \]
+  (Note, that $C$ may be the identity circuit, i.e. the circuit that simply
+  returns its input.)
+\end{definition}
+\paragraph{} Finally, we are ready to prove the correctness of $\Pi$.
+\begin{theorem}
+  Let $\Sigma_\Pi$ be a set of permitted circuits with respect to $\Pi$,
+  containing the identity circuit. Then, $\Dec$ correctly decrypts all valid ciphertexts.
+\end{theorem}
+\begin{proof}
+  We simply follow what is required by our definitions.
+  Thus, let $\vec{c} = [c_1, c_2, \hdots, c_t] \in \C^t$. Then, by the
+  definition of $\Enc$, every $c_k$ may be written as
+  \[
+    c_k = m_k + i_k + j_k\quad\text{where }m_k \in \M, i_k \in I, j_k \in J.
+  \]
+  We also have $m_k + i_k \in X_\Enc$ by definition. Now, simply writing out the
+  evaluation of a permitted circuit $C \in \Sigma_\Pi$, we get
+  \[
+    \Evaluate(pk, C, \vec{c}) = g(C)(\vec{c}) \mod J^{pk} \in g(C)(m_1 + i_1,
+    \hdots m_t + i_t) + J.
+  \]
+  Now, using the fact that $C \in \Sigma_\Pi$, we know that the result of the lifted circuit
+  $g(C)$ can be correctly decrypted (i.e. $g(C)(X_\Enc, \hdots, X_\Enc) \in X_\Dec$). Formally:
+  \begin{align*}
+    \Dec(sk, \Evaluate(pk, C, \vec{c})) &= g(C)(m_1 + i_1,
+                                          \hdots m_t + i_t) \mod I \\
+                                        &= g(C)(m_1, \hdots m_t) \mod I\quad\text{due to the lifting property} \\
+                                        &= C(m_1, \hdots, m_t).\quad \text{as required by correctness.}
+  \end{align*}
+\end{proof}
 \subsubsection{Security of the construction}
+\paragraph{} Finally in this section, we prove the security of our scheme.
+\begin{theorem}
+Fix a ring $R$ and an ideal $(s)$ for some $s \in R$. Let our ideal sampling algorithm
+\[
+  \Samp_R(I, m) = m + r \times s\quad\text{where } r \leftarrow \Samp_R.
+\]
+Then our construction $\Pi$ is IND-CPA secure relative to the ICP.
+\end{theorem}
+\paragraph{Strategy}  We show security in the ``standard'' way: assume that there is some arbitrary
+  $\PPT$ adversary $\A$ that breaks IND-CPA security with advantage $\epsilon$ given
+  $\Samp$. Then, there is some other $\PPT$ adversary $\A'$ that solves the ICP
+  with advantage $\epsilon/2$. In particular, if $\epsilon/2$ is
+  negligible then so is $\epsilon$ and hence our scheme is IND-CPA secure.
+\begin{proof}
+  Let $\A$ be an arbitrary $\PPT$ adversary with
+  \[
+    \Adv{IND-CPA}{\Pi, \A} = \epsilon.
+  \]
+  We now describe another $\PPT$ algorithm $\A'$ that attempts to solve the ICP,
+  using $\A$ as a subroutine:\\
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A'(t, pk)\quad$ (where $pk = (R, (s), J^{pk},
+    \Samp_R)$ as in the ICP)
+    \State Set $m_0, m_1 \leftarrow \A$ Stage 1.
+    \State Generate $\beta \leftarrow \{0, 1\}$ uniformly.
+    \State Calculate $c = m_b + t \times s \mod J^{pk}$.
+    \State Set $\beta' \leftarrow \A(pk, c)$ Stage 2.
+    \State \Return $b' = \beta' \oplus \beta$.
+    \State
+  \end{algorithmic}
+  Let us now analyse the behaviour of the above algorithm.
+  \paragraph{Case 1:} The ICP challenger chooses $b = 0$\\ 
+  Recall, that by the definition of the ICP when $b = 0$ our algorithm $\A'$ will
+  receive $t = r + j$ for some $r$ sampled according to $\Samp_R$ and $j \in J$.
+  Hence the ciphertext that we submit to $\A$ will be
+  \[
+    c = m_\beta + t \times s \mod J^{pk},
+  \]
+  which is certainly of the correct form for a ciphertext. This case therefore
+  is exactly a usual case of IND-CPA for $\Pi$ and hence the output of
+  $\A'$ is completely determined by $\A$. Formally:
+  \[
+    \Adv{IND-CPA}{\Pi, \A}(n) = \Adv{ICP}{\A', R, I, \Samp_R, \GenIdeal}(n) = \epsilon.
+  \]
+  \paragraph{Case 2:} The ICP challenger chooses $b = 1$\\ 
+  Recall, that by the definition of the ICP, when $b = 1$ our algorithm $\A'$
+  will receive a $t$ that is uniform modulo $J^{pk}$. Since $I = (s)$ is
+  relatively prime to $J$, if we multiply $t$ by the generator $s$, their
+  product will still be uniform modulo $J^{pk}$ (this follows by the fact that
+  similarly to the way elements of $\Int_{N^2}^*$ mapped $N$-to-$1$ onto the
+  elements of $\texttt{Res}(N^2)$, here the elements of $(s) + J$ such as
+  $t \times s$ will map onto $J$ in some $k$-to-$1$ fashion). Hence $t\times s$
+  is independent of $\beta$, and hence $\A$ will have 0 advantage (i.e. cannot
+  guess with probability better than $1/2$), and hence, by extension $\A'$ has 0
+  advantage.
+  \paragraph{} Denote
+  \[
+    A_\Pi(b, n) = \Adv{ICP}{\A', R, I, \Samp_R, \GenIdeal}(n) \quad \text{ given
+    } B = b.
+  \]
+  Then, clearly
+  \[
+    \Adv{ICP}{\A', R, I, \Samp_R, \GenIdeal}(n) = A_\Pi(0, n)\Prob(B = 0) +
+    A_\Pi(1, n)\Prob(B = 1).
+  \]
+  Using the results of the above two case analyses and the fact that $B$'s is
+  uniformly distributed, we get 
+  \begin{align*}
+    \Adv{ICP}{\A', R, I, \Samp_R, \GenIdeal}(n) &= A_\Pi(0, n)\frac12 +
+    A_\Pi(1, n)\frac12 \\
+                                                &= \frac{\epsilon}2.
+  \end{align*}
+  By the ICP hardness assumption relative to $\GenIdeal$, the advantage of $\A'$
+  must be negligible, hence the advantage of $\A$ must also be negligible, thus
+  $\Pi$ is IND-CPA secure.
+\end{proof}
 \subsection{The Scheme, Concretely}
+\paragraph{} In this section, we now take a step closer to realising the scheme:
+we look at a special case of our abstract scheme. By the end of this chapter, it
+should be clear to us how and what should be implemented. Therefore, the goal of
+this section is to present the bridge that connects the abstract scheme and the
+concrete implementation, while exposing the pure mathematical machinery that
+we will be utilising.
+\paragraph{}
+As we discussed already in Section \ref{sec:fhe_motivation}, the underlying
+mathematical objects that will help us achieve our goal will be ideal lattices.
+The reason is not only because their decryption complexity is lower than known
+factoring-based public-key schemes, but due to the ring ideal - lattice duality,
+calculations with these objects are easier and also the performance and security
+analyses of them will be easier, as we can leverage the geometric nature of
+lattices. 
+\subsubsection{Definitions and Approach}
+\paragraph{} We recall from our discussion in the previous section, the
+definition of permitted circuits:
+\[
+  \Sigma_\Pi' = \{C\,\,|\,\, \forall \vec{c} \in X_\Enc^t\,\,\text{ we
+    have }\,\,g(C)(\vec{c}) \in X_\Dec\}.
+\]
+What controls the size of $\Sigma_\Pi'$? It is precisely the two sets $X_\Enc$
+and $X_\Dec$! Concretely, we would prefer the size of $X_\Enc$ to be a small as
+possible, so that we can start with as small an ``error'' on the ciphertexts as
+possible (while maintaining security) and want $X_\Dec$ to be as large as
+possible, so we can correctly decrypt ciphertexts with larger errors. Therefore,
+we will also focus on attempting to achieve these two goals.
+\paragraph{} The first ``substitution'' into the abstract scheme will therefore
+be the ring we will employ. We would like as nice a ring to work with as
+possible. Since integers are really easy to work with from a computational
+point of view, they are an obvious choice as a base ring. Then, since we would
+like to be able to have a neat representation of circuits as polynomials, we may
+consider the polynomial ring over the integers as our second step. Finally,
+since we would also prefer a nice geometric duality, to $N$-dimensional
+Euclidean space, we finally arrive at our pick: for a security parameter
+$\lambda = 1^n$ we shall work with the quotient ring $R = \Int[x]/f(x)$, where
+$f$ is a degree $n$ irreducible polynomial! This will also have the added
+benefit that since $f$ is irreducible, $R$ will be a field, and hence every
+non-zero element will have a multiplicative inverse (this will be crucial in our
+implementation, however, it is not necessery for the concrete description). Note
+that now every element of $R$ can be represented as an $n$-dimensional vector
+sitting in $\Int^n$. In particular, this will mean for us that $X_\Enc$ and
+$X_\Dec$ may be treated as subsets of $\Int^n$. Based on this observation, we
+can make our definition of permitted circuits much simpler and more intuitive:
+\begin{definition}
+  Let $r_\Enc$ be the smallest value, such that $X_\Enc \subseteq B(r_\Enc)$,
+  where $B(r)$ is the ball of radius $r$ centered at the origin. Similarly, let
+  $r_\Dec$ be the largest value such that $B(r_\Dec) \subseteq X_\Dec$. Then, let
+  \[
+    \Sigma_\Pi = \{C\,\,|\,\,\forall \vec{c} \in B(r_\Enc)\,\,\text{ we have
+    }\,\,g(C)(\vec{c} \in B(r_\Dec))\}.
+  \]
+\end{definition}
+Note, that by the definition of $\Sigma_\Pi$, it sits in the maximal set of
+permitted circuits $\Sigma_\Pi'$, as defined in Definition \ref{def:perm_circuits}
 \subsection{The Scheme, Implemented}
 \cite{gentryImplementation}
 \cite{smartImplementation}
@@ -2385,4 +2690,4 @@ resetting the error.
 \section{Conclusion}
 \printbibliography
 
-\end{document}
+\end{document} 
