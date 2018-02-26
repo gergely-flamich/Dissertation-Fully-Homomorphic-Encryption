@@ -2802,20 +2802,146 @@ We are now ready to state the theorem on the circuit bounds:
   \]
   and so $g(C)(\vec{c}) \in B(r_\Dec)$.
 \end{proof}
-\subsubsection{The concrete encryption function}
-\subsubsection{The concrete decryption function}
 \paragraph{} We now see that besides minimising $r_\Enc$ and maximising $r_\Dec$
 we should also minimise $\gamma(R)$, hence beyond the fact that we would like to
 use $\Int[x]$ as the base for our quotient, it is highly non-trivial what
 polynomial $f$ we should quotient by, and how it will affect the multiplicative
 expansion factor. Due to lack of space, we merely mention that by sacrificing
 some choice in our security parameter $\lambda$, we can indeed find a polynomial
-$f$ that is both irreducible and has a favourable expansion factor. For a longer
-discussion on the topic, we direct the reader to Section 7.4 in \cite{gentry2009fully}.
-\subsubsection{}
+$f$ that is both irreducible and has a favourable expansion factor. For a more complete
+discussion on the topic, we direct the reader to Section 7.4 in
+\cite{gentry2009fully} and \cite{lyubashevsky2006generalized}.
+\subsubsection{The concrete encryption function}
+\label{sec:enc_concretely}
+\paragraph{} Similarly to how we went from an abstract condition to concrete
+criteria with the when considering the choice of ring, we would like to continue
+in this vein when we consider how we would like to concretise our encryption
+function. We must remember that all we are doing is substituting into the
+definitions of the abstract scheme and then ``tweak'' the parameters of the
+concrete solutions so we get as favourable results as possible. Therefore,
+recall that we have defined the $\Samp(I, m)$ by
+\[
+  \Samp_R(I, m) = m + r \times s\quad \text{ where } r \leftarrow \Samp_R
+\]
+and $(s) = I$. Let $\ell_\Samp$ be an upper bound on the length of the outputs
+of $\Samp_R$. Then, we get
+\[
+  r_\Enc = \max\{\norm{m + r \times s}\} \leq n \cdot \norm{S} + \gamma(R)\cdot\ell_{\Samp}\cdot\norm{S}
+\]
+where $S$ is the rotation basis of $s(x)$. The inequality holds by the
+triangle inequality, the multiplicative bound in $R$ and the fact that
+$\vec{m}$ will be a bit vector, hence again by the triangle inequality
+$\norm{\vec{m}S}\leq n\norm{S}$. There are two values we
+can tweak here: the generator $s$, and the sampling radius $\ell_\Samp$. Indeed,
+in the next section we will see that our choice for $v$ is such that $\norm{S}$
+is small. As for $\ell_\Samp$, due to lack of space, we merely note that it
+controls the security of our scheme, at the cost of functionality and
+performance. See the next section for more details or Section 7.5 in \cite{gentry2009fully}.
+\subsubsection{The concrete decryption function}
+\paragraph{} Finally, we consider the decryption function. Since we are working
+with lattices, when we ran $\GenIdeal$, we may assume that the generators we got
+$(J^{pk}, J^{sk})$ are polynomials $(v(x), w(x))$, respectively. Then, we will
+write $V, W$ for their rotation bases, respectively. Hence, substituting into
+our abstract schem, our decryption function becomes
+\[
+  \Dec((R, I, V), \vec{c}) = (\vec{c} \mod V) \mod I = \vec{c} - \lfloor \vec{c}
+  \times V^{-1} \rceil \times V \mod I.
+\]
+Recall that by our definition of $X_\Dec$, ciphertexts will be correctly
+decrypted in the fundamental domain of $V$. Geometrically therefore, $r_\Dec$ is the largest ball
+that can be inscribed into the parallelepiped defined by $V$.
 \subsection{The Scheme, Implemented}
-\cite{gentryImplementation}
-\cite{smartImplementation}
+\paragraph{} We finally arrive at the last stage: we describe a concrete family
+of lattices that we can instantiate to have the scheme working. Our
+implementation follows that of Smart and Vercauteren \cite{smartImplementation}
+(2010), and Gentry and Halevi (2011) \cite{gentryImplementation}. As mentioned
+in the introduction, the author has provided code following this implementation
+in the \texttt{Sage} language. Now that we have seen the underlying machinery,
+the aim of this section is to expose how we can use neat tricks to reduce the
+complexity of the procedure, as well as how to reduce the space that is required
+to store various components of the algorithm.
+\paragraph{} To stay consistent with notation in literature, we remind the
+reader that for integers $c, d$ we shall write $[c]_d$ to refer to the
+\textit{centered mod} of $c$ by $d$. This operation will work precisely as the
+normal modulo operation, but with the caveat that $[c]_d$ will map its input in
+the range $[-\frac{d}2, \frac{d}2)$.
+\paragraph{} Furthermore, below we will make use of the notion of the Hermite
+Normal Form of an integer matrix. We therefore define them here so that we avoid
+clutter.
+\begin{definition}{(Lower triangular) Hermite Normal Form:}
+  Let $A \in \GL_n(\Int)$. Then, there exists a unimodular matrix $U \in
+  \GL_n(\Int)$ and another matrix $H \in \GL_n(\Int)$ such that $UA = H$, $H$ is
+  unique for $A$ (up to orientation) and has the following properties (it is
+  always assumed below that $i, j$ integers and $1 \leq i, j \leq n$):
+  \begin{enumerate}
+    \item If $i < j$ then $h_{i, j} = 0$.
+    \item If $i = j$ then $h_{j, j} > 0$.
+    \item If $i > j$ then $|h_{i, j}| \leq h_{j, j}/2$
+  \end{enumerate}
+\end{definition}
+An important observation for us is that since if $A$ is a basis for a lattice
+$\L(A)$ then since $U$ is unimodular then $H$ is also a basis for that same
+lattice (we will expand on this in a moment). For a more complete treatment of
+the HNF, we refer the reader to Section 2.4.2 in \cite{cohen1993course}.
+\subsubsection{Choosing the ring, its ideal and the key generation algorithm}
+\paragraph{} We begin by describing the ring $R = \Int[x]/f$ as we described in the previous
+section. In particular, we need to make concrete our choice for $f$. Let $N =
+|\lambda| $ be our security parameter, and set $n = 2^N$. Then, we will be
+using $f(x) = x^n + 1$, not only because it is irreducible, but also as we
+will see in a moment has some very nice properties. 
+\paragraph{} As mentioned in Section \ref{sec:enc_concretely}, we would also
+like to have the generator of $I$ as small as possible. Hence, we set $I = (2)$,
+the set of polynomials with even coefficients. In this case, R/I will have $n$
+cosets since all cosets will have the form $b_n(x) + (2)$ such that the
+coefficients of $b_n$ are either 0 or 1.
+\paragraph{} The key generation is the most complicated part of the procedure.
+This is how we shall go about it: we will rely on a bounding parameter $t$. We
+will pick a $v \in R$ such that all coefficients of $v_i$ are in $[-\frac{t}2,
+\frac{t}2)$. Now, we calculate the ``scaled inverse'' of $v$ mod $f$. In
+particular, since $\Int[x]$ is a Euclidean domain, B\'ezout's Identity holds,
+i.e. for $v$ and $f$ there is an integer $d$ and polynomials $w$ and $q$ such
+that
+\[
+  v\times w + f \times q = d.
+\]
+Modding by $f$, we get $v\times w = d \mod f$. We merely need to apply the
+Extended Euclidean algorithm to compute $w$ and $d$.
+We now generate the HNF of $v$'s rotation basis, and check if it is of the form 
+\[
+  H = \begin{bmatrix}
+    d & 0 & 0 &\hdots &0 \\
+    -r & 1 & 0 &\hdots &0 \\
+    -[r^2]_d & 0 & 1 & \hdots& 0 \\
+    \vdots & 0 & 0 & \ddots & \vdots \\
+    -[r^{2^n - 1}]_d & 0 & 0 & \hdots & 1
+  \end{bmatrix}
+\]
+for some other integer $r$. The reason why we prefer this form of the HNF is
+because it would allow us to store it very compactly: we would only need to
+store $d$ and $r$ to store the whole $n \times n$ matrix! However, the
+question is how likely is it that we have a HNF like above? Fortunately for us,
+very likely, in particular, the HNF is of the above form whenever $d$ is odd and
+is not divisible by any squares of integers (the technical term is $d$ is
+square-free). Another great advantage of this method, is that since $v \times w
+= d$, taking rotation bases, we will also get $VW = d\cdot I$, where $I$ is the
+$n\times n$ identity matrix. Hence, $V^{-1} = \frac1d \cdot W$. 
+\paragraph{} To perform the check described above, we can use another trick. It
+can be shown, that the HNF of $V$ is of the correct form if and only if $H$
+contains the row 
+\[
+  \vec{y} \times V = [-r, 1, \hdots, 0]
+\]
+for some $\vec{y} \in \Int^n$. Then, multiplying both sides by $W$, we get
+\begin{gather*}
+  \vec{y} \times V \times W = [-r, 1, \hdots, 0] \times W \\
+  \vec{y} \cdot d = -r \cdot [w_1, w_2, \hdots, w_n] + [-w_n, w_1, \hdots, w_{n-1}]. 
+\end{gather*}
+Now, we can mod the whole equation by $d$ and get
+\begin{gather*}
+  r \cdot [w_1, w_2, \hdots, w_n] = [-w_n, w_1, \hdots, w_{n-1}] \mod d.
+\end{gather*}
+Due to linear independence now, we therefore have $rw_i = w_{i+1}$ for all $i$. 
+\subsubsection{}
 \subsection{Discussion about the capabilities of the scheme}
 \section{Conclusion}
 \printbibliography
