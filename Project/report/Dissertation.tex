@@ -1824,6 +1824,7 @@ from $R$:
   \textbf{principal ideal}.
 \end{definition}
 \begin{definition}{Modding by an ideal:}
+  \label{def:ideal_mod}
   Let $R$ be a ring and $I$ an ideal of $R$. Let $\pi + I$ be a coset of $I$ and
   $\psi \in \pi + I$. Assume that $\pi$ is in some sense a unique ``special''
   element. We will call $\pi$ a \textbf{distinguished representative} of $I$.
@@ -1907,7 +1908,8 @@ of rings.
 \end{definition}
 \begin{definition}{Divisibility}
   Let $R$ be a ring and $r, s \in R$. Then, we say that $s$ \textbf{divides}
-  $r$, iff there is some $t \in R$, such that $r = st$.
+  $r$, iff there is some $t \in R$, such that $r = st$. We call $(s,t)$ a
+  \textbf{divisor pair}.
 \end{definition}
 \begin{definition}{Irreducibility}
   Let $R$ be a ring with a multiplicative identity. Then, we say that an element
@@ -1984,11 +1986,14 @@ to 0 by its definition, we get
   \lfloor \vec{v}\times B^{-1} \rceil = \lfloor \vec{a} + \vec{t} \rceil = \vec{a}.
 \]
 Hence, we define the following:
-\begin{align*}
-  \vec{v} \mod B &= \vec{v} - \lfloor \vec{v} \times B^{-1} \rceil \times B \\
-                 &= \ell + \vec{f} - \vec{a} \times B \\
-                 &= \ell + \vec{f} - \ell = \vec{f}.
-\end{align*}
+\begin{definition}{Modding by a lattice basis}
+  \label{def:lattice_mod}
+  \begin{align*}
+    \vec{v} \mod B &= \vec{v} - \lfloor \vec{v} \times B^{-1} \rceil \times B \\
+                   &= \ell + \vec{f} - \vec{a} \times B \\
+                   &= \ell + \vec{f} - \ell = \vec{f}.
+  \end{align*}
+\end{definition}
 This gives a really nice way of testing whether a point in the ambient space is
 also in the lattice, since if $\vec{v} \in \L(B)$, then $\vec{v} \mod B = 0$!
 \begin{definition}
@@ -2103,6 +2108,22 @@ The above if and only if condition motivates the following definition.
   lattice induced by $p$.
 \end{definition}
 The above definition is made to really highlight the dual nature of the ideal $(p)$.
+\paragraph{} Finally, we draw attention to the two modding operations that we
+have defined: modding a ring element by an ideal in Definition
+\ref{def:ideal_mod} and modding an element of $n$-dimensional Euclidean space by
+a lattice basis in Definition \ref{def:lattice_mod}. The question now arises: since ideal
+lattices are related to both rings and lattices, is there a connection between
+the two operations? The answer is not only that the two are related, but they
+are exactly the same operation! (Hence, when we later write mod in the context of
+ideal lattices, it will not be an overload of notation.) To see that they are
+equal, we observe the following: Since an element in $R$ may be represented as a
+vector in $\Int^n$, given an ideal $(v(x))$ and another ring element $a(x) \in
+R$, we have
+\[
+  a(x) \in p(x) + (v(x)) \quad\Leftrightarrow\quad \vec{a} \in \vec{p} + \L(V)
+  \quad\Leftrightarrow\quad \vec{a} = \vec{p} \mod V
+\]
+where $V$ is the rotation basis corresponding to $v(x)$.
 \subsection{Mathematical Set-up III: Computational Considerations for Lattices and Rings}
 \paragraph{} Up to now, we only considered structures in the context of the
 properties that their axioms give rise to. In this section, we now switch
@@ -2403,7 +2424,7 @@ simulate any Turing Machine. Then, by Church-Turing Thesis we have that we can
 compute anything that is computable. We will now clarify functional
 completeness:
 \begin{definition}{(Informal) Functionally complete set:}
-  Let $\Gamma$ be a set of boolean gates, such that every gate in the set is a
+  Let $\Gamma$ be a set of boolean (binary) gates, such that every gate in the set is a
   binary operation, i.e $\forall g \in \Gamma$ we have $g: \{0, 1\} \times \{0,
   1\} \to \{0, 1\}$. Then, $\Gamma$ is functionally complete, if every Boolean
   function $f: \{0, 1\}^n \to \{0, 1\}$ may be expressed as a circuit of
@@ -2642,7 +2663,7 @@ factoring-based public-key schemes, but due to the ring ideal - lattice duality,
 calculations with these objects are easier and also the performance and security
 analyses of them will be easier, as we can leverage the geometric nature of
 lattices. 
-\subsubsection{Definitions and Approach}
+\subsubsection{Approach, and the concrete ring}
 \paragraph{} We recall from our discussion in the previous section, the
 definition of permitted circuits:
 \[
@@ -2680,9 +2701,118 @@ can make our definition of permitted circuits much simpler and more intuitive:
     \Sigma_\Pi = \{C\,\,|\,\,\forall \vec{c} \in B(r_\Enc)\,\,\text{ we have
     }\,\,g(C)(\vec{c} \in B(r_\Dec))\}.
   \]
+  We refer to $r_\Enc$ as the \textbf{encryption radius} and to $r_\Dec$ as the
+  \textbf{decryption radius}.
 \end{definition}
 Note, that by the definition of $\Sigma_\Pi$, it sits in the maximal set of
-permitted circuits $\Sigma_\Pi'$, as defined in Definition \ref{def:perm_circuits}
+permitted circuits $\Sigma_\Pi'$, as defined in Definition
+\ref{def:perm_circuits}. Then, our goal may be rephrased as minimising the
+encryption radius and maximising the decryption radius.
+\paragraph{} Given $r_\Enc$ and $r_\Dec$ we can now as a more precise question:
+what is the size of $\Sigma_\Pi$? To answer this, we need to bound the length of
+the output of a generalised circuit. Namely, given $C \in \Sigma_\Pi$ and $\vec{c}
+\in B(r_\Enc)$, what can we say about $\norm{g(C)(\vec{c})}$? Since the
+generalised circuit will be composed of sums and products of vectors in
+Euclidean space, we can break down the problem into bounding the size of two
+arbitrary vectors $\vec{u}$ and $\vec{v}$, then the norm of the output of the
+circuit will be just the function of the bounds on addition and multiplication.
+Bounding addition is easy: by the triangle inequality, we have $\norm{\vec{u} +
+  \vec{v}} \leq \norm{\vec{u}} + \norm{\vec{v}}$. For multiplication, it can be
+shown that $\norm{\vec{u} \times \vec{v}} \leq \gamma(R) \cdot \norm{\vec{u}}
+\cdot \norm{\vec{v}}$, where $\gamma(R)$ is a factor that is only dependent on $R$.
+To show a bound on the output of a circuit, however, we first need some more
+terminology.
+The first one relies on the observation, that a circuit (in our case) may be
+expressed as a directed tree with the leaves being the inputs and the root being
+the output of the circuits, with the non-leaf nodes corresponding to the logic
+gates.
+\begin{definition}
+  Let $C = (E, V)$ be an (acyclic) circuit represented as a tree, with root node
+  $o$. Define the set of level $l$ gates by 
+  \[
+    C^{l} = \{v \in V\,\,|\,\, d(v, o) = l\}.
+  \]
+  Now, define the depth of C denoted by $\delta(C)$ by
+  \[
+    \delta(C) = \max_{i \in \Nat} C^{(i)} \neq \emptyset.
+  \]
+\end{definition}
+Note, that according to our definition $C^{(0)}$ is simply the singleton set
+containing the root of the tree, and $\delta(C)$
+is going to denote the length of the longest path between a leaf and the root.
+\paragraph{} The second definition is merely a slight generalisation of our earlier
+definition of a gate. Recall that a (binary) logic gate was a function $g: \{0,
+1\} \times \{0, 1\} \to \{0, 1\}$. We generalise this notion slighly further
+\begin{definition}{Fan-in}
+  Let $g: \{0, 1\}^k \to \{0, 1\}$ be a $k$-ary Boolean function. Then we say
+  that the fan-in of $g$ is $k$. 
+\end{definition}
+The reason for talking about $k$ fan-in gates is not theoretical, but practical.
+In particular, as we will see in a moment that it is desirable to keep our
+circuit depths as low as possible. Hence, where possible, we can replace $k - 1$
+addition gates that evaluate $c = \Add(c_1, \Add(c_2, \Add(\hdots, \Add(c_{k-1},
+c_{k}))))$ for some $\vec{c} = [c_1, \hdots, c_k] \in B(r_\Enc)$ with a $k$
+fan-in addition gate to get $c = \Add(\vec{c})$. The important difference here
+is that the depth of the first circuit is $k-1$ whereas the depth of the second
+is $1$.
+We are now ready to state the theorem on the circuit bounds:
+\begin{theorem}
+  Assume $r_\Enc \geq 1$. Given a circuit $C$, assume its $\Add$ gates have
+  fan-in at most $\gamma(R)$ and its $\Mult$ gates have fan-in 2.
+  Finally, assume that
+  \[
+    \delta(C) = \log_2\log_2 r_\Dec - \log_2\log_2(\gamma(R) \cdot r_\Enc).
+  \]
+  Then, $C(\vec{c}) \in B(r_\Dec)$ for all $\vec{c} \in B(r_\Enc)$, and hence $C
+  \in \Sigma_\Pi$.
+\end{theorem}
+\begin{proof}
+  Let $r_i$ be an upper bound on the norm of the results of gates in $C^{(i)}$
+  for $0 \leq i \leq \delta(C)$. Then, our task is to bound $\norm{g(C)(\vec{c}}
+  \leq r_0$ by $r_\Enc$, the radius of the input nodes in the circuit. Hence, $r_{\delta(C)} = r_\Enc$. Then
+  an $\Add$ gate at level $i$ will take take as input at most $\gamma(R)$ number
+  of $\vec{u_j}$s from level $i + 1$ and output some vector $\vec{v}$. Then, by
+  the triangle equality
+  \[
+    \norm{v} \leq \sum_{j = 1}^{\gamma(R)}\norm{u_j} 
+             \leq \sum_{j = 1}^{\gamma(R)} r_i
+             = \gamma(R) \cdot r_i.
+  \]
+  Similarly, for a $\Mult$ gate at level $i$ for some input $\vec{u}_1,
+  \vec{u}_2$ outputting $\vec{v}$ we get
+  \[
+    \norm{\vec{v}} \leq \gamma(R)\cdot\norm{\vec{u}_1}\cdot\norm{\vec{u}_2} \leq
+    \gamma(R)\cdot r_i^2.
+  \]
+  Since $r_i, \gamma(R) \geq 1$, in both cases $r_{i-1} \leq \gamma(R)\cdot
+  r_i^2 \leq (\gamma(R)\cdot r_i)^2$ for all $i$. Then, applying this inequality
+  to $r_0$ $\delta(C)$ times, we get:
+  \[
+    r_0 \leq (\gamma(R)\cdot r_\Enc)^{2^{\delta(C)}}
+  \]
+  Taking logs twice then:
+  \begin{align*}
+    \log_2\log_2r_0 &\leq \delta(C) + \log_2\log_2(\gamma(R)\cdot r_\Enc)\\
+                    &\leq (\log_2\log_2r_\Dec - \log_2\log_2(\gamma(R)\cdot r_\Enc)) + \log_2\log_2(\gamma(R)\cdot r_\Enc)\\
+                    &= \log_2\log_2r_\Dec.
+  \end{align*}
+  Whence
+  \[
+    r_0 \leq r_\Dec,
+  \]
+  and so $g(C)(\vec{c}) \in B(r_\Dec)$.
+\end{proof}
+\subsubsection{The concrete encryption function}
+\subsubsection{The concrete decryption function}
+\paragraph{} We now see that besides minimising $r_\Enc$ and maximising $r_\Dec$
+we should also minimise $\gamma(R)$, hence beyond the fact that we would like to
+use $\Int[x]$ as the base for our quotient, it is highly non-trivial what
+polynomial $f$ we should quotient by, and how it will affect the multiplicative
+expansion factor. Due to lack of space, we merely mention that by sacrificing
+some choice in our security parameter $\lambda$, we can indeed find a polynomial
+$f$ that is both irreducible and has a favourable expansion factor. For a longer
+discussion on the topic, we direct the reader to Section 7.4 in \cite{gentry2009fully}.
+\subsubsection{}
 \subsection{The Scheme, Implemented}
 \cite{gentryImplementation}
 \cite{smartImplementation}
