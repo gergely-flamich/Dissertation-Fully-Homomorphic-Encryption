@@ -2761,7 +2761,7 @@ We are now ready to state the theorem on the circuit bounds:
   fan-in at most $\gamma(R)$ and its $\Mult$ gates have fan-in 2.
   Finally, assume that
   \[
-    \delta(C) = \log_2\log_2 r_\Dec - \log_2\log_2(\gamma(R) \cdot r_\Enc).
+    \delta(C) \leq \log_2\log_2 r_\Dec - \log_2\log_2(\gamma(R) \cdot r_\Enc).
   \]
   Then, $C(\vec{c}) \in B(r_\Dec)$ for all $\vec{c} \in B(r_\Enc)$, and hence $C
   \in \Sigma_\Pi$.
@@ -2929,7 +2929,7 @@ $n\times n$ identity matrix. Hence, $V^{-1} = \frac1d \cdot W$.
 can be shown, that the HNF of $V$ is of the correct form if and only if $H$
 contains the row 
 \[
-  \vec{y} \times V = [-r, 1, \hdots, 0]
+  \vec{h}_1 = \vec{y} \times V = [-r, 1, \hdots, 0]
 \]
 for some $\vec{y} \in \Int^n$. Then, multiplying both sides by $W$, we get
 \begin{gather*}
@@ -2940,10 +2940,134 @@ Now, we can mod the whole equation by $d$ and get
 \begin{gather*}
   r \cdot [w_1, w_2, \hdots, w_n] = [-w_n, w_1, \hdots, w_{n-1}] \mod d.
 \end{gather*}
-Due to linear independence now, we therefore have $rw_i = w_{i+1}$ for all $i$. 
-\subsubsection{}
+Due to linear independence now, we therefore have $rw_{i+1} = w_i$ for all $1
+\leq i \leq n - 2$ and $rw_1 = -w_{n - 1}$. Then, multiplying all these terms
+together, we get
+\[
+  r^n\cdot w_1w_2\cdots w_n = -w_nw_1\cdots w_{n-1} \mod d.
+\]
+Then, the $w_i$ terms match up on both sides, hence dividing by them on both
+sides, we get
+\[
+  r^n = -1 \mod d.
+\]
+Observe, that the above two equations are equivalent up to an even number of
+$-1$ factors. Hence, it is enough to check for the last equation to see that the
+we have the HNF in the required form (up to an even number of negated rows). For
+a proof of the existence of a row $\vec{h}_1$ being a sufficient condition for
+the correct HNF form, please see Lemma 1 in \cite{gentryImplementation}.
+\paragraph{To summarise:} We will have $R = \Int[x]/f$, $f = x^n + 1$, $I =
+(2)$ and we will only store $d$ and $r$ as the description $J^{pk}$.
+\subsubsection{The encryption function}
+\paragraph{} We will focus on encryption a single bit $b \in \{0, 1\}$, with a
+public key $J^{pk}$. To then encode the message as the representative of a coset
+of $(2)$, we pick a representative $u(x) \leftarrow \Samp_R \mod (2)$. Note, that all
+coefficients of $u$ are now going to be $\{0, 1\}$. Then set $c' = 2\cdot u(x) + b$.
+Then, to perform the encryption function, assume $J^{pk} = (d, r)$ generates
+matrix $H$, and thus we get
+\[
+  \vec{c} = \vec{c}' \mod H = \vec{c}' - \lfloor \vec{c}' \times H^{-1} \rceil
+  \times H.
+\]
+Recall that $H$ and (it is easy to check that) its inverse, $H^{-1}$ are of the
+special form
+\[
+  H = \begin{bmatrix}
+    d & 0 & 0 &\hdots &0 \\
+    -r & 1 & 0 &\hdots &0 \\
+    -[r^2]_d & 0 & 1 & \hdots& 0 \\
+    \vdots & 0 & 0 & \ddots & \vdots \\
+    -[r^{n - 1}]_d & 0 & 0 & \hdots & 1
+  \end{bmatrix}
+  \quad\text{ and }\quad
+  H^{-1} = \frac{1}{d}\begin{bmatrix}
+    1 & 0 & 0 &\hdots &0 \\
+    r & d & 0 &\hdots &0 \\
+    [r^2]_d & 0 & d & \hdots& 0 \\
+    \vdots & 0 & 0 & \ddots & \vdots \\
+    [r^{n - 1}]_d & 0 & 0 & \hdots & d
+  \end{bmatrix}.
+\]
+\paragraph{} Now, we calculate $\vec{c}' - \lfloor \vec{c}' \times H^{-1} \rceil$.
+Starting with the multiplication, let $\vec{c}' = [2u_0 + b, 2u_1, \hdots,
+2u_n]$ and now we get
+\[
+  \lfloor \vec{c}' \times H^{-1} \rceil = \left\lfloor\left[\frac{[u(r) + b]_d}d , 2u_1,
+    \hdots 2u_{n-1}\right] \right\rceil.
+\]
+Since all coefficients of $u(x)$ are integers already, rounding them will have
+no effect. However, observe that the first term is some integer and we are
+taking its centered mod by $d$, so it will fall in the interval $[-d/2, d/2)$.
+Hence, after dividing it by $d$, it will fall into the interval $[-1/2, 1/2)$,
+which will round to $0$. Thus, we will have
+\[
+  \left\lfloor\left[\frac{[2u(r) + b]_d}d , 2u_1,\hdots 2u_{n-1}\right]
+  \right\rceil = [ 0 , 2u_1,\hdots 2u_{n-1}].
+\]
+Then, one can easily verify, that  
+\[
+  \vec{c} = \vec{c}' - [ 0 , 2u_1,\hdots 2u_{n-1}] \times H = \vec{c} = [[2\cdot
+  u(r) + b]_d, 0, \hdots, 0]
+\]
+Thus, letting $c = [2\cdot u(r) + b]_d$, it is enough to output and transmit $c$!
+\subsubsection{The decryption function}
+\paragraph{} From our concrete scheme, we know that given a ciphertext vector
+$\vec{c}$ and private key $J^{sk}$, we want to calculate
+\[
+ \vec{m}' = \vec{c} \mod J^{sk}
+\]
+And return the first entry, namely $m'_0 \mod 2$.
+Recall, that the secret key $J^{sk}$ is given by the rotation bases $V$ and $W$.
+Recall also, that $V^{-1} = W/d$.
+Then, the above calculation (without the second modding) will be
+\[
+  \vec{c} - \lfloor \vec{c} \times W/d \rceil \times V
+\]
+The correctness of the above procedure hinges on the condition that for $\vec{a}
+= 2 \cdot \vec{u} + b \cdot [1, 0,\hdots 0]$ all entries in $\vec{a} \times
+W$ are going to be in the interval $[-d/2, d/2)$. To see this, we note that
+$\vec{c} = \vec{y} \times V + \vec{a}$. where $\vec{y}$ is an integer vector.
+Hence,
+\[
+  \lfloor \vec{c} \times W/d \rceil = \lfloor \vec{y} \times V \times W/d +
+  \vec{a} \times W/d \rceil = \vec{y} + \lfloor \vec{a} \times W/d \rceil.
+\]
+From the above we can see that we will decrypt correctly iff $\lfloor \vec{a}
+\times W/d \rceil \in [-1/2, 1/2)$ which holds iff $[\vec{a} \times W]_d =
+\vec{a} \times W$, which holds iff $\vec{a} \times W \in [-d/2, d/2)$. In
+particular, from this we get that we are correct if and only if
+\[
+  [\vec{c} \times W]_d = \vec{a} \times W.
+\]
+Now, recall from the above section that $\vec{c} = [c, 0, \hdots, 0]$, hence
+\[
+  [\vec{c} \times W]_d = [c \cdot [w_1, w_2, \hdots, w_n]]_d = [[cw_1]_d,
+  \hdots, [cw_n]_d].
+\]
+On the other hand
+\[
+  [\vec{c} \times W]_d = \vec{a} \times W = 2 \cdot \vec{u} \times W + b \cdot
+  [w_1, \hdots, w_n].
+\]
+Equating the RHSs of the above two equations and modding by two, we get
+\[
+  [[cw_1]_d, \hdots, [cw_n]_d] = b \cdot [w_1, \hdots, w_n] \mod 2.
+\]
+In particular, we have
+\[
+  [cw_i]_d = bw_i \mod 2
+\]
+for all $w_i$. Observe that if $w_i$ is odd, then the above simplifies to
+\[
+  [cw_i]_d = b \mod 2
+\]
+thus it is enough to store a single odd coefficient of $w(x)$ as the description
+$J^{sk}$ for the secret key!
 \subsection{Discussion about the capabilities of the scheme}
-\section{Conclusion}
+\subsection{Making the scheme fully homomorphic}
+\paragraph{Acknowledgements} The author would like to thank Nick Tikhonov for
+introducing the author to fully homomorphic encryption and the many interesting
+conversations with him about the topic.
 \printbibliography
 
 \end{document} 
