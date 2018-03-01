@@ -2851,6 +2851,7 @@ Recall that by our definition of $X_\Dec$, ciphertexts will be correctly
 decrypted in the fundamental domain of $V$. Geometrically therefore, $r_\Dec$ is the largest ball
 that can be inscribed into the parallelepiped defined by $V$.
 \subsection{The Scheme, Implemented}
+\label{sec:scheme_impl}
 \paragraph{} We finally arrive at the last stage: we describe a concrete family
 of lattices that we can instantiate to have the scheme working. Our
 implementation follows that of Smart and Vercauteren \cite{smartImplementation}
@@ -3063,8 +3064,37 @@ for all $w_i$. Observe that if $w_i$ is odd, then the above simplifies to
 \]
 thus it is enough to store a single odd coefficient of $w(x)$ as the description
 $J^{sk}$ for the secret key!
-\subsection{Discussion about the capabilities of the scheme}
 \subsection{Making the scheme fully homomorphic}
+\paragraph{}
+Now that we have seen the somewhat homomorphic scheme, how do we make it fully
+homomorphic? We first formalise some ideas:
+\begin{definition}{(Compact Homomorphic Encryption)}
+  Let $\Pi = (\Gen, \Enc, \Dec, \Evaluate)$ be a homomrphic cipher. Then, we say that it is \textbf{compact},
+  iff for every security parameter $\lambda$ there is a (family of) circuits $D_\Pi$
+  expressing $\Dec$ of depth $\Oh(\lambda)$.\\
+  Further, we say that if $\Evaluate$ is correct for some circuts $\Sigma_\Pi$ too,
+  then we say that $\Pi$ \textbf{compactly evaluates} $\Sigma_\Pi$.
+\end{definition}
+\begin{definition}
+  A homomorphic scheme $\Pi$ is \textbf{fully homomorphic} iff $\Pi$ compactly evaluates
+  \textit{all circuits}.
+\end{definition}
+\begin{definition}
+  A homomorphic scheme is called \textbf{bootstrappable} if it compactly
+  evaluates its decryption circuit augmented with a set of functionally complete gates.
+\end{definition}
+\begin{definition}
+  A family of homomorphic schemes $\{\Pi^{(d)}\,\,|\,\,d\in\Nat\}$ is levelled
+  fully homomorphic if for all $d$ every element uses the same decryption
+  function and a scheme $\Pi^{(d)}$ can correctly evaluate all circuits of depth
+  at most $d$, and the time complexity of $\Pi^{(d)}$'s algorithms is
+  polynomial in $\lambda, d$ and the size of circuits that we are evaluating.
+\end{definition}
+\paragraph{} In this section, we will show that we can construct a levelled
+fully homomorphic scheme from any bootstrappable scheme.
+\subsection{Discussion about the capabilities of the scheme}
+\paragraph{} So how close are we to full homomorphism in our implemented scheme
+that was described in Section \ref{sec:scheme_impl}?
 \paragraph{Acknowledgements} The author would like to thank Nick Tikhonov for
 introducing the author to fully homomorphic encryption and the many interesting
 conversations with him about the topic.
