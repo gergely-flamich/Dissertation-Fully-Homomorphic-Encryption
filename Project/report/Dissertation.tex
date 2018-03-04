@@ -75,6 +75,8 @@
 \newcommand{\GenIdeal}{\texttt{GenIdeal}}
 \newcommand{\Samp}{\texttt{Samp}}
 
+\renewcommand{\vec}[1]{\mathbf{#1}}
+
 \newcommand{\norm}[1]{||#1||}
 
 \addtokomafont{labelinglabel}{\sffamily}
@@ -3081,7 +3083,13 @@ homomorphic? We first formalise some ideas:
 \end{definition}
 \begin{definition}
   A homomorphic scheme is called \textbf{bootstrappable} if it compactly
-  evaluates its decryption circuit augmented with a set of functionally complete gates.
+  evaluates its decryption circuit augmented with a set of functionally complete
+  gates. More formally, let $\Gamma$ be a set of functionally complete gates,
+  and for $g \in \Gamma$ let the set of $g$-augmented decryption circuts be
+  $D_\Pi(\Gamma)$. Then, $\Pi$ is bootstrappable iff
+  \[
+    D_\Pi(\Gamma) \subseteq \Sigma_\Pi.
+  \] 
 \end{definition}
 \begin{definition}
   A family of homomorphic schemes $\{\Pi^{(d)}\,\,|\,\,d\in\Nat\}$ is levelled
@@ -3090,12 +3098,93 @@ homomorphic? We first formalise some ideas:
   at most $d$, and the time complexity of $\Pi^{(d)}$'s algorithms is
   polynomial in $\lambda, d$ and the size of circuits that we are evaluating.
 \end{definition}
-\paragraph{} In this section, we will show that we can construct a levelled
-fully homomorphic scheme from any bootstrappable scheme.
-\subsection{Discussion about the capabilities of the scheme}
-\paragraph{} So how close are we to full homomorphism in our implemented scheme
-that was described in Section \ref{sec:scheme_impl}?
-\paragraph{Acknowledgements} The author would like to thank Nick Tikhonov for
+\paragraph{} In this section, we will show (a sketch of the fact) that we can construct a levelled
+fully homomorphic scheme from any bootstrappable scheme $\Pi$. We note, that
+setting up the scheme, proving its correctness and its security require some
+more setup that is out of the scope of this work. Hence, the reader should be
+aware that all arguments below, although very close to the formal setting, are
+just sketches. 
+\paragraph{} Recall that the limitation to the evaluative capacity of our cipher
+is that the error vector associated with every ciphertext grows so large, that
+it exceeds the decryption radius $r_\Dec$ and will lead to incorrect decryption.
+To combat this, as mentioned already in Section \ref{sec:fhe_motivation}, we
+will want to be able to ``reset'' this vector to be small again. This is
+precisely where bootstrapping will come in.
+Thus, let $d \in \Nat$ be arbitrary. Then, we will construct the 
+levelled scheme $\Pi^{(d)}$ from $\Pi$ as follows:
+\paragraph{Key Generation} Run $\Gen(\lambda)$ $d$ times, to obtain the vector
+$[(pk_1, sk_1), (pk_2, sk_2), \hdots, (pk_d, sk_d)]$. Set 
+\[
+pk = [(pk_1,\Enc_{pk_1}(sk_2)), \hdots, (pk_{d-1}, \Enc_{pk_{d-1}}(sk_d)), pk_d]  
+\]
+and $sk = sk_d$. That is, the public key now becomes a vector of tuples plus
+$pk_d$, such that a tuple contains the public key for that level and the
+encryption of the secret key of a level below under the current public key.
+Output $(pk, sk)$.
+\paragraph{Encryption} Given public key $pk$ and message $m$, calculate and
+output $c\leftarrow \Enc_{pk_d}(m)$.
+\paragraph{Decryption} Given a secret key $sk$ and ciphertext $c$, calculate and
+output $m' = \Dec_{sk}(c)$.
+\paragraph{Evaluate} Given a public key $pk$, a circuit made up of $g$-augmented decryption circuits
+$D_\Pi(g)$ and ciphertext vector $\vec{c}$, let $\overline{sk_{ij}}$ denote the $j$th bit of the $i$th secret
+key encrypted under the $i - 1$st public key, and perform the following $d$
+times with the appropriate inputs:\\
+\begin{algorithmic}
+  \State $\Evaluate(pk_{i-1}, D_\Pi, \overline{sk_{i,j}}, \vec{c})$:
+  \State \quad Calculate $\overline{c_{i,j}} \leftarrow \Enc_{pk_{i-1}}(c_{i,j})$ for
+  every $c_i \in \vec{c}$
+  \quad (where $c_{i, j}$ is the $j$th bit of $c_i$)
+  \State \quad Set $c'_i \leftarrow \Evaluate(pk_{i-1}, D_\Pi, [\overline{sk_{i,
+      j}}, \overline{c_{i, j}}])$
+  \State \quad Output $c' = g(\vec{c}')$.
+  \State
+\end{algorithmic}
+\paragraph{} The first three procedures are quite straightforward, but the last
+definition might be quite a mouthful, so let us break it down and see really how
+intuitive it is. We wish to calculate the function $g$ of the input ciphertexts
+$\vec{c}$, where each ciphertext has some potentially large error associated
+with them. We wish to reset this error to prevent the decryption failing and
+then compute $g$. Hence, in Step 1 we encrypt each ciphertext again, under the public key
+of the next level, $pk_{i-1}$. Now, every ciphertext is doubly encrpted, once
+under $pk_i$ and $pk_{i-1}$. But, since we have the secret key $sk_i$ encrypted
+in our public key under $pk_{i-1}$ as well, since $\Pi$ is bootstrappable, in
+Step 2 we
+can now \textit{homomophically decrypt} the ciphertext, resetting the error and
+``removing'' the level $i$ encryption. Thus the ciphertexts in $\vec{c}'$ will
+be all encrypted only under $pk_{i - 1}$, and hence in Step 3 so will be
+$g(\vec{c}')$, achieving our initial goal.
+\paragraph{Correctness} From the above it should be intuitively clear that
+$\Pi^{(d)}$ is correct, however, a formal proof requires some care. The key idea
+is to notice that if the input circuit $C$ is just the identity circuit, then
+underlying plaintext of the input ciphertexts cannot change at any level, by the
+correctness of $\Pi$, and the definition of $\Evaluate^{(d)}$. For the rigorous
+argument please see Theorem 4.2.1 in \cite{gentry2009fully}.
+\paragraph{Security} Similarly, it should be intuitively clear that since we are
+just reusing the parts of an IND-CPA secure cipher, ``layering '' $d$ of them
+on top of each other will essentially mean that an adversary will now need to
+break $d$ instances of the cipher, as we never expose any part that would make
+the adversary's job easier. However, in practice the definition of
+$\Pi^{(d)}$ and in particular $\Evaluate^{(d)}$ is slightly different and hence
+its security analysis requires more care, but the result is the same. For the
+precise definitions, theorems and results, please see Chapter 4 in
+\cite{gentry2009fully} in general and Theorem 4.2.3 in particular.
+\subsubsection{Full homomorphism from levelled homomorphism}
+\paragraph{} Above we have seen how we can use our scheme $\Pi$ to construct
+$\Pi^{(d)}$. The issue here is that although we can create a scheme for
+arbitrary depth $d$, the public key will have size $\Oh(d)$, whereas we would
+prefer the key size to be $\Oh(1)$. To solve this, we consider the final big
+idea: instead of using different public-private key pairs, with the $i$th secret
+key being encrypted under the $i-1$st public key, we merely use the pair $(pk,
+\Enc_{pk}(sk))$! Thus, we have have finally arrived at FHE.
+\paragraph{Security} The last remaining question is, now that we encrypted the
+secret key under its own public key, do we retain the same level of security?
+The answer is sadly no, and one needs to employ a further security framework and
+a hardness assumption to engineer themselves around this difficulty (namely, Key
+Dependent Message (KDM) security and the Sparse Subset Sum Problem (SSSP)'s
+hardness assumption). Due to lack of space, we merely note here that using these
+reasonable assertions, we can reach IND-CPA security again, and we finally get a
+secure fully homomorphic scheme. (See Section 4.3 in \cite{gentry2009fully}.)
+\section*{Acknowledgements} The author would like to thank Nick Tikhonov for
 introducing the author to fully homomorphic encryption and the many interesting
 conversations with him about the topic.
 \printbibliography
