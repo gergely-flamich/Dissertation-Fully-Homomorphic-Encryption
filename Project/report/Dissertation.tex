@@ -486,12 +486,12 @@ A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguisha
   \end{align*}
   By the definition of $C$, we have
   \begin{align*}
-    \Prob(\A(C) = 0 \land M = m_0) &= \Prob(\A(\Enc_K(M)) = 0 \land M = m_0)\\
-                                   &= \Prob(\A(c) = 0 \land \Enc_K(M) = c \land M = m_0) \\
-                                   &= \sum_{c\in C} \Prob(\A(c) = 0 | \Enc_K(M) = c)\cdot \Prob(\Enc_K(M) =c\,\,|\,\, M = m)\\
-                                   &=\sum_{c\in C} \Prob(\A(c) = 0 | C = c)\cdot \Prob(C = c\,\,|\,\, M = m) \\
-                                   &=\sum_{\substack{c\in C \\ c \neq \hat{c}}} \Prob(\A(c) = 0 | C = c) \cdot \Prob(C = c\,\,|\,\, M = m) \\
-                                   &\quad\quad\quad + \Prob(\A(c) = 0 | C = \hat{c}) \cdot \Prob(C = \hat{c}\,\,|\,\, M = m)
+    \Prob(\A(C) = 0 \,\,|\,\, M = m_0) &= \Prob(\A(\Enc_K(M)) = 0 \,\,|\,\, M = m_0)\\
+                                   &= \Prob(\A(c) = 0 \,\,|\,\, \Enc_K(M) = c \land M = m_0) \\
+                                   &= \sum_{c\in C} \Prob(\A(c) = 0 \,\,|\,\, \Enc_K(M) = c)\cdot \Prob(\Enc_K(M) =c\,\,|\,\, M = m)\\
+                                   &=\sum_{c\in C} \Prob(\A(c) = 0 \,\,|\,\, C = c)\cdot \Prob(C = c\,\,|\,\, M = m) \\
+                                   &=\sum_{\substack{c\in C \\ c \neq \hat{c}}} \Prob(\A(c) = 0 \,\,|\,\, C = c) \cdot \Prob(C = c\,\,|\,\, M = m) \\
+                                   &\quad\quad\quad + \Prob(\A(c) = 0 \,\,|\,\, C = \hat{c}) \cdot \Prob(C = \hat{c}\,\,|\,\, M = m)
   \end{align*}
   By the definition of $\A$, $ \Prob(\A(c) = 0 | C = \hat{c}) = 1$, and
   similarly $ \Prob(\A(c) = 0 | C = c) = \frac12$ for $c \neq \hat{c}$. Hence,
