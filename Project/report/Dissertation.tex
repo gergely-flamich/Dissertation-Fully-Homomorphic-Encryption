@@ -337,6 +337,7 @@ The security of a scheme must lay in the key and not the scheme.
 In order for us to be able to analyse our schemes, we must have two well defined
 notions: what does it mean that a scheme is \textit{secure} and how \textit{powerful} is
 the adversary who wishes to break our scheme.
+\subsection{How should we define security?}
 \paragraph{The adversary} We will start from a rather
 paranoid, but very useful perspective: we will assume that the adversary has
 unbounded computational power. This means that we will have to fend off attacks
@@ -352,6 +353,40 @@ We say that a scheme $\Pi$ is perfectly secure if
   \forall m \in \M, c \in \C.\quad \Prob(M=m \,|\, C=c) = \Prob(M=m).
 \]
 \end{definition}
+\begin{theorem}
+  \label{thm:perfect_sec_ciphertext}
+  A cipher $\Pi$ is perfectly secure iff for all $m \in \M$ and $c \in C$
+  we have
+  \[
+    \Prob(C = c\,\,|\,\, M=m) = \Prob(C = c).
+  \]
+\end{theorem}
+\begin{proof}
+  We begin with the forward direction. Thus, assume that $\forall m \in \M$ and
+  $\forall c \in \C$ we have
+  \[
+    \Prob(M=m \,|\, C=c) = \Prob(M=m).
+  \]
+  Then, fix $c\in \C$ and $m \in \M$. Now, by Bayes' Theorem we get
+  \begin{align*}
+    \Prob(C=c \,\,|\,\, M = m) &= \frac{\Prob(M=m \,\,|C = c)\cdot\Prob(C = c)}{\Prob(M=m)} \\
+                         &= \frac{\Prob(M=m)\cdot\Prob(C=c)}{\Prob(M=m)}\quad\text{by perfect security}\\
+                         &= \Prob(C = c)
+  \end{align*}
+  as required.\\
+  Let us now consider the backwards direction, hence assume for all $c\in \C$
+  and $m\in \M$ that
+  \[
+    \Prob(C = c\,\,|\,\, M=m) = \Prob(C = c).
+  \]
+  Now, fix $c\in\C$ and $m\in\M$. Again, by Bayes' Theorem we have
+  \begin{align*}
+    \Prob(M=m \,\,|\,\, C = c) &= \frac{\Prob(C=c \,\,|M = m)\cdot\Prob(M = m)}{\Prob(C=c)} \\
+                         &= \frac{\Prob(C=c)\cdot\Prob(M=m)}{\Prob(C=c)}\quad\text{by our assumption}\\
+                         &= \Prob(M = m)
+  \end{align*}
+  as required.
+\end{proof}
 \paragraph{Indistinguishability} We will require that given any ciphertext and a uniformly
 random string from the cipher alphabet, the adversary cannot
 \textit{distinguish} the two strings whatsoever. To formalise this, we will
@@ -383,104 +418,104 @@ A scheme $\Pi$ is perfectly secure if and only if it is perfectly indistinguisha
 \begin{proof}
   `$\Rightarrow$' Let $\A$ be an arbitrary adversary. Without loss
   of generality, we may assume that $\A$ outputs $m_0, m_1$ and that $\Gen$
-  outputs $k$. Let $c_0 = \Enc_k(m_0)$ and $c_1 = \Enc_k(m_1)$. Then,
-  \begin{align*}
-    \Prob(\Expr{eav}{\A, \Pi} = 1) &= \Prob(\A \,\text{outputs 0}\,| B = 0)\Prob(B = 0) + \Prob(\A \,\text{outputs 1}\,| B = 1)\Prob(B = 1) \quad\text{by definition}\\
-    &= \frac12\Prob(\A \,\text{outputs 0}\,| B = 0) + \frac12\Prob(\A \,\text{outputs 1}\,| B = 1)
-  \end{align*}
-  Notice, that since $B$ completely determines whether we have receive $c_0$ or
-  $c_1$, we have $\Prob(B = b) = \Prob(C = c_b)$. Letting
-  $\Prob(\A\,\text{outputs 0} | C = c_0) = p$ and $\Prob(\A\,\text{outputs 1} |
-  C = c_1) = q$, we get
+  outputs $k$. We will denote the output of the advaresary by $\A(c)$ for input
+  $c \in \C$. Then, we note that
   \begin{equation}
     \begin{split}
-    \label{eq:perfequivforward}
-    \Prob(\Expr{eav}{\A, \Pi} = 1) &= \frac12 \Prob(\A \, \text{outputs 0} \,| C = c_0) + \frac12 \Prob(\A \,\text{outputs 1}\,| C = c_1) \\
-                                   &= \frac12 p + \frac12 q \\
-                                   &=  \frac12 (p + q)
+    \label{eq:perf_adv_message_dependency}
+    \Prob(\Expr{eav}{\A, \Pi} = 1) &= \Prob(\A(\Enc_K(m_B)) = B \,\,|\,\, B) \cdot \Prob(B) \\
+                                   &= \frac12 \Prob(\A(\Enc_K(M)) = B \,\,|\,\, M = m_B) \quad\text{since $B$ is uniform}\\
+                                   &= \frac12 \Prob(\A(C) = B \,\,|\,\, M = m_B) \\
+                                   &= \frac12 \left[ \Prob(\A(C) = 0 \,\,|\,\, M = m_0) + \Prob(\A(C) = 1 \,\,|\,\, M = m_1) \right]
     \end{split}
   \end{equation}
-  Recall that since $\Pi$ is perfectly secure, $\forall m \in \M$ and $\forall c
-  \in \C$ we have $\Prob(M = m | C = c) = \Prob(M = m)$. In particular, we have
+  By our assumption, $\Pi$ is perfectly secret, hence by definition $M$ and $C$
+  are independent. Therefore, for arbitrary functions $f_1, f_2$, $f_1(M)$ and
+  $f_2(C)$ are also independent\footnotemark . Since $\A$ is just an arbitrary
+  computable function of $C$, we can set $f_2 = \A$, and we will set $f_1$ to be
+  the identity function. Hence, $M$ and $\A(C)$ are independent. Formally:
+  \begin{equation}
+    \label{eq:message_adv_independence}
+    \Prob(M = m) = \Prob(M = m\,\,|\,\, \A(C) = b).
+  \end{equation}
+  Then, by Bayes' theorem, we get
+  \begin{align*}
+    \Prob(\A(C) = b\,\, |\,\, M = m) &= \frac{\Prob(M = m\,\,|\,\,\A(C) = b)\cdot\Prob(\A(C) = b)}{\Prob(M = m)}\\
+                     &= \frac{\Prob(M = m)\cdot\Prob(\A(C) = b)}{\Prob(M = m)}\quad\text{by \ref{eq:message_adv_independence}}\\
+                     &= \Prob(\A(C) = b).
+  \end{align*}
+  In particular, we get
   \[
-    \Prob(M = m_0) = \Prob(M = m_0 | C = c_0) = \Prob(M = m_0 | C = c_1).
+    \Prob(\A(C) = 0 \,\,|\,\, M = m_0) = \Prob(\A(C)) = 0 \,\,|\,\, M = m_1) = p.
   \]
-  Note, that beside the complete knowledge of the system the \textbf{only information} $\A$
-  may work with is the value of $C$ to infer anything about the value of $M$.
-  It is clear from above, that the knowledge of the value of $C$ does not change
-  the amount of information that can be inferred about the value of $M$.
-  Therefore, $\A$ must treat $c_0$ and $c_1$ the same way and so the probability that $\A$ guesses $0$ correctly must be equal to when $\A$ guesses
-  $0$ incorrectly! Formally:
-  \[
-    \Prob(\A \, \text{outputs 0} \,| C = c_0) = \Prob(\A \,
-    \text{outputs 0} \,| C = c_1) = p.
-  \]
-  and from this, we get
-  \[
-  q = \Prob(\A \, \text{outputs 1} \,| C = c_1) =
-  1 - \Prob(\A \, \text{outputs 0} \,| C = c_1) = 1 - p.
-  \]
-  Combining this with Equation \ref{eq:perfequivforward}, we have
-  \[
-    \Prob(\Expr{eav}{\A, \Pi} = 1) = \frac12 (p + q) = \frac12 (p + 1 - p) = \frac12.
-  \]
+  From which, we also have 
+  \begin{gather*}
+    \Prob(\A(C) = 0\,\,|\,\, M = m_1) + \Prob(\A(C) = 1 \,\,|\,\, M = m_1) = 1
+    \\
+    \Prob(\A(C) = 1 \,\,|\,\, M = m_1) = 1 - p
+  \end{gather*}
+  Conbining this with \ref{eq:perf_adv_message_dependency} we get
+  \begin{align*}
+    \Prob(\Expr{eav}{\A, \Pi} = 1) &= \frac12 \left[ \Prob(\A(C) = 0 \,\,|\,\, M = m_0) + \Prob(\A(C) = 1 \,\,|\,\, M = m_1) \right]\\
+                                   &= \frac12 [p + (1 - p)] \\
+                                   &= \frac12
+  \end{align*}
+  as required.\\
   `$\Leftarrow$' We shall prove this direction through a contradiction. Thus,
-  assume $\Pi$ is not perfectly secure. Then, it is easy to see the following:
-  \paragraph{Claim:} $\exists m \in \M$ for which $\exists c_0, c_1 \in \C$ such
-  that
+  assume $\Pi$ is not perfectly secure. Then, by Theorem
+  \ref{thm:perfect_sec_ciphertext}, we will get that
   \[
-    \Prob(M = m | C = c_0) \neq \Prob(M = m | C = c_1).
+    \exists m_0, m_1 \in \M,\,\, \hat{c} \in \C.\quad \Prob(C =
+    \hat{c}\,\,|\,\,M = m_0) \neq \Prob(C =
+    \hat{c}\,\,|\,\,M = m_1).
   \]
-  \paragraph{} To see this, assume the opposite: $\forall m \in \M, \forall c
-  \in \C$ we have $\Prob(M = m | C = c) = p$ for some $p \geq 0$. Since $\Pi$ is
-  not perfectly secure, $\exists m \in \M. \exists c \in \C$ such that
-  \[
-    \Prob(M = m) \neq Prob(M = m | C = c) = p.
-  \]
-  But then,
+  Now, we construct the following adversary $\A$:\\
+  \begin{algorithmic}
+    \State \textbf{Algorithm} $\A()$ Stage 1:
+    \State \Return $m_0, m_1$ as above.
+    \State
+    \State \textbf{Algorithm} $\A(c)$ Stage 2:
+    \If{$c = \hat{c}$}{ \Return 0 }\Else{ \Return $b' \leftarrow \{0, 1\}$
+      chosen uniformly }\EndIf
+    \State
+  \end{algorithmic}
+  Now, running our experiment, we will have
   \begin{align*}
-    \Prob(M = m) &= \sum_{c' \in \C} \Prob(M = m | C = c')\Prob(C = c') \\
-                 &= \sum_{c' \in \C} p\Prob(C = c')\quad\text{by our assumption above} \\
-   &= p\sum_{c' \in \C} \Prob(C = c') = p.
+    \Prob(\Expr{eav}{\Pi, \A} = 1) &= \Prob(\A(C) = 0 | M = m_0)\cdot\Prob(B = 0) + \Prob(\A(C) = 1 | M = m_1)\cdot\Prob(B = 1)\\
+                                   &= \frac12 \cdot (\Prob(\A(C) = 0 | M = m_0) + \Prob(\A(C) = 1 | M = m_1)).
   \end{align*}
-  This violates our assumption that $\Pi$ is not perfectly secure, so the claim
-  must hold.
-  \paragraph{}
-  Let $m \in \M$, $c_0, c_1 \in \C$ be as in the above claim. Without loss of
-  generality, we may assume, that
-  \[
-    \Prob(M = m | C = c_0) = \Prob(M = m | C = c_1) + \delta
-  \]
-  where $\delta > 0$. Now, construct the following adversary $\A$:
-  \begin{enumerate}
-    \item $\A$ outputs $m_0 = m$ and some other arbitrary $m_1 = m'$.
-    \item When $\A$ receives $c_0$ output $0$, $1$ when it receives $c_1$ and
-      output a uniformly random guess otherwise.
-  \end{enumerate}
-  Note that the probability in any case that $\A$ guesses 0 correctly is the
-  probabilty that $\A$ guesses 0 given the ciphertext multiplied by the
-  probability that given the ciphertext the underlying message is $m_0 = m$.
-  Therefore, the probability that $\A$ outputs $0$ given $B = 0$ is
+  By the definition of $C$, we have
   \begin{align*}
-    \Prob(\A \, \text{outputs 0} | B = 0) &= \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \Prob(\A \, \text{outputs 0} | C = c)\Prob(M = m | C = c) + \Prob(\A \, \text{outputs 0} | C = c)\Prob(M = m | C = c_0) \\
-                                          &\quad\quad\quad+ \Prob(\A \, \text{outputs 0} | C = c_1)\Prob(M = m | C = c_1)\\
-                                          &= \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \frac12\Prob(M = m | C = c) + \Prob(M = m | C = c_0)\\
-                                          &= \frac12 \sum_{\substack{c \in \C \\ c \neq c_0, c_1}} \Prob(M = m | C = c) + \Prob(M = m | C = c_0)\\
-    \end{align*}
-    Adding and taking away the missing terms in the sum, we have
-    \begin{align*}
-      \Prob(\A \, \text{outputs 0} | B = 0) &= \frac12\sum_{c \in \C} \Prob(M = m | C = c) + \frac12\left(\Prob(M = m | C = c_0) - \Prob(M = m | C = c_1)\right) \\
-                                            &= \frac12 + \frac{\delta}{2} = p
+    \Prob(\A(C) = 0 \land M = m_0) &= \Prob(\A(\Enc_K(M)) = 0 \land M = m_0)\\
+                                   &= \Prob(\A(c) = 0 \land \Enc_K(M) = c \land M = m_0) \\
+                                   &= \sum_{c\in C} \Prob(\A(c) = 0 | \Enc_K(M) = c)\cdot \Prob(\Enc_K(M) =c\,\,|\,\, M = m)\\
+                                   &=\sum_{c\in C} \Prob(\A(c) = 0 | C = c)\cdot \Prob(C = c\,\,|\,\, M = m) \\
+                                   &=\sum_{\substack{c\in C \\ c \neq \hat{c}}} \Prob(\A(c) = 0 | C = c) \cdot \Prob(C = c\,\,|\,\, M = m) \\
+                                   &\quad\quad\quad + \Prob(\A(c) = 0 | C = \hat{c}) \cdot \Prob(C = \hat{c}\,\,|\,\, M = m)
   \end{align*}
-  Similarly, we get $q = \frac12 + \frac{\delta}{2}$. Hence, by Equation
-  \ref{eq:perfequivforward} we have
+  By the definition of $\A$, $ \Prob(\A(c) = 0 | C = \hat{c}) = 1$, and
+  similarly $ \Prob(\A(c) = 0 | C = c) = \frac12$ for $c \neq \hat{c}$. Hence,
+  we have
+  \begin{align*}
+    \Prob(\A(C) = 0 \land M = m_0) &= \sum_{c\in C} \frac12 \Prob(C = c\,\,|\,\, M = m_0) + \frac12\Prob(C = \hat{c} \,\, |\,\, M = m_0) \\
+                                   &=\frac12 \sum_{c\in C} \Prob(C = c \,\,|\,\, M = m_0) + \frac12\Prob(C = \hat{c} \,\,|\,\, M = m_0) \\
+                                   &= \frac12 + \frac12\Prob(C = \hat{c} \,\,|\,\, M = m_0). \\
+  \end{align*}
+  Similarly, we will get
   \[
-    \Prob(\Expr{eav}{\Pi, \A} = 1) = \frac12 (p + q) = \frac12 (\frac12 +
-    \frac{\delta}{2} + \frac12 + \frac{\delta}{2}) = \frac12 + \frac{\delta}{2}.
+    \Prob(\A(C) = 1 \land M = m_1) = \frac12 - \frac12\Prob(C = \hat{c} \,\,|\,\, M = m_1). 
   \]
-  Hence $\Pi$ is not perfectly indistinguishable. Since the contraposition of
-  our claim is true, our original claim is also true.
+  Putting these together, we get
+  \begin{align*}
+    \Prob(\Expr{eav}{\Pi, \A} = 1) & = \frac12 \left( \frac12 + \frac12\Prob(C = \hat{c} \,\,|\,\, M = m_0) + \frac12 - \frac12\Prob(C = \hat{c} \,\,|\,\, M = m_1) \right) \\
+                                   &= \frac12 + \frac12 (\Prob(C = \hat{c} \,\,|\,\, M = m_0) - \Prob(C = \hat{c} \,\,|\,\, M = m_1)).
+  \end{align*}
+  By our assumption, the above two terms in the difference will not be equal,
+  hence the whole right hand side will not be equal to a half, and thus $\Pi$ is
+  not perfectly indistinguishable, as required.
 \end{proof}
+\footnotetext{See theorem \ref{thm:func_independence} in the appendix}
+\subsection{Limitations of Information-theoretic security}
 The following theorem (in fact, a stronger version of it) was first proved by
 Shannon in \cite{shannon1949communication}.
 \begin{theorem}
@@ -3184,9 +3219,68 @@ Dependent Message (KDM) security and the Sparse Subset Sum Problem (SSSP)'s
 hardness assumption). Due to lack of space, we merely note here that using these
 reasonable assertions, we can reach IND-CPA security again, and we finally get a
 secure fully homomorphic scheme. (See Section 4.3 in \cite{gentry2009fully}.)
-\section*{Acknowledgements} The author would like to thank Nick Tikhonov for
-introducing the author to fully homomorphic encryption and the many interesting
+\section*{Acknowledgements} The author would like to thank Nick Tikhonov for introducing the author to fully homomorphic encryption and the many interesting
 conversations with him about the topic.
+\section*{Appendix}
+\begin{theorem}
+  \label{thm:func_independence}
+  Let $X_1$, $X_2$ discrete random variables and $f_1, f_2$ be arbitrary
+  functions of $X_1$ and $X_2$ respectively. Assume that $X_1$ and $X_2$ are
+  independent. Then $Y_1 = f_1(X_1)$ and $Y_2 = f_2(X_2)$ are also independent.
+\end{theorem}
+\begin{proof}
+  Note, that below $f^{-1}_i$ denotes the preimage of $f_i$, not its inverse,
+  i.e.
+  \[
+    f^{-1}(Y) = \{x \in X | f(x) \in Y\}.
+  \]
+  Now, let $A_i = f^{-1}(Y_i)$ for $i \in \{1,2\}$. We perform the following calculations:
+  \begin{align*}
+    \Prob(Y_1 \land Y_2) &= \Prob(X_1 \in f^{-1}(Y_1) \land X_2 \in f^{-1}(Y_2))\\
+                         &= \Prob(X_1 \in A_1 \land X_2 \in A_2) \\
+                         &= \sum_{x_1 \in A_1 \land x_2 \in A_2} \Prob(X_1 = x_1 \land X_2 = x_2) \\
+                         &= \sum_{x_1 \in A_1 \land x_2 \in A_2} \Prob(X_1 = x_1)\Prob(X_2 = x_2)\quad\text{by the independence of } X_1, X_2.
+  \end{align*}
+  Observe, that the sum on the right hand side is merely summing over all
+  possible products between elements of $A_1$ and $A_2$, hence we can rewrite it
+  as a product of sums, as follows:
+
+  \begin{align*}
+    \Prob(Y_1 \land Y_2) &= \sum_{x_1 \in A_1} \Prob(X_1 = x_1) \cdot \sum_{x_2 \in A_2} \Prob(X_2 = x_2) \\
+                         &= \Prob(X_1 \in A_1)\Prob(X_2 \in A_2) \\
+                         &= \Prob(Y_1)\Prob(Y_2)\quad\text{as required}.
+  \end{align*}
+\end{proof}
+\begin{theorem}
+  Let $f(x) = x^{2^n} + 1 \in \Int[x]$ for some $n \in \Nat$. Then, $f$ is
+  irreducible in $\Int[x]$.
+\end{theorem}
+\begin{proof}
+  We will use Eisenstein's criterion \cite{eisenstein_1850}, which says that a
+  polynomial $g(x) = a_0 + a_1x + \hdots + a_nx^n \in \Rat[x]$ with integer coefficients is irreducible if there
+  exists a prime number $p$ such that the following hold:
+  \begin{itemize}
+  \item $p$ divides every $a_i$ except for the leading coefficient $a_n$
+  \item $p$ does not divide the leading coefficient
+  \item $p^2$ does not divide the constant term $a_0$.
+  \end{itemize}
+  Therefore, we do the following substitution, which does not change the
+  reducibility:
+  \begin{align*}
+    f(x + 1) &= (x + 1)^{2^n} + 1\\
+             &= \sum_{k = 0}^{2^n} \binom{2^n}{k} x^k + 1 \\
+             &= \sum_{k = 1}^{2^n - 1} \binom{2^n}{k} x^k + x^{2^n} + 1 + 1
+  \end{align*}
+  Then, for $p = 2$, we note the following:
+  \begin{itemize}
+    \item $2$ does not divide the leading coefficient, since $f(x+1)$ is monic.
+    \item $2$ divides the constant term $a_0 = 2$ and it divides all binomial
+      coefficients $\binom{2^n}{k}$ for $0 < k < 2^n$.
+    \item $2^2 = 4$ does not divide the constant term $a_0 = 2$.
+  \end{itemize}
+  Hence, by Eisenstein's criterion $f(x + 1)$ is irreducible and by extension so
+  is $f(x)$, as required.
+\end{proof}
 \printbibliography
 
 \end{document} 
