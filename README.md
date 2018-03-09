@@ -7,8 +7,8 @@ crypto scheme, prove its security with appropriate rigour and implement it.
 Setting up the project
 --------------------------------------------------------------------------------
 
-The code in this repository requires __Sage v8.1__ (or higher) and Jupyter 
-Notebook to run installed on the user's machine to run. Once these conditions
+The code in this repository requires __Sage v8.1__ (or higher) and __Jupyter 
+Notebook__ to run installed on the user's machine to run. Once these conditions
 are present, to run some example code, navigate to the source folder of the scheme:
 
 ```
