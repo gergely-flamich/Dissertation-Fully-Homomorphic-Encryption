@@ -2291,17 +2291,27 @@ simpler one.
 Hence, we are asking that given a ring $R$ and $I$ and some sampling function
 $\Samp_I$, is it easy to determine if a randomly chosen element of $R$ is in
 $I$. While this problem may seem very far removed from practicalities, we
-consider the following two examples.
-\paragraph{Example 1}
-  Let $N$ be an integer such that it is a product of two primes of equal length.
-  Then, set $R = \Int_N$ under addition and multiplication modulo $N$. Let $e$
-  be a unit in $R$, and set $I = (e)$ and let $\Samp_I$ sample $I$ uniformly. Then,
-  solving this instance of the IMP is exactly equivalent to solving the RSA
-  problem. 
-\paragraph{Example 2}
+consider the following example.
+\paragraph{Example}
   Let $N = pq$ such that $p, q$ are primes of equal length. Set $R =
-  \Int_{N^2}$, and set $I = (N)$ and let $\Samp_I$ sample $I$ uniformly. Then,
-  noticing that $I = \texttt{Res}(N^2)$, solving this instance of the IMP is equivalent to solving the DCRP! Hence
+  \Int_{N^2}$, and set $I = (N)$ and $J = (\phi(N))$. Then, it is easy to show
+  that $I \cap J = \textbf{0}$ and that $I + J = R$. Hence, by the Chinese
+  Remainder Theorem for rings,
+  \[
+    \Int_{N^2} = R/(I \cap J) \cong R/I \times R/J \cong \Int_N \times \Int_{\phi(N)}.
+  \]
+  Consider $\Int_{\phi(N)}$ as an additive group, and $\Int_N^* \leq
+  \Int_{N^2}^*$, the group of units in $\Int_N$, which is in turn a subgroup of
+  the group of units in $\Int_{N^2}$ (this is because they are cyclic). Note,
+  that since $\Int_{\phi(N)}$ and $\Int_N^*$ are both cyclic and have $\phi(N)$
+  elements, they are isomorphic. Also, note that
+  \[
+    \Int_{N^2}/(\phi(N)) \cong (N).
+  \]
+  Thus, there is a (group) isomorphism between $\Int_N^*$ and $(N)$. However,
+  $\Int_N^*$ is precisely the group of $N$-th powers in $\Int_{N^2}^*$! This
+  means that $\texttt{Res}(N) \cong (N)$. Let $\Samp_I$ sample $(N)$ uniformly.
+  Notice, that then solving this instance of the IMP is precisely the DCRP! Hence
   Paillier's scheme is also just a special case of the IMP.
 \begin{definition}{Ideal Membership Problem (IMP) Assumption}
   IMP is hard relative to $(R, I, \Samp_I)$ if for all $\PPT$ adversaries $\A$ we have
