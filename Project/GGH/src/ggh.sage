@@ -1,4 +1,5 @@
 from sage.modules.free_module_integer import IntegerLattice
+import sage.matrix.matrix_integer_dense_hnf as hnf
 from sage.matrix.matrix_space import MatrixSpace
 
 def key_gen(security_parameter, gen_param = 500, hadamard_threshold = 0.7, delta=4):
@@ -13,18 +14,20 @@ def key_gen(security_parameter, gen_param = 500, hadamard_threshold = 0.7, delta
         V = R.random_element(x = -security_parameter,
                              y = security_parameter + 1)
 
-    for i in xrange(round(security_parameter * 10)):
-        c1 = ZZ.random_element(security_parameter)
-        c2 = ZZ.random_element(security_parameter)
+    # for i in xrange(round(security_parameter * 10)):
+    #     c1 = ZZ.random_element(security_parameter)
+    #     c2 = ZZ.random_element(security_parameter)
 
-        if c1 == c2:
-            continue
+    #     if c1 == c2:
+    #         continue
 
-        sign = -1 if ZZ.random_element(2) == 1 else 1
+    #     sign = -1 if ZZ.random_element(2) == 1 else 1
 
-        U.add_multiple_of_column(c1, c2, sign)
+    #     U.add_multiple_of_column(c1, c2, sign)
 
-    W = U * V
+    # W = U * V
+
+    W, _ = hnf.hnf(V)
 
     W_inv = W.inverse()
 
