@@ -2931,6 +2931,9 @@ An important observation for us is that since if $A$ is a basis for a lattice
 $\L(A)$ then since $U$ is unimodular then $H$ is also a basis for that same
 lattice (we will expand on this in a moment). For a more complete treatment of
 the HNF, we refer the reader to Section 2.4.2 in \cite{cohen1993course}.
+The reason why we will want to use the HNF is because it always exists, can be
+calculated in polynomial time via Gaussian elimination and will provide the
+``worst'' possible basis for a lattice. For a rigorous explanation see \cite{micciancio2001improving}.
 \subsubsection{Choosing the ring, its ideal and the key generation algorithm}
 \paragraph{} We begin by describing the ring $R = \Int[x]/f$ as we described in the previous
 section. In particular, we need to make concrete our choice for $f$. Let $N =
@@ -3014,7 +3017,7 @@ coefficients of $u$ are now going to be $\{0, 1\}$. Then set $c' = 2\cdot u(x) +
 Then, to perform the encryption function, assume $J^{pk} = (d, r)$ generates
 matrix $H$, and thus we get
 \[
-  \vec{c} = \vec{c}' \mod H = \vec{c}' - \lfloor \vec{c}' \times H^{-1} \rceil
+  \vec{c} = \vec{c}''' \mod H = \vec{c}' - \lfloor \vec{c}' \times H^{-1} \rceil
   \times H.
 \]
 Recall that $H$ and (it is easy to check that) its inverse, $H^{-1}$ are of the

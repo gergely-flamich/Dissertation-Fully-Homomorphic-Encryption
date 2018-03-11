@@ -7,12 +7,12 @@ def key_gen(security_parameter, hadamard_threshold = 0.7, delta=4):
     Key generation algorithm for the GGH cipher.
 
     Given some security parameter lambda = 1^n, it picks an element from GL_n(Z)
-    from an n x n x .. x n hypercube. If this candidate has a sufficiently high
+    from an 2n x 2n x .. x 2n hypercube. If this candidate has a sufficiently high
     Hadamard ratio (its vectors are quite orthogonal to each other), we accept it
     and set it as our private key.
 
     Then, we calculate its HNF (which in a sense is the worst possible basis as
-    far as orthogonality goes) and set it as the public basis.
+    far as orthogonality goes) and set it as the publr k is frequently omitted from ic basis.
     """
     R = MatrixSpace(ZZ, security_parameter)
 
@@ -116,6 +116,9 @@ def decrypt(privkey, ciphertexts):
     plaintext = []
 
     for ciphertext in ciphertexts:
+
+        # As long as the private basis is sufficiently orthogonal,
+        # we will decode to the closest lattice vector
         appr_vec = ciphertext * V.inverse()
 
         appr_vec = appr_vec.apply_map(round)
