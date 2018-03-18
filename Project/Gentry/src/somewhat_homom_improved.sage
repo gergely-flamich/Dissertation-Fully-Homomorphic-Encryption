@@ -32,7 +32,8 @@ def key_gen(N = 5, t = 32, num_retry = 10):
 
     n = 2^N
 
-    f = Zx(x^n + 1)
+    # f = x^n + 1
+    f = Zx('x^{} + 1'.format(n))
 
     # R = Z[x]/(x^n + 1)
     R = Zx.quotient(f)
@@ -124,7 +125,7 @@ def encrypt(pk, plaintext, u=None):
 
     n = 2^N
 
-    f = Zx(x^n + 1)
+    f = Zx('x^{} + 1'.format(n))
 
     R = Zx.quotient(f)
 
