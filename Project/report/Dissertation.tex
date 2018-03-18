@@ -2293,26 +2293,21 @@ $\Samp_I$, is it easy to determine if a randomly chosen element of $R$ is in
 $I$. While this problem may seem very far removed from practicalities, we
 consider the following example.
 \paragraph{Example}
-  Let $N = pq$ such that $p, q$ are primes of equal length. Set $R =
-  \Int_{N^2}$, and set $I = (N)$ and $J = (\phi(N))$. Then, it is easy to show
-  that $I \cap J = \textbf{0}$ and that $I + J = R$. Hence, by the Chinese
-  Remainder Theorem for rings,
-  \[
-    \Int_{N^2} = R/(I \cap J) \cong R/I \times R/J \cong \Int_N \times \Int_{\phi(N)}.
-  \]
-  Consider $\Int_{\phi(N)}$ as an additive group, and $\Int_N^* \leq
-  \Int_{N^2}^*$, the group of units in $\Int_N$, which is in turn a subgroup of
-  the group of units in $\Int_{N^2}$ (this is because they are cyclic). Note,
-  that since $\Int_{\phi(N)}$ and $\Int_N^*$ are both cyclic and have $\phi(N)$
-  elements, they are isomorphic. Also, note that
-  \[
-    \Int_{N^2}/(\phi(N)) \cong (N).
-  \]
-  Thus, there is a (group) isomorphism between $\Int_N^*$ and $(N)$. However,
-  $\Int_N^*$ is precisely the group of $N$-th powers in $\Int_{N^2}^*$! This
-  means that $\texttt{Res}(N) \cong (N)$. Let $\Samp_I$ sample $(N)$ uniformly.
-  Notice, that then solving this instance of the IMP is precisely the DCRP! Hence
-  Paillier's scheme is also just a special case of the IMP.
+Recall Paillier's scheme, in particular, that it it relies on the isomorphism
+\[
+  \Int_{N^2}^* \cong \Int_N^* \times \Int_N
+\]
+where $N = pq$ for $p, q$ primes of equal length. Recall, that the set of $N$th
+residues $\texttt{Res}(N)$ is the set of $N$th powers in $\Int_{N^2}^*$. Fix $a
+\in \Int_{N^2}$. Then,
+\begin{align*}
+  (a + N)^N &= a^N + \binom{N}{1}a^{N-1}\cdot N + \hdots \text{ terms with a factor of } N^2 \\
+            &= a^N + N a^{N-1}\cdot N + 0 \mod N^2 \\
+            &= a^N \mod N^2.
+\end{align*}
+This means that $a^N = (a \mod N)^N$, thus $\texttt{Res}(N) \cong \Int_N \cong
+(N) \leq \Int_{N^2}$. Hence, solving the IMP in $\Int_{N^2}$ for the ideal $(N)$
+is equivalent to solving the DCRP for $\Int_{N^2}^*$ and $\texttt{Res}(N)$!
 \begin{definition}{Ideal Membership Problem (IMP) Assumption}
   IMP is hard relative to $(R, I, \Samp_I)$ if for all $\PPT$ adversaries $\A$ we have
   \[
