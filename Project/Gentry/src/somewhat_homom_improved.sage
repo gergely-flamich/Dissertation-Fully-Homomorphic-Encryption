@@ -103,7 +103,7 @@ def hadamard_ratio(basis):
     return n((vol/block)^(1/basis.rank()))
 
 
-def encrypt(pk, plaintext, u=None):
+def encrypt(pk, plaintext, u=None, verbose=False):
     """
     Encryption function of Gentry's somewhat homomorphic scheme.
 
@@ -138,8 +138,9 @@ def encrypt(pk, plaintext, u=None):
         u_coeff_vec = [0 if abs(candidate) > p else sgn(candidate) for candidate in random_vector(RR, n)]
         u = R(u_coeff_vec)
 
-    print("Perturbation is {} dimensional and has {} non-zero entries.".format(n, sum(map(abs, u))))
-    print("Namely, u(x) = {}".format(u))
+    if verbose:
+        print("Perturbation is {} dimensional and has {} non-zero entries.".format(n, sum(map(abs, u))))
+        print("Namely, u = {}".format(list(u)))
 
     a = 2 * u
 
