@@ -1,4 +1,5 @@
 \documentclass{article}
+\usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{graphicx}
@@ -140,7 +141,7 @@ We declare that the material submitted for assessment is my own work except wher
 
 \section{Introduction}
 \paragraph{}
-Cryptography is a fascinating subject, not only because it occupies the gray
+Cryptography is a fascinating subject, not only because it occupies the grey
 zone between pure mathematics and computer science, but also because of how much
 and how diversely it draws from both disciplines. It is a subject that has its
 roots going back as far as the beginning of human communications. Regarded
@@ -156,7 +157,7 @@ that they do not only allow encrypting data, but also arbitrary computation to
 take place on the encrypted data. At first, this might not even sound possible -
 after all, how could we ensure that if we manipulate encrypted data, the result
 will correct at all, let alone be allowed to do as many manipulations as we
-wish? The aim of this work is essentially to provide an answer to this question.
+wish? The aim of this work is to provide an answer to this question.
 \paragraph{}
 It is not possible to present every, in itself marvellous, aspect of these
 cryptosystems. Nonetheless, the author hopes to present the key ideas as
@@ -179,7 +180,7 @@ Throughout this work some basic concepts will be used, the most important of
 which will be given below.
 \begin{definition}{Strings over an alphabet:}
   Let $A$ be a finite set of symbols, called an \textbf{alphabet} the strings
-  over $A$ denoted $A^*$ is the set of all finite length sequences of
+  over $A$ denoted $A^*$ is the set of all finite-length sequences of
   symbols from $A$, including $\epsilon$, the empty string. Formally:
   \[
     A^* = \bigcup_{n\in \Nat \cup \{0\}} A^n.
@@ -243,9 +244,9 @@ as the $n$-th power of $g$.
 \end{definition}
 \section{A Very Brief History of Ciphers}
 \paragraph{}
-One of the earliest known cipher goes back at least 2000 years, to Roman times. We will now examine the
+One of the earliest known ciphers goes back at least 2000 years, to Roman times. We will now examine the
 cipher now named after Julius Ceasar, who used the following method to obfuscate
-his correspondance for his adversaries:
+his correspondence for his adversaries:
 \paragraph{Ceasar Cipher}: Take the message (written using symbols from the
 Latin alphabet) that we wish to obfuscate. Replace each symbol with the one that
 comes 3 places after it in the alphabet. For letters at the end where we could
@@ -259,17 +260,17 @@ To decrypt a message, we simply shift backwards by 3 positions, e.g.
   \textit{Zhqm, zmgm, zmfm} \quad\to\quad \textit{Veni, vidi, vici}.
 \]
 \paragraph{Note:} The above is to show an example of the shifting property. In
-parctice the punctuation and spaces between words would also have been removed \cite{ceasarCipher}.
+practice the punctuation and spaces between words would also have been removed \cite{ceasarCipher}.
 \paragraph{}
 We can further generalise this concept to arrive at the definition of
 \textit{shift ciphers}, where instead of the fixing the shift to 3, we pick a
 key $k \in \mathbb{N}$, and we then shift $k$ places forward (and backwards).
 With shift ciphers in mind, we now formally defined some key concepts that will
 be used throughout this work.
-\begin{definition}{(Cipher)}
+\begin{definition}{Cipher:}
   Let $\M, \C, \K_\Enc, \K_\Dec$ be alphabets. We will refer to $\M$
   as the \textbf{message space} and to $\C$ as the \textbf{cipher space}.
-  A cipher (also called cryptoscheme or cryptosystem) $\Pi$ over $\M$, $\K_\Enc$ and $\K_\Dec$ is a tuple $(\Gen, \Enc, \Dec)$, where
+  A cipher (also called crypto scheme or cryptosystem) $\Pi$ over $\M$, $\K_\Enc$ and $\K_\Dec$ is a tuple $(\Gen, \Enc, \Dec)$, where
   \begin{itemize}
   \item $\Gen$ is the \textbf{key generation algorithm}, which outputs a key
     $(k_\Enc, k_\Dec) \in (\K_\Enc^* \times \K_\Dec^*)$, chosen according to some
@@ -277,19 +278,19 @@ be used throughout this work.
     \textbf{key space} of $\Pi$. If for all outputs there is a polynomial time
     function $f$ such that $f(k_\Enc) = k_\Dec$, then we call $\Pi$
     a \textbf{symmetric cipher} and instead of the tuple we just write $k$.
-    Otherwise we call $\Pi$ an \textbf{asymmetric cipher}.
+    Otherwise, we call $\Pi$ an \textbf{asymmetric cipher}.
     Since $\Gen$ is usually a probabilistic algorithm, we will denote generating
     its output by $k \leftarrow \Gen$ instead of $k = \Gen$ to emphasize the
     randomised nature of the function.
   \item $\Enc: \K_\Enc^*\times\M\mapsto \C$ is the \textbf{encryption algorithm}, which takes
-    a encryption key $k$ and a message $m$ and outputs its encoding $c$. We will often
+    an encryption key $k$ and a message $m$ and outputs its encoding $c$. We will often
     refer to the message as the \textbf{plaintext} and to the encrypted message
     as \textbf{ciphertext}.
     \paragraph{Note:} $\Enc$ is not necessarily deterministic. When it is
     probabilistic, we will write $c \leftarrow \Enc_k(m)$ instead of $c = \Enc_k(m)$.
   \item $\Dec: \K_\Dec^*\times\C \mapsto \M$ is the \textbf{decryption algorithm}, which
     takes some decryption key $k$ and some ciphertext $c$ and outputs its
-    correspnding plaintext $m$. 
+    corresponding plaintext $m$. 
     \paragraph{Note:} $\Dec$ is \textbf{always} deterministic (otherwise the
     scheme could never be assumed to be correct).
   \end{itemize}
@@ -300,7 +301,7 @@ be used throughout this work.
   i.e. that the cipher does not change its contents.
 \end{definition}
 \paragraph{Note:} For classical ciphers, we usually consider $\M = \C$ to be the
-English (or Latin) alphabet. For modern crypto systems we will always work with
+English (or Latin) alphabet. For modern cryptosystems we will always work with
 bitstrings, i.e. $\M$, $\C$ and $\K$ will be some subset of $\{0, 1\}^*$.
 \paragraph{Equivalences of alphabets}
 Consider any alphabet $\M = \{m_1, \hdots m_n\}$. It will be 
@@ -357,7 +358,7 @@ our proofs of security, where we will always assume that the adversary knows
 everything about the mechanism of the cipher.
 
 \section{Perfect Security}
-In order for us to be able to analyse our schemes, we must have two well defined
+In order for us to be able to analyse our schemes, we must have two well-defined
 notions: what does it mean that a scheme is \textit{secure} and how \textit{powerful} is
 the adversary who wishes to break our scheme. We start with the analysis of the
 ``simple'' case, that is, the security of symmetric ciphers.
@@ -379,12 +380,12 @@ the encryption algorithm over the randomness of $K$ and $M$.
 paranoid, but very useful perspective: we will assume that the adversary has
 unbounded computational power. This means that we will have to fend off attacks
 that may involve computing arbitrary \textit{decidable} functions, no matter how
-long they take to calculate. Also, by Kerckhoff's principle we assume that the
+long they take to calculate. Also, by Kerckhoff's principle, we assume that the
 adversary has perfect knowledge of both our encryption and decryption functions.
 We will also impose a very stringent constraint on what we
 consider secure: we will require that an adversary observing our communications
 \textbf{cannot gain any information} whatsoever. Formally:
-\begin{definition}{(Perfect Security)}
+\begin{definition}{Perfect Security:}
   \label{def:perfect_security}
 We say that a scheme $\Pi$ is perfectly secure if
 \[
@@ -428,7 +429,7 @@ We say that a scheme $\Pi$ is perfectly secure if
 The above definition is very compact, but it does not explicitly mention how an
 adversary would be involved in an attack, so perhaps it's not the best way of
 defining security after all. Therefore, we now approach the problem from a much
-more hands-on prespective: we describe a concrete attack on the scheme in terms
+more hands-on perspective: we describe a concrete attack on the scheme in terms
 a \textbf{security experiment}:
 \paragraph{}
 Let $\Pi = (\Gen, \Enc, \Dec)$ be a scheme, and $\A$ be any adversary.
@@ -449,7 +450,7 @@ In the above attack, the adversary $\A$ is asked to tell apart the encryptions o
 two messages. Clearly, an adversary that is able to \textit{distinguish} two
 ciphertexts is capable of learning some information about the underlying
 messages, so this is precisely what we wish to disallow. Formally:
-\begin{definition}{(Perfect Indistinguishability)}
+\begin{definition}{Perfect Indistinguishability:}
   \label{def:perfect_indistinguishability}
 We say that a scheme $\Pi$ is perfectly indistinguishable iff for all adversaries $\A$
 \[
@@ -586,14 +587,14 @@ A necessary condition for a scheme $\Pi = (\Gen, \Enc, \Dec)$ to be perfectly se
 \end{proof}
 \section{Computational Security}
 \paragraph{}
-Information theoretical security definions, although guaranteeing defense
+Information theoretical security definitons, although guaranteeing defence
 against attacks of arbitrary strength, are problematic, as sharing and guarding
 the keys are very cumbersome and in some cases impossible. In a sense, they are
 also more powerful than what we need, since in the real world we do not have to
 deal with attackers of unlimited computational power. Therefore, it would be
 desirable to relax our notions of security to something more ``realistic''.
 This will allow us to design much more efficient schemes.
-In this section, we will discuss these relaxations, and 3 notions of security,
+In this section, we will discuss these relaxations and 3 notions of security,
 each being stronger than the previous. Since these definitions incorporate
 assumptions about computational power and are no longer information theoretical,
 we will call this approach \textbf{computational security}. We start with some
@@ -602,15 +603,15 @@ work is mainly concerned with asymmetric cryptosystems, we give our definitions
 in the appropriate setting; mutatis mutandis the same notions hold for symmetric systems.
 \subsection{Mathematical Set-up}
 \paragraph{Note:} From this point onwards, we discuss everything in the
-public-key setting. To better align with literature therefore, we shall write
+public-key setting. To better align with literature, therefore, we shall write
 $(pk, sk)$ instead of $(k_\Enc, k_\Dec)$, where $pk$ is called the \textbf{public key}
 and $sk$ is called the \textbf{private} or \textbf{secret key}.
-\begin{definition}{Probabilistic Polynomial-time Algorithm}
+\begin{definition}{Probabilistic Polynomial-time Algorithm:}
  Let $\A$ be an algorithm with access to a uniformly random tape. Then, we say that $\A$
  is a probabilistic polynomial-time ($\PPT$) algorithm iff for every input of size
  $n$ $\A$ terminates in $\Oh(n)$ steps. 
 \end{definition}
-\begin{definition}{Negligible function}
+\begin{definition}{Negligible function:}
   Let $f: \Nat \to \Reals$ be a function. Then, we say that $f$ is
   \textbf{negligible} iff $\forall p: \Nat \to \Reals$ polynomials $\exists
   N \in \Nat$ such that $\forall n \geq N$ we have
@@ -635,17 +636,16 @@ once again in the awkward position of having to decide what it should mean to
 of the previous two notions is trivial to formalise, and there has been a lot of
 effort put into finding the appropriate formulations. The approach we will consider here is based on the work by Bellare
 et al. \cite{bellaresecurityrelations}, initially suggested by Moni
-Naor\footnotemark. We will consider so
-called \textbf{goals} (our definition of a scheme being broken) and \textbf{threat} or
+Naor\footnotemark. We will consider so-called \textbf{goals} (our definition of a scheme being broken) and \textbf{threat} or
 \textbf{attack models} (our definition of what we allow the adversary to do).
 Then, combining a goal with a threat model will give us a framework in which we
-will be able to prove the security of a cipher. In the rest of this section we
+will be able to prove the security of a cipher. In the rest of this section, we
 will explore 2 goals and 3 threat models, yielding 6 possible security
 frameworks. Then, we will establish some connection between appropriate notions.
 \paragraph{} It is important to remember that one of the reasons why we
 abandoned the notions of information-theoretic security is because it assumed
-unbounded computational power. Instead we shall restrict our focus on $\PPT$
-algorithms, since by the Extended Church-Turing Thesis, any ``efficient'' or ``reasonable'' model
+unbounded computational power. Instead, we shall restrict our focus on $\PPT$
+algorithms since by the Extended Church-Turing Thesis, any ``efficient'' or ``reasonable'' model
 of computation can be simulated by such an algorithm. This will immediately
 lead us to the asymptotic analysis of schemes, which we will do from now on. The
 reader might ask now: asymptotic in what though? The ciphers that we consider
@@ -653,9 +653,9 @@ from now on will all have a \textbf{security parameter} $\lambda$ associated
 with them, that effectively ``tunes'' the difficulty of the underlying problem
 of the cipher. The parameter will mostly affect the key length of a particular instance
 of the scheme, and hence it is common to denote it $\lambda = 1^n \in \{0,
-1\}^n$ as a string, as if it was the input to some Turing machine. Finally, we
+1\}^n$ as a string as if it was the input to some Turing machine. Finally, we
 note that since for a scheme $\Pi$ the function $\Enc$ will now be a $\PPT$
-algorithm, we also allow it to fail with negilgable probability, and we will
+algorithm, we also allow it to fail with negligible probability, and we will
 denote it by writing $\Enc_{pk}(m) = \perp$.
 \footnotetext{As described in Section 1.1 in \cite{bellaresecurityrelations}, this was
   suggested in private communications with the authors.}
@@ -677,20 +677,20 @@ $\Pi$ under the \textit{atk} threat model with security parameter $\lambda =
 1^n$ and write $\Expr{atk}{\Pi, \A}(n) = 1$ when an adversary succeeds and $\Expr{atk}{\Pi, \A}(n) = 0$ when
 it does not, including when some part of the algorithm fails.
 \paragraph{Advantages} will be our formalisation of how well an adversary can
-take advantage of certain properties of the system to increase their chances in
+take advantage of certain properties of the system to increase their chances of
 successfully breaking the scheme. The aim of our security proofs will be to show
 that any attacker attempting to break our cipher can only have negligible
 advantage. Formally, the general framework will be to conclude that for a scheme
 $\Pi$ for any $\PPT$ adversary $\A$ in the \textit{atk} threat model
 \[
-  \Adv{atk}{\Pi, \A}(n) = |\Prob(\Expr{atk}{\Pi, \A}(n) = 1) - \Prob(\Expr{atk}{\Pi,
-    \A}(n) = 0)| \leq \negl(n).
+  \Adv{atk}{\Pi, \A}(n) = \Prob(\Expr{atk}{\Pi, \A}(n) = 1) - \Prob(\Expr{atk}{\Pi,
+    \A}(n) = 0) \leq \negl(n).
 \]
 \subsubsection{Indistinguishability}
 \paragraph{} Intuitively, our first notion will capture the idea that
 ciphertexts do not leak enough information about their underlying plaintext that
 could be used to reliably predict what was encrypted. This definition will be
-familiar, since we have already seen its information-theoretic equivalent in
+familiar since we have already seen its information-theoretic equivalent in
 Definition \ref{def:perfect_indistinguishability}. This is intuitively what probably
 most people would associate with definitions of security.
 \begin{definition}{IND-atk:}
@@ -712,12 +712,12 @@ most people would associate with definitions of security.
 variable $B$.
 \paragraph{Note:} The adversary is allowed to ``remember'' the results from its
 first stage in its second stage. (The adversary is \textit{stateful}.)
-\begin{definition}{IND-ATK secure}
+\begin{definition}{IND-ATK secure:}
   \label{def:adv_ind}
   We say that a scheme $\Pi$ is IND-ATK secure if for all $\PPT$ adversaries
   $\A$ in the ATK threat model we have
   \[
-    \Adv{ind-atk}{\Pi, \A} = 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) = b)
+    \Adv{IND-atk}{\Pi, \A} = 2\cdot\Prob(\Expr{IND-atk}{\Pi, \A}(n) = b)
     - 1
     \leq \negl(n).
   \]
@@ -760,26 +760,26 @@ experiment described in \cite{bellaresecurityrelations}:
       \textit{atk} allows in \textbf{stage 2}. $\A$ outputs a $t$-ary relation
       $R:\M \times \M^{t-1} \mapsto \{True, False\}$, and a vector of
       ciphertexts \textbf{y}.
-    \item $\A$ succeeds in case 1 if $\textbf{m}'' = \Dec_{sk}(\textbf{y}) = (\Dec_{sk}(y_1),
+    \item $\A$ succeeds in case 1 if $\textbf{m}' = \Dec_{sk}(\textbf{y}) = (\Dec_{sk}(y_1),
       \hdots,\Dec_{sk}(y_{t-1}))$ we have $R(m, \textbf{m}') = True$ with $m 
-      \not\in \textbf{m}'$, and write $\Expr{nm-atk-1}{\Pi, \A}(n) = 1$. \\
+      \not\in \textbf{m}'$, and write $\Expr{NM-atk-1}{\Pi, \A}(n) = 1$. \\
       $\A$ succeeds in case 0 if $\textbf{m}' = \Dec_{sk}(\textbf{y})$ we have
       $R(\hat{m}, \textbf{m}') = True$ with $\hat{m} 
-      \not\in \textbf{m}'$, and write $\Expr{nm-atk-0}{\Pi, \A}(n) = 1$. \\
+      \not\in \textbf{m}'$, and write $\Expr{NM-atk-0}{\Pi, \A}(n) = 1$. \\
 
   \end{enumerate}
-  \paragraph{Note:} The last condition is necessary, because otherwise we would
+  \paragraph{Note:} The last condition is necessary because otherwise, we would
   be giving credit to $\A$ for copying the ciphertext and outputting the equality relation.
   \paragraph{Note:} Succeeding in case 1 represents the occasion when the
-  adversary deliberately outputs a related ciphertext vector, and case 0
+  adversary deliberately outputs a related ciphertext vector and case 0
   represents when the output just happens to match some randomly selected message.
 \end{definition}
-\begin{definition}{NM-ATK secure}
+\begin{definition}{NM-ATK secure:}
  A scheme $\Pi$ is secure in the NM-ATK sense, if for all $\PPT$ adversaries
  $\A$ in the ATK threat model, we have
  \[
-   \Adv{nm-atk}{\Pi, \A} = \Prob(\Expr{nm-atk-1}{\Pi, \A}(n) = 1) -
-   \Prob(\Expr{nm-atk-0}{\Pi, \A}(n) = 1) \leq \negl(n).
+   \Adv{NM-atk}{\Pi, \A} = \Prob(\Expr{NM-atk-1}{\Pi, \A}(n) = 1) -
+   \Prob(\Expr{NM-atk-0}{\Pi, \A}(n) = 1) \leq \negl(n).
  \]
 \end{definition}
 \subsection{Threat models}
@@ -788,11 +788,11 @@ framework also relies on a threat model, i.e. what we assume the attacker to be
 able to do. Below we formalise what we mean by this, and see 3 increasingly
 harsh models.
 \subsubsection{Chosen Plaintext Attack (CPA)}
-\paragraph{} For public key crypto systems CPA is the most basic model.
+\paragraph{} For public key cryptosystems, CPA is the most basic model.
 Informally, it allows the attacker to encrypt any message using the scheme,
 using the public key at any stage of the attack. To formalise this, we will rely
 on the notion of an \textbf{encryption oracle}.
-\begin{definition}{Encryption Oracle}
+\begin{definition}{Encryption Oracle:}
   Given a security experiment involving scheme $\Pi = (\Gen, \Enc, \Dec)$ and
   $(pk, sk)$ as generated by $\Gen$ during the experiment, an encryption oracle
   $\Enc_{pk}(\cdot)$ is a ``black box'' $\PPT$ algorithm that the adversary $\A$ 
@@ -800,9 +800,9 @@ on the notion of an \textbf{encryption oracle}.
   $\Enc$ is probabilistic, it uses ``fresh'' randomness during every query (uses
   i.i.d. random variables for every query).
 \end{definition}
-From the above, the definition of CPA is straight forward.
-\begin{definition}{CPA experiment}
-  Let $\Expr{goal-cpa}{\Pi, \A}(n)$ be a CPA security experiment with goal
+From the above, the definition of CPA is straightforward.
+\begin{definition}{CPA experiment:}
+  Let $\Expr{goal-CPA}{\Pi, \A}(n)$ be a CPA security experiment with goal
   \textit{goal} involving cipher $\Pi$, adversary $\A$ with security parameter $\lambda = 1^n$, where
   $\A$ is given access to an encryption oracle in \textbf{both stages}.
 \end{definition}
@@ -812,7 +812,7 @@ Chosen Ciphertext Attack, or a lunchtime attack. Here, we allow the attacker to
 obtain the decryption of arbitrary ciphertexts \textbf{before the challenge}.
 We will formalise obtaining the decryption of a ciphertext through a
 \textbf{decryption oracle}.
-\begin{definition}{Decryption Oracle}
+\begin{definition}{Decryption Oracle:}
   Given a security experiment involving scheme $\Pi = (\Gen, \Enc, \Dec)$ and
   $(pk, sk)$ as generated by $\Gen$ during the experiment, a decryption oracle
   $\Dec_{sk}(\cdot)$ is a ``black box'' \textit{deterministic polynomial-time}
@@ -820,8 +820,8 @@ We will formalise obtaining the decryption of a ciphertext through a
   outputs $m' = \Dec_{sk}(c)$.
 \end{definition}
 \paragraph{} Again, the definition of CCA1 follows easily.
-\begin{definition}{CCA1 Experiment}
-  Let $\Expr{goal-cca1}{\Pi, \A}(n)$ be a CCA1 security experiment with goal
+\begin{definition}{CCA1 Experiment:}
+  Let $\Expr{goal-CCA1}{\Pi, \A}(n)$ be a CCA1 security experiment with goal
   \textit{goal} involving
   cipher $\Pi$, adversary $\A$ with security parameter $\lambda = 1^n$, where
   $\A$ is given access to an encryption oracle in \textbf{both stages} and a
@@ -830,8 +830,8 @@ We will formalise obtaining the decryption of a ciphertext through a
 \subsubsection{Adaptive Chosen Ciphertext Attack (CCA2)}
 \paragraph{} The harshest threat model we will consider is the Adaptive Chosen
 Ciphertext Attack (CCA2). Its definition is not very different from that of CCA1:
-\begin{definition}{CCA2 Experiment}
-  Let $\Expr{goal-cca2}{\Pi, \A}(n)$ be a CCA2 security experiment with goal
+\begin{definition}{CCA2 Experiment:}
+  Let $\Expr{goal-CCA2}{\Pi, \A}(n)$ be a CCA2 security experiment with goal
   \textit{goal} involving
   cipher $\Pi$, adversary $\A$ with security parameter $\lambda = 1^n$, where
   $\A$ is given access to an encryption oracle in \textbf{both stages} and a
@@ -845,7 +845,7 @@ Ciphertext Attack (CCA2). Its definition is not very different from that of CCA1
 \paragraph{} We can now put what we know together, and obtain valid security
 frameworks! Namely, the 6 we can get from what we have seen above are: IND-CPA,
 IND-CCA1, IND-CCA2, NM-CPA, NM-CCA1 and NM-CCA2. A natural question to ask then,
-is how are these 6 notions related to each other? In this section we will show 3
+is how are these 6 notions related to each other? In this section, we will show 3
 different kinds of relations, and mention the rest, but only their proofs are
 outside the scope of this work.
 \subsubsection{Relationship under a fixed security goal}
@@ -888,7 +888,7 @@ section, we give two results based on our definitions, both due to \cite{bellare
   \ref{sec:secgoals} that now we must show that the advantage of $\A'$ in
   breaking $\Pi$ is negligible. Formally, we wish to establish that
   \[
-    \Adv{ind-atk}{\Pi, \A'}(n) \leq \negl(n).
+    \Adv{IND-atk}{\Pi, \A'}(n) \leq \negl(n).
   \]
   To do just that, we define an NM-ATK adversary $\A$, that will make use of $\A'$.
   In particular, let $\A$ be defined as below. Note, that both $\A$ and $\A$ are
@@ -908,12 +908,12 @@ section, we give two results based on our definitions, both due to \cite{bellare
     b) = True$ iff $a = \bar{b}$.
     \State
   \end{algorithmic}
-  Below, we will use the fact that without the loss of generaliy, we may assume
-  that $\A'$ always outputs $x_0 \neq x_1$. This fact is very intuitive, however
+  Below, we will use the fact that without the loss of generality, we may assume
+  that $\A'$ always outputs $x_0 \neq x_1$. This fact is very intuitive, however,
   showing it formally requires some care. To see a proof of this, please see
   Proposition 3.8 in \cite{bellaresecurityrelations}. To arrive at the statement
   of the theorem, we need to prove the two fairly intuitive claims below.
-  \paragraph{Claim 1.} $\Prob(\Expr{nm-atk-1}{\Pi, \A}(n) = 1) = \Prob(\Expr{ind-atk}{\Pi, \A'}(n) = b)$.\\
+  \paragraph{Claim 1.} $\Prob(\Expr{NM-atk-1}{\Pi, \A}(n) = 1) = \Prob(\Expr{IND-atk}{\Pi, \A'}(n) = b)$.\\
   This means that $\A$ succeeding in case 1 is exactly as likely as $\A'$ succeeding.
   Looking at the above definition of $\A$ this should seem fairly obvious, and
   we formally verify this intuition here. First, assuming that in the
@@ -927,14 +927,14 @@ section, we give two results based on our definitions, both due to \cite{bellare
   x'$. Then, since $\Dec$ assigns a unique plaintext to a ciphertext, it must
   also be the case that $c \neq c'$. We also always have $\perp \neq x'$.
 
-  \paragraph{} Now, consider $\Expr{ind-atk}{\Pi, \A'}$ given $B = b$. By our assumption, we
+  \paragraph{} Now, consider $\Expr{IND-atk}{\Pi, \A'}$ given $B = b$. By our assumption, we
   always have $x_0 \neq x_1$, and hence we observe that $\Dec_{sk}(c) =
   x_{b'}$ if and only if $b = b'$. (Otherwise, if we could have the same
   ciphertext twice, the decryption could still be correct, but $b = 1 - b'$!)
   Putting this fact together with the above, we see that $b = b'$ if and only if
   $c \neq c'$, $\perp \neq x'$ and $R(x, x') = True$, which is exactly the
   definition of $\A$ succeeding in case 1.
-  \paragraph{Claim 2.} $\Prob(\Expr{nm-atk-0}{\Pi, \A}(n) = 1) = \frac12$\\
+  \paragraph{Claim 2.} $\Prob(\Expr{NM-atk-0}{\Pi, \A}(n) = 1) = \frac12$\\
   This follows from the fact that since by the definition of NM-ATK experiments
   $\A$'s behaviour is not affected by $\hat{m}$. Hence, by the definition of
   $\A$ succeeds in case 0 if and only if $\hat{m} = m$. Since $M$ is a uniformly random
@@ -942,12 +942,12 @@ section, we give two results based on our definitions, both due to \cite{bellare
   \paragraph{}
   Hence, we have 
   \begin{align*}
-    \Adv{nm-atk}{\Pi, \A} &= \Prob(\Expr{nm-atk-1}{\Pi, \A}(n) = 1) - \Prob(\Expr{nm-atk-0}{\Pi, \A}(n) = 1)\\
-                          &= \Prob(\Expr{ind-atk}{\Pi, \A'}(n) = b) - \frac12 \quad\text{by Claim 1 and 2.}\\
-                          &= \frac12 \Adv{ind-atk}{\Pi, \A'}\quad\text{by Definition \ref{def:adv_ind}}.
+    \Adv{NM-atk}{\Pi, \A} &= \Prob(\Expr{NM-atk-1}{\Pi, \A}(n) = 1) - \Prob(\Expr{NM-atk-0}{\Pi, \A}(n) = 1)\\
+                          &= \Prob(\Expr{IND-atk}{\Pi, \A'}(n) = b) - \frac12 \quad\text{by Claim 1 and 2.}\\
+                          &= \frac12 \Adv{IND-atk}{\Pi, \A'}\quad\text{by Definition \ref{def:adv_ind}}.
   \end{align*}
-  Since $\Pi$ is NM-ATK secure $\Adv{nm-atk}{\Pi, \A}$ is negligible, hence by
-  the above equation $\Adv{ind-atk}{\Pi, \A'}$ is negligible also. Since $\A'$ can
+  Since $\Pi$ is NM-ATK secure $\Adv{NM-atk}{\Pi, \A}$ is negligible, hence by
+  the above equation $\Adv{IND-atk}{\Pi, \A'}$ is negligible also. Since $\A'$ can
   be any IND-ATK adversary, $\Pi$ is IND-ATK secure.
 \end{proof}
 \begin{theorem}{IND-CCA2 $\Rightarrow$ NM-CCA2}\\
@@ -986,10 +986,10 @@ section, we give two results based on our definitions, both due to \cite{bellare
   \begin{equation}
     \begin{split}
       \label{eq:indcca2eqnmcca2}
-    \Adv{ind-cca2}{\Pi, \A}(n) &= 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) = b)
+    \Adv{IND-CCA2}{\Pi, \A}(n) &= 2\cdot\Prob(\Expr{IND-atk}{\Pi, \A}(n) = b)
     - 1 \\
-                               &= 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) = b | B = b)\Prob(B = b)
-    - 2\cdot\Prob(\Expr{ind-atk}{\Pi, \A}(n) \neq b)\Prob(B = b) \\
+                               &= 2\cdot\Prob(\Expr{IND-atk}{\Pi, \A}(n) = b | B = b)\Prob(B = b)
+    - 2\cdot\Prob(\Expr{IND-atk}{\Pi, \A}(n) \neq b)\Prob(B = b) \\
                                &= p_n(0) - p_n(1)\quad\text{since } \Prob(B = b) = \frac12.
      \end{split}
   \end{equation}
@@ -1005,37 +1005,37 @@ section, we give two results based on our definitions, both due to \cite{bellare
   \[
     p_n(b) = \frac12 (1 + p'_n(b))
   \]
-  where the first term comes from the coinflip $(\frac12)$ and the second term
+  where the first term comes from the coin flip $(\frac12)$ and the second term
   is the probability of $\A'$ relating $x_0$ with $\vec{x}'$ times $\Prob(B =
   b)$, which gives $\frac{p'_n(b)}{2}$. (The reader is encouraged to go through
   the definition of $\A$ to verify that this is indeed the case.)
   Therefore, continuing from Equation \ref{eq:indcca2eqnmcca2}:
   \[
-    \Adv{ind-cca2}{\Pi, \A}(n) = p_k(0) - p_k(1) = \frac12 (1 + p_k'(0)) -
+    \Adv{IND-CCA2}{\Pi, \A}(n) = p_k(0) - p_k(1) = \frac12 (1 + p_k'(0)) -
     \frac12 (1 + p_k'(1)) = \frac12 (p_k'(0) - p_k'(1)).
   \]
   The second crucial observation is that in an NM-CCA2 experiment giving $x_1$
-  to $\A'$ and and it then $R$-relating it to $x_0$ is precisely $\A'$
+  to $\A'$ and it then $R$-relating it to $x_0$ is precisely $\A'$
   succeeding in case 0, since it corresponds to the scenario that we
   accidentally related a ciphertext to a random plaintext from the sample space.
-  Formally, $p'_k(1) = \Prob(\Expr{nm-cca2-0}{\Pi, \A'}(n) = 1)$. Similarly,
-  giving $x_0$ to $\A'$ corresponds to $p'_k(0) = \Prob(\Expr{nm-cca2-1}{\Pi, \A'}(n) =
+  Formally, $p'_k(1) = \Prob(\Expr{NM-CCA2-0}{\Pi, \A'}(n) = 1)$. Similarly,
+  giving $x_0$ to $\A'$ corresponds to $p'_k(0) = \Prob(\Expr{NM-CCA2-1}{\Pi, \A'}(n) =
   1)$. Putting this together with the previous equation, we get
   \[
-    \Adv{nm-cca2}{\Pi, \A'}(n) = p'_k(0) - p'_k(1) = 2\cdot\Adv{ind-cca2}{\Pi, \A}(n).
+    \Adv{NM-CCA2}{\Pi, \A'}(n) = p'_k(0) - p'_k(1) = 2\cdot\Adv{IND-CCA2}{\Pi, \A}(n).
   \]
-  Since $\Pi$ is IND-CCA2 secure, $\Adv{ind-cca2}{\Pi, \A}$ is negligible and
-  hence so is $\Adv{nm-cca2}{\Pi, \A'}$. Since $\A'$ was arbitrary, $\Pi$ is
+  Since $\Pi$ is IND-CCA2 secure, $\Adv{IND-CCA2}{\Pi, \A}$ is negligible and
+  hence so is $\Adv{NM-CCA2}{\Pi, \A'}$. Since $\A'$ was arbitrary, $\Pi$ is
   NM-CCA2 secure.
 \end{proof}
 \subsubsection{All relationships together}
 \label{sec:allrelations}
 \paragraph{} In Figure \ref{fig:secrelations} we indicate all the connections in the following way:
 an uncrossed arrow represents implication, and a crossed arrow represents strict
-strongness towards the arrows target (i.e. $A \rightarrow B$ means $A$ implies
+strongness towards the arrow's target (i.e. $A \rightarrow B$ means $A$ implies
 $B$ and $A \not\rightarrow B$ means there is a scheme that breaks $A$ but does
 not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
-``horzontal'' arrows, for the remaining proofs, please see Section 3 in \cite{bellaresecurityrelations}.
+``horizontal'' arrows, for the remaining proofs, please see Section 3 in \cite{bellaresecurityrelations}.
 \begin{figure}
   \centering
   \begin{tikzpicture}
@@ -1069,7 +1069,7 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
 \end{theorem}
 \begin{proof}
   All we need is the encryption oracle in stage 1, which we do under every
-  threat model, since we are assuming that the publick key and $\Enc$ are known
+  threat model, since we are assuming that the public key and $\Enc$ are known
   to the adversary. Therefore, construct a $\PPT$ adversary $\A$ as follows:
   \begin{algorithmic}
     \State \textbf{Algorithm} $\A$ \textbf{Stage 1}
@@ -1098,13 +1098,13 @@ not break $B$). We have presented the proofs of the uncrossed ``vertical'' and
 \end{proof}
 \subsection{Security under multiple encryptions}
 \paragraph{} The reader might find that we focused solely on the case when the
-adversary is only observing a single ciphertext, and may wonder if it is perhaps
+adversary is only observing a single ciphertext and may wonder if it is perhaps
 unrealistic to only consider this simple case. Luckily, in the case of
 asymmetric encryption, it can be shown that \textit{goal-atk}
 security under a single encryption implies \textit{goal-atk} security under
 \textbf{multiple} encryptions. Formalising the notion of multiple encryptions
 takes some effort and proving the above claim is non-trivial, however, we will
-only acknowledgeme the result and not prove it. For a rigorous treatment see
+only acknowledge the result and not prove it. For a rigorous treatment see
 Section 11 in \cite{katz2014introduction} (in particular Theorem 11.6).
 \section{Public-Key Crypto Schemes}
 \paragraph{} When one first encounters the concept of ciphers it is tempting to believe that
@@ -1127,7 +1127,7 @@ give a basic example of an asymmetric cipher.
 \paragraph{} All asymmetric schemes rely on certain assumptions about computing
 values of some functions with or without the knowledge of some secret piece of
 information is either ``easy'' or ``hard''. We will call such functions
-\textbf{trapdoors} or \textbf{trapdoor functions}. The idea then is use the
+\textbf{trapdoors} or \textbf{trapdoor functions}. The idea then is to use the
 function without the secret to perform encryption and use its inverse with the
 secret to decrypt. Sadly, we do not have space for a
 full formal discussion on these objects (namely one-way functions, trapdoor
@@ -1138,7 +1138,7 @@ later sections.
 familiar to the reader: it is in the same vein as our definitions of security
 frameworks! In particular, we will rely on the notion of experiments. Thus, we
 begin with our first experiment:
-\begin{definition}{The Factoring Experiment} The factoring experiment
+\begin{definition}{The Factoring Experiment:} The factoring experiment
   $\Expr{factor}{\A, \GenModulus}(n)$ given a security parameter $\lambda =
   1^n$, involving a $\PPT$ adversary $\A$ and $\PPT$ algorithm $\GenModulus$ is as follows:
   \begin{enumerate}
@@ -1157,7 +1157,7 @@ theorem. As for the second problem, one such algorithm uses the so-called
 in polynomial time in $n$ and fails with negligible probability $\negl(n)$. For
 a detailed discussion on $\PPT$ prime testing, see Chapter 3 Section 4 in \cite{hoffstein2014introduction}.
 Now, we can formally define the factoring assumption:
-\begin{definition}{The Factoring Assumption}
+\begin{definition}{The Factoring Assumption:}
   Factoring is hard relative to $\GenModulus$ if for all $\PPT$ adversaries $\A$
   we have
   \[
@@ -1168,7 +1168,7 @@ Essentially, the above definition says that factoring gets very hard as the
 length of the primes used increases. Although this problem has been known and
 studied for a very long time, it does not yield a straightforward trapdoor.
 Instead, we will rely (for now) on the following experiment and hardness assumption:
-\begin{definition}{The RSA Experiment}
+\begin{definition}{The RSA Experiment:}
 The RSA experiment $\Expr{RSA-inv}{\A, \GenRSA}(n)$ involving a $\PPT$ adversary $\A$ and
   $\PPT$ algorithm $\GenRSA$ is as follows:
   \begin{enumerate}
@@ -1181,7 +1181,7 @@ The RSA experiment $\Expr{RSA-inv}{\A, \GenRSA}(n)$ involving a $\PPT$ adversary
 \paragraph{} Informally, the RSA experiment asks the adversary to find an $e$-th
 root of $y$ in $\Int_N$.
   We have our experiment, now we can define our assumption:
-  \begin{definition}{The RSA Assumption}
+  \begin{definition}{The RSA Assumption:}
     \label{def:rsa_assumption}
   The RSA problem is hard relative to $\GenRSA$ if for all $\PPT$ adversaries $\A$
   we have
@@ -1190,8 +1190,7 @@ root of $y$ in $\Int_N$.
   \]
 \end{definition}
 \paragraph{} Now, crucially, we will relate the RSA assumption to the factoring
-assumption, meaning we can rely on the hardness assumption of a much better
-studied problem. To do this, we will now show how to obtain the algorithm
+assumption, meaning we can rely on the hardness assumption of a much better-studied problem. To do this, we will now show how to obtain the algorithm
 $\GenRSA$ from $\GenModulus$. Therefore, consider the following algorithm:
 \begin{algorithm}[H]
   \begin{algorithmic}
@@ -1213,7 +1212,7 @@ The great thing about the RSA assumption is that it will give us a really nice
 trapdoor, that we will present in the next part of this section.
 \paragraph{Note:} Choosing $e$ can be quite tricky in practice. Here we just
 mention that this is possible.
-\subsection{The RSA cryptoscheme}
+\subsection{The RSA crypto scheme}
 \subsubsection{Mathematical set-up}
 \begin{theorem}{Order}
   Let $G$ be a finite group and $g \in G$. Then, there exist positive integers
@@ -1280,7 +1279,7 @@ observation:
   It is very easy to check that the above indeed fulfils all group axioms.
 \end{proof}
 The order of $\Int_n$ is very important number-theoretically, so much so that it
-is usually dentoted $\phi(n) = |\Int_n|$ and is called the \textbf{Euler phi-function}.
+is usually denoted $\phi(n) = |\Int_n|$ and is called the \textbf{Euler phi-function}.
 Now, we are ready to state the theorem of our interest:
 \begin{theorem}{(Euler's Theorem)}\\
   \label{thm:eulersthm}
@@ -1363,14 +1362,14 @@ for a detailed discussion on the matter.
 \paragraph{}
 At this point, we start to finally focus on the main topic of the dissertation:
 homomorphic schemes. Intuitively, these encapsulate the idea of 
-comptutation over encrypted data, in sense that the adversary may at most
+computation over encrypted data, in the sense that the adversary may at most
 observe the operation take place, but both the inputs and the output of it
-remain secret. In this section we give the formal definition and construct an
+remain secret. In this section, we give the formal definition and construct an
 example scheme known as the Paillier scheme. Finally, we close with a discussion
 on the limitations of homomorphic schemes.
 \subsection{What is homomorphic encryption?}
 First, we see whence these schemes got their name:
-\begin{definition}{(Group) Homomorphism}
+\begin{definition}{(Group) Homomorphism:}
   Let $G$ and $H$ be groups. Then, a function $f: G \to H$ is called a
   homomorphism, iff $\forall g \in G, h \in H$ we have
   \[
@@ -1382,19 +1381,19 @@ First, we see whence these schemes got their name:
     G \cong H.
   \]
 \end{definition}
-Informally, homomorphisms are structure preserving maps, and if two groups are
+Informally, homomorphisms are structure-preserving maps, and if two groups are
 isomorphic, then they are virtually the same object. Now, to put this in the
 context of ciphers:
-\begin{definition}{((Group) Homomorphic Cipher)}
+\begin{definition}{(Group) Homomorphic Cipher:}
   Let $\Pi = (\Gen, \Enc, \Dec)$ be a cipher with message space $\M$ and cipher
-  space $\C$. Furtermore, let $(\M, \circ)$ and $(\C, \oplus)$ be groups where
+  space $\C$. Furthermore, let $(\M, \circ)$ and $(\C, \oplus)$ be groups where
   $\circ, \oplus$ are binary operations.
   We say that $\Pi$ is homomorphic iff $\forall (pk, sk) \in \K, \forall
   m_1, m_2 \in \M, c_1 = \Enc_{pk}(m_1), c_2 = \Enc_{pk}(m_2)$ we have
   \[
     m_1 \circ m_2 = \Dec_{sk}(c_1 \oplus c_2).
   \]
-  More compactly, the aboves says that $\Pi$ is homomorphic is $\Dec_{sk}(\cdot)$ is a
+  More compactly, the above says that $\Pi$ is homomorphic is $\Dec_{sk}(\cdot)$ is a
   homomorphism for all $sk$.
 \end{definition}
 \subsubsection{Limitations}
@@ -1402,6 +1401,7 @@ context of ciphers:
 however, one aspect will be clear immediately: these ciphers are
 \textit{extremely} malleable. We formalise this in the theorem below:
 \begin{theorem}
+  \label{thm:homom_enc_limit}
   Let $\Pi = (\Gen, \Enc, \Dec)$ be a homomorphic cipher. Then $\Pi$ cannot be
   secure in the NM-atk sense. 
 \end{theorem}
@@ -1423,7 +1423,7 @@ however, one aspect will be clear immediately: these ciphers are
   \end{algorithmic}
   Let $m, \textbf{m}'$ as defined in the NM-atk security experiment. We note
   that in our case we have $\textbf{m}' = \Dec_{sk}(c \oplus c) = m \circ m =
-  m^2$, where the penultimate equality follows, since $\Pi$ is a homomorphic cipher. 
+  m^2$, where the penultimate equality follows since $\Pi$ is a homomorphic cipher. 
   \paragraph{Claim} $m \not\in \textbf{m}'$. \\
   The above is equivalent to stating that $m \neq m^2$. Assume the contrary,
   i.e. that $m = m^2$. Since $\M$ is a group, we have inverses. Multiplying by
@@ -1441,8 +1441,8 @@ not true! In particular, recall Section \ref{sec:security_frameworks} Figure
 \ref{fig:secrelations}, based on the results of \cite{bellaresecurityrelations}.
 We see that IND-CCA1 does not imply NM-CPA security, leaving open the
 possibility of IND-CCA1 secure homomorphic ciphers. A somewhat surprising recent
-result result is achieved by Yasuda et al. \cite{Yasuda2018}, where they construct a
-cipher where in fact the relationship between the message and the cipherspace is
+result is achieved by Yasuda et al. \cite{Yasuda2018}, where they construct a
+cipher where in fact the relationship between the message and the cipher space is
 a ring homomorphism, and they show that their scheme is IND-CCA1 secure!
 \subsection{Paillier's Scheme}
 \paragraph{}
@@ -1540,7 +1540,7 @@ write
   N)^{a_1 - a_2} = (1 + (a_1 - a_2)N) = 1 \mod N^2$. Hence $a_1 - a_2 = 0 \mod N^2$
   and since $a_1, a_2 \in \Int_N$ the above is an equality, from which we have
   $a_1 = a_2$.
-  \paragraph{} Going back to our initial formula, now simplifying by the terms
+  \paragraph{} Going back to our initial formula, now simplifying the terms
   involving the $a$s:
   \[
     b_1^N = b_2^N \mod N^2.
@@ -1651,7 +1651,7 @@ Let $c$ be the ciphertext we wish to decrypt. First, let $\hat{c} = c^{\phi(N)}
 \mod N^2$. Then, calculate $m' = \frac{(\hat{c} - 1)}{N} \cdot \phi(N)^{-1} \mod
 N$.
 Output $m'$.
-\paragraph{Note:} the division by $N$ happends in $\Rat$ and not in $\Int_N$!
+\paragraph{Note:} the division by $N$ happens in $\Rat$ and not in $\Int_N$!
 \paragraph{Correctness}
 Let $(pk, sk)$ be the key $\Gen$ generates, with $pk = N^2$, for some $N = pq$
 primes and $sk = \phi(N)$. Let $m$ be the message we encrypt and $c =
@@ -1703,7 +1703,7 @@ Here we will be passing $c = (1 + N)^{m_b} \cdot r^N \mod N^2$ to the second
 stage of $\A$. Since here we will have $c = \Enc(m_b)$, by the definition of the
 indistinguishability experiment we will have
 \[
-  \Prob(\Expr{ind-cpa}{\Pi, \A} = 1) = \Prob(\A \text{ outputs } b | B = b) =
+  \Prob(\Expr{IND-CPA}{\Pi, \A} = 1) = \Prob(\A \text{ outputs } b | B = b) =
   \Prob(\A'(N, [r^N \mod N^2]) = 1).
 \]
 \paragraph{Case 2.} We ran $(N, p, q) \leftarrow \GenModulus(1^n)$, chose an $r
@@ -1716,11 +1716,11 @@ $\A$ does not depend on $b$. Hence $\Prob(\A'(N, r) = 1) = \frac12$.
 \]
 Substituting the two above case analyses we get
 \[
-\Prob(\Expr{ind-cpa}{\Pi, \A} = 1) - \frac12 \leq \negl(n)
+\Prob(\Expr{IND-CPA}{\Pi, \A} = 1) - \frac12 \leq \negl(n)
 \]
 and hence
 \[
-  \Adv{ind-cpa}{\Pi, \A} = 2 \cdot \Prob(\Expr{ind-cpa}{\Pi, \A} = 1) - 1 \leq \negl(n).
+  \Adv{IND-CPA}{\Pi, \A} = 2 \cdot \Prob(\Expr{IND-CPA}{\Pi, \A} = 1) - 1 \leq \negl(n).
 \]
 Thus, $\Pi$ is IND-CPA secure.
 \end{proof}
@@ -1766,10 +1766,10 @@ We immediately follow up with 3 key definitions involving members of $V$.
     \in B \}.
   \]
 \end{definition}
-\paragraph{} One can think of the span of a set of vector as the ``smallest''
+\paragraph{} One can think of the span of a set of vectors as the ``smallest''
 space in which all vectors related to the elements of $B$ can be found.
 Geometrically, it is the ``smallest'' set of points that can be reached from the
-origin by translating by scaled version of the vectors in $B$. It is usually
+origin by translating by the scaled version of the vectors in $B$. It is usually
 convenient to collect vectors in $B$ in a structured way, called a matrix. If we
 collected the scaling factors in a vector $\vec{\alpha} = [\alpha_1, \hdots,
 \alpha_m]$, then we can express the vector $\vec{w}$ by writing
@@ -1781,7 +1781,7 @@ collected the scaling factors in a vector $\vec{\alpha} = [\alpha_1, \hdots,
     - \vec{b}_m - 
   \end{bmatrix}
 \]
-\begin{definition}{Linear Independence}
+\begin{definition}{Linear Independence:}
   Let $V$ be a vector space, and $B = \{\vec{b}_1, \hdots, \vec{b}_m\} \subseteq
   V$. We say that the vectors of $B$ are linearly independent if
   \[
@@ -1795,7 +1795,7 @@ collected the scaling factors in a vector $\vec{\alpha} = [\alpha_1, \hdots,
 the set of points that can be ``reached'' in a unique way through the vectors
 of $B$, i.e. every point is defined by a unique linear combination. This
 motivates our next definition:
-\begin{definition}{Basis}
+\begin{definition}{Basis:}
   Let $V$ be a vector space, and $B = \{\vec{b}_1, \hdots, \vec{b}_m\} \subseteq
   V$. Then, we say $B$ is a basis for $V$ if we have $\Span(B) = V$ and the
   vectors of $B$ are linearly independent.
@@ -1825,7 +1825,7 @@ On can think of the inner product of two vectors as the ``generalised'' length
 of the ``shadow '' (projection) of one vector on the other.
 We can then use the length of the projection of a vector onto itself as a way of
 measuring its length. In particular:
-\begin{definition}{Norm}
+\begin{definition}{Norm:}
   Let $\vec{v} = [v_1, \hdots, v_n] \in R^n$. Then we say that the (Euclidean) norm (length) of
   $\vec{v}$ is defined as
   \[
@@ -1837,9 +1837,9 @@ measuring its length. In particular:
     \norm{B} = \sup_i\{\norm{\vec{b}_i} \,\,|\,\,\vec{b}_i \in B\}
   \]
 \end{definition}
-Finally, using the definition of length, we may measure distance between any two
+Finally, using the definition of length, we may measure the distance between any two
 vectors by measuring the length of their difference:
-\begin{definition}
+\begin{definition}{Distance between two vectors (Metric):}
   Let $\vec{v}, \vec{u} \in \Reals^n$. Then, the (Euclidean) distance between
   them is defined as
   \[
@@ -1851,9 +1851,9 @@ inner product space theory, normed space theory and metric space theory,
 respectively. We also note that the norm and the metric we are imposing on
 $\Reals^n$ are exactly the norm and metric induced by the inner product.
 Finally, we finish with an important geometric concept: perpendicular lines.
-In a generalised setting we will say that two vectors are perpendicular to each
+In a generalised setting, we will say that two vectors are perpendicular to each
 other if the length of the shadow of one on the other is $0$. Formally:
-\begin{definition}
+\begin{definition}{Orthogonality:}
   Let $\vec{v}, \vec{u} \in \Reals^n$. We say that they are orthogonal
   (perpendicular) to each other if we have
   \[
@@ -1861,9 +1861,9 @@ other if the length of the shadow of one on the other is $0$. Formally:
   \]
 \end{definition}
 We will use one more notion related to distances later, namely that of a ball:
-\begin{definition}{Ball}
+\begin{definition}{Ball:}
   Let $V$ be a vector space, $\vec{v} \in V$ and $r \in \Reals$. Then the
-  (closed) ball centered around $\vec{v}$ is defined as
+  (closed) ball centred around $\vec{v}$ is defined as
   \[
     B(\vec{v}, r) := \{\vec{w} \in V \,\,|\,\, \norm{\vec{w} - \vec{v}} \leq r\}.
   \]
@@ -1890,7 +1890,7 @@ will only focus on polynomial rings. We thus begin with some basic definitions:
  \end{itemize}
 \end{definition}
 \begin{definition}{Field:}
-  Let $(F, +, \times)$ be a ring. If $(F \setminus \{0\}, \times)$ forms an
+  Let $(F, +, \times)$ be a ring. If $(F \setminus \{0\}, \times)$ forms a
   commutative group, we say $F$ is a field.
 \end{definition}
 \begin{definition}{Ideal:}
@@ -1909,7 +1909,7 @@ will only focus on polynomial rings. We thus begin with some basic definitions:
 \end{definition}
 We then have a very natural way of obtaining an ideal, using a set of elements
 from $R$:
-\begin{definition}{Generators}
+\begin{definition}{Generators:}
   Let $S = \{i_1, \hdots, i_n\} \subseteq R$. Then, we say that the ideal
   \textbf{generated by} $S$ is
   \[
@@ -1928,14 +1928,14 @@ from $R$:
     \psi \mod I := \pi.
   \]
 \end{definition}
-\begin{definition}{Sum of ideals}
+\begin{definition}{Sum of ideals:}
   Let $R$ be a ring and $I$, $J$ be ideals in $R$. Then, we can define a new set
   \[
     I + J = \{i + j \,\,|\,\, i \in I, j \in J\}.
   \]
   Then, $I + J$ is again an ideal of $R$.
 \end{definition}
-\begin{definition}{Relatively prime ideals}
+\begin{definition}{Relatively prime ideals:}
   Let $R$ be a ring and $I$, $J$ be ideals in $R$. Then, we say that $I$ and $J$
   are relatively prime, iff
   \[
@@ -1992,26 +1992,26 @@ where
   c_i = \sum_{\substack{0 \leq k, l \leq m + n \\ k + l = i}} p_kq_l.
 \]
 \end{definition}
-Finally, we consider some concepts which arise from the number theoretic origins
+Next, we consider some concepts which arise from the number theoretic origins
 of rings.
-\begin{definition}{Unit}
+\begin{definition}{Unit:}
   Let $R$ be a ring, that has a multiplicative identity. Then, we say that an
   element $u \in R\setminus\{0\}$ is a unit, iff it has a multiplicative inverse in $R\setminus\{0\}$
 \end{definition}
 It is easy to see that the set of units in a ring form a group called the \textit{group
 of units} and is usually denoted $R^*$.
-\begin{definition}{Divisibility}
+\begin{definition}{Divisibility:}
   Let $R$ be a ring and $r, s \in R$. Then, we say that $s$ \textbf{divides}
   $r$, iff there is some $t \in R$, such that $r = st$. We call $(s,t)$ a
   \textbf{divisor pair}.
 \end{definition}
-\begin{definition}{Irreducibility}
+\begin{definition}{Irreducibility:}
   Let $R$ be a ring with a multiplicative identity. Then, we say that an element
   is irreducible if it is non-zero, is not a unit and all of its divisor pairs have a unit in them. In other
   words, if we have $r = uv$ for some $u, v \in R$, then either $u$ or $v$ is a unit.
 \end{definition}
 Finally, very similarly to group homomorphisms, we define ring homomorphisms:
-\begin{definition}{Ring Homomorphism}
+\begin{definition}{Ring Homomorphism:}
   Let $R, S$ be rings. Then a function $f: R \to S$ is a homomorphism iff
   $\forall x,y \in R$ we have
   \[
@@ -2042,7 +2042,7 @@ ideas we explore here.
   \]
   Then $B$ is also called the basis of the lattice $\L$.
 \end{definition}
-\begin{definition}{Fundamental Domain}
+\begin{definition}{Fundamental Domain:}
   Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots, \vec{v}_n\}$. Then, the
   \textbf{fundamental domain of $\L$ with respect to $B$} is
   \[
@@ -2052,7 +2052,7 @@ ideas we explore here.
 \end{definition}
 The following theorem is key for cryptographic application of lattices:
 \begin{theorem}
-  Let $\L$ be a lattice with basis $B$. Then $\F_B$ tessalates $\Reals^n$
+  Let $\L$ be a lattice with basis $B$. Then $\F_B$ tessellates $\Reals^n$
   without overlap. Formally, let $x \in \Reals^n$. Then there exists a unique $\ell \in \L$
   and $f \in \F_B$ such that
 \[
@@ -2097,7 +2097,7 @@ to 0 by its definition, we get
   \lfloor \vec{v}\times B^{-1} \rceil = \lfloor \vec{a} + \vec{t} \rceil = \vec{a}.
 \]
 Hence, we define the following:
-\begin{definition}{Modding by a lattice basis}
+\begin{definition}{Modding by a lattice basis:}
   \label{def:lattice_mod}
   \begin{align*}
     \vec{v} \mod B &= \vec{v} - \lfloor \vec{v} \times B^{-1} \rceil \times B \\
@@ -2107,17 +2107,29 @@ Hence, we define the following:
 \end{definition}
 This gives a really nice way of testing whether a point in the ambient space is
 also in the lattice, since if $\vec{v} \in \L(B)$, then $\vec{v} \mod B = 0$!
-\begin{definition}
+\begin{definition}{Covolume:}
   Let $\L$ be an $n$-dimensional lattice with basis $B$ and fundamental domain
   $\F_B$. Then, the $n$-dimensional volume of $\F_B$ is called the determinant
   (or covolume) of $\L$, denoted by $\det(\L)$.
 \end{definition}
 \begin{theorem}
   \label{thm:lattice_change_of_basis}
-  Let $\L$ be a lattice with bases $B_1, B_2$. Then, there exists a matrix $A$
-  with $\det(A) = \pm 1$ such that $AB_1 = B_2$.
+  Let $\L$ be a lattice with basis $B_1$. Then $B_2$ is also a basis for $\L$ if
+  and only if, there exists a matrix $A$ with $\det(A) = \pm 1$ such that $AB_1 = B_2$.
 \end{theorem}
 \begin{proof}
+  Let us take a change of basis matrix $A$, such that $AB_1 = B_2$. Then, since
+  we are staying in the same lattice, $A$ must have integer entries and since it
+  is a non-degenerative transformation it must have $det(A) \neq 0$. Then:
+  \[
+    1 = \det(I) = \det(AA^{-1}) = \det(A)\cdot \det(A^{-1}).
+  \]
+  Now, using the fact that $A$ has integer entries, we deduce that $\det(A)$ is
+  an integer also, and hence $\det(A) = \det(A^{-1}) = \pm 1$. On the other hand,
+  if $\det(A) = \pm 1$, then since $A^{-1} = \frac{1}{\det(A)}\cdot
+  \text{adj}(A)$ and the adjugate of $A$ will clearly have integer entries,
+  and hence so must $A^{-1}$. (See \cite{cohen1993course} pp. 54 for the definition of
+  the adjugate matrix.)
 \end{proof}
 \begin{theorem}{Hadamard's inequality}
   Let $\L$ be a lattice with basis $B = \{\vec{v}_1, \vec{v}_2, \hdots \vec{v}_n\}$. Then
@@ -2125,8 +2137,12 @@ also in the lattice, since if $\vec{v} \in \L(B)$, then $\vec{v} \mod B = 0$!
   \Vol(\L) \leq \norm{\vec{v}_1}\cdot\norm{\vec{v}_2}\cdots\norm{\vec{v}_n}.
 \]
 \end{theorem}
+Thinking geometrically, the theorem is stating something very intuitive: given
+the set of all $n$-dimensional parallelepipeds, the one that has the largest
+volume will be the $n$-dimensional hyperrectangle. For a proof, see Corollary
+2.5.5 in \cite{cohen1993course}.
 Based on the above theorem, we will make the following definition:
-\begin{definition}{Hadamard Ratio}
+\begin{definition}{Hadamard Ratio:}
   Let $\L$ and $B$ as in the theorem above. Then, the \textbf{Hadamard ratio of $B$}
   is defined as
   \[
@@ -2216,7 +2232,7 @@ This can be rewritten as
 \end{align*}
 This means that we can calculate the product of two polynomials in $R$ by
 switching to their vector representation, multiplying one by the other's
-rotation basis and swithcing back! With this insight, the proof is very straightforward.
+rotation basis and switching back! With this insight, the proof is very straightforward.
 \begin{proof} $q(x) \in (p(x)) \Rightarrow \vec{q} \in \L(P)$.\\
   $q(x) \in (p(x))$ means that there is some $v(x) \in R$ such that $q(x) = v(x)
   \times p(x)$. Now switching to the vector context, we have
@@ -2233,7 +2249,7 @@ The above if and only if condition motivates the following definition.
   lattice induced by $p$.
 \end{definition}
 The above definition is made to really highlight the dual nature of the ideal $(p)$.
-\paragraph{} Finally in this section, we draw attention to the two modding operations that we
+\paragraph{} Finally, in this section, we draw attention to the two modding operations that we
 have defined: modding a ring element by an ideal in Definition
 \ref{def:ideal_mod} and modding an element of $n$-dimensional Euclidean space by
 a lattice basis in Definition \ref{def:lattice_mod}. The question now arises: since ideal
@@ -2252,12 +2268,12 @@ where $V$ is the rotation basis corresponding to $v(x)$.
 \subsection{Mathematical Set-up III: Computational Considerations for Lattices and Rings}
 \paragraph{} Up to now, we only considered structures in the context of the
 properties that their axioms give rise to. In this section, we now switch
-context, and consider them from a computational point of view. In particular,
+context and consider them from a computational point of view. In particular,
 we consider computational problems that arise from lattices that can be used to
 construct public-key ciphers.
 \subsubsection{Computational Lattice Problems}
 \label{sec:comp_lattice_prob}
-\begin{definition}
+\begin{definition}{i-th Successive Minimum:}
   Let $\L$ be a lattice. Then, define $\lambda_i(\L)$ called the $i$th
   successive minimum of $\L$ as the smallest radius $r > 0 $ such that $\L$
   contains at least $i$ linearly independent (non-zero) vectors with norm at most $r$.
@@ -2273,7 +2289,7 @@ than one point as long as they all have the same norm.)
 $n$-dimensional lattice? And what should it even mean to find the shortest
 vector? We answer these questions below in reverse order.
 
-\begin{definition}{The $\gamma(n)$-SVP Experiment} The Shortest Vector Problem experiment
+\begin{definition}{The $\gamma(n)$-SVP Experiment:} The Shortest Vector Problem experiment
   $\Expr{SVP}{\A, \GenBasis}(n)$ with factor $\gamma(n)$ involving a $\PPT$ adversary $\A$ and
   $\PPT$ algorithm $\GenBasis$ is as follows:
   \begin{enumerate}
@@ -2288,7 +2304,7 @@ vector? We answer these questions below in reverse order.
 \end{definition}
 \paragraph{} Then, in the hope that it is easy to find a ``hard'' lattice, we
 can define the hardness assumption of this problem.
-\begin{definition}{$\gamma(n)$-Shortest Vector Problem (SVP) Assumption}
+\begin{definition}{$\gamma(n)$-Shortest Vector Problem (SVP) Assumption:}
   $\gamma(n)$-SVP is hard relative to $\GenBasis$ if for all $\PPT$ adversaries $\A$ we
   have
   \[
@@ -2298,7 +2314,7 @@ can define the hardness assumption of this problem.
 \paragraph{} A similar and related problem is, informally, given a point
 $\vec{v}$ from the lattice's ambient space, finding the closest lattice point to
 $\vec{v}$. We formalise this below:
-\begin{definition}{The $\gamma(n)$-CVP Experiment} The Closest Vector Problem experiment
+\begin{definition}{The $\gamma(n)$-CVP Experiment:} The Closest Vector Problem experiment
   $\Expr{CVP}{\A, \GenCVP}(n)$ with factor $\gamma(n)$ involving a $\PPT$ adversary $\A$ and
   $\PPT$ algorithm $\GenCVP$ is as follows:
   \begin{enumerate}
@@ -2313,7 +2329,7 @@ $\vec{v}$. We formalise this below:
 \end{definition}
 \paragraph{} Again, in the hope that we can find ``hard'' lattice bases, we can
 define the appropriate hardness assumption:
-\begin{definition}{$\gamma(n)$-Closest Vector Problem (CVP) Assumption}
+\begin{definition}{$\gamma(n)$-Closest Vector Problem (CVP) Assumption:}
    $\gamma(n)$-CVP is hard relative to $\GenCVP$ if for all $\PPT$ adversaries $\A$ we
   have
   \[
@@ -2322,7 +2338,7 @@ define the appropriate hardness assumption:
 \end{definition}
 \paragraph{} Now that we know what we mean by ``finding'' vectors, we can answer
 our second question above: are there $\PPT$ algorithms $\GenBasis$ and $\GenCVP$ as specified in the above
-definitios, with respect to which our hardness assumptions hold? A related
+definitions, with respect to which our hardness assumptions hold? A related
 question is, how are CVP and SVP connected? It would be preferable to find a
 connection so that we can base the hardness
 assumption of one problem on the assumption of the other (as we did with the
@@ -2332,7 +2348,7 @@ generated instances of) SVP is polynomially equivalent to solving a different,
 worst-case lattice problem, the Short Basis Problem (SBP). In the framework of
 this text, this means for us that the SBP yields a $\PPT$ algorithm $\GenBasis$
 with respect to which our SVP assumption holds. As for the connection between
-CVP and SVP, they can both be reduced into each other with the lattice dimension
+CVP and SVP, they can both be reduced to each other with the lattice dimension
 of the problems changing at most very slightly after the reduction. See the
 paper by Goldreich et al. for the SVP to CVP reduction \cite{GOLDREICH199955}
 and Section 6.5 in \cite{hoffstein2014introduction} for the other direction as
@@ -2374,12 +2390,12 @@ scheme called GGH that we introduce at the end of this section will be a
 straightforward application of this approach. In fact, a slightly twisted
 version of the above ideas will give us the scheme in the last section.
 \subsubsection{Computational Ring Problems}
-\paragraph{} In the above section we have seen concrete computational problems
-involving lattices. We now take a step back, and consider two more abstract
+\paragraph{} In the above section, we have seen concrete computational problems
+involving lattices. We now take a step back and consider two more abstract
 problems, defined with rings. This approach will help us understand
 relationships between the ciphers presented in this work. We begin with the
 simpler one.
-\begin{definition}{The Ideal Membership Experiment} The ideal membership experiment
+\begin{definition}{The Ideal Membership Experiment:} The ideal membership experiment
   $\Expr{IMP}{\A, R, I, \Samp_I}(n)$ involving a $\PPT$ adversary $\A$, ring $R$, $I$ an
   ideal of $R$ and $\PPT$ algorithm $\Samp_I$ that samples from $I$
   according to some distribution is as follows:
@@ -2395,7 +2411,7 @@ $\Samp_I$, is it easy to determine if a randomly chosen element of $R$ is in
 $I$. While this problem may seem very far removed from practicalities, we
 consider the following example.
 \paragraph{Example}
-Recall Paillier's scheme, in particular, that it it relies on the isomorphism
+Recall Paillier's scheme, in particular, that it relies on the isomorphism
 \[
   \Int_{N^2}^* \cong \Int_N^* \times \Int_N
 \]
@@ -2416,7 +2432,7 @@ number of elements, they are isomorphic. Thus,
 \]
 Hence, solving the IMP in $\Int_{N^2}$ for the ideal $(N)$
 is equivalent to solving the DCRP for $\Int_{N^2}$ and $\texttt{Res}(\Int_{N^2}, N)$!
-\begin{definition}{Ideal Membership Problem (IMP) Assumption}
+\begin{definition}{Ideal Membership Problem (IMP) Assumption:}
   IMP is hard relative to $(R, I, \Samp_I)$ if for all $\PPT$ adversaries $\A$ we have
   \[
     \Adv{IMP}{\A, R, I, \Samp_I}(n) = 2 \cdot \Prob(\Expr{IMP}{\A, R, I, \Samp_I}(n) = 1) - 1 \leq \negl(n)
@@ -2428,7 +2444,7 @@ $B_I$ and a vector $\vec{v} \in \L(B_I)$, it is enough to check if $\vec{v}
 \mod B_I = 0$. Hence, if we wish to use ideal lattices as our source of hard
 problems, we cannot use any that can be reduced into the IMP. This observation
 motivates our second ring problem.
-\begin{definition}{The Ideal Coset Experiment} The ideal coset experiment
+\begin{definition}{The Ideal Coset Experiment:} The ideal coset experiment
   $\Expr{ICP}{\A, R, I, \Samp_R, \GenIdeal_I}(n)$ involving a $\PPT$ adversary $\A$, ring
   $R$, $I$ an ideal of $R$, $\PPT$ algorithm $\Samp_R$ that samples $R$
   according to some distribution and $\PPT$ algorithm $\GenIdeal$, assuming that modding by ideals may be performed
@@ -2444,7 +2460,7 @@ motivates our second ring problem.
   \end{enumerate}
 \end{definition}
 
-\begin{definition}{Ideal Coset Problem (ICP) Assumption}
+\begin{definition}{Ideal Coset Problem (ICP) Assumption:}
   The ICP is hard relative to $(R,I,\Samp_R,\GenIdeal)$ if for all $\PPT$ adversaries $\A$ we have
   \[
     \Adv{ICP}{\A, R, I, \Samp_R, \GenIdeal}(n) = 2 \cdot \Prob(\Expr{ICP}{\A, R,
@@ -2462,7 +2478,7 @@ $U \in \GL_n(\Int)$ such that $|\det(U)| = 1$. Calculate $W = UV$. Output
 $(pk, sk) = (W, V)$.
 \paragraph{Encryption}
 Let $pk = W$ and $m \in \Int^n$ be the message that we want to encrypt. Let $r
-\in \Int^n$ be a random vector with $\norm{r}$ small. Then, caluclate and output
+\in \Int^n$ be a random vector with $\norm{r}$ small. Then, calculate and output
 $c = mW + r$.
 \paragraph{Decryption}
 Let $pk = W$, $sk = V$ and $c$ the ciphertext we want to decrypt. Use Babai's
@@ -2471,7 +2487,7 @@ $\hat{m}$ by $VW^{-1}$ on the right and output the answer.
 \paragraph{Correctness}
 Let $pk = W$, $sk = V$ and $m$ be the message we wish to encrypt. Then, $c =
 \Enc_{pk}(m) = mW + r$, for some small $r$. Now, examining $\Dec_{sk}(c)$, we
-find that first we calculate $\hat{m} = \lfloor cV^{-1} \rfloor$. Since $V$'s
+find that first, we calculate $\hat{m} = \lfloor cV^{-1} \rfloor$. Since $V$'s
 Hadamard ratio is high we will have decoded to the closest lattice point, hence
 we will now have $\hat{m}V = mW$. Hence by multiplying $\hat{m}$ by $VW^{-1}$ on
 the left, we get
@@ -2482,7 +2498,7 @@ Hence the cipher is correct.
 \subsubsection{Security of GGH}
 \paragraph{} The IND-CPA security of GGH relies on the result that CVP can be transformed into SVP and
 that SVP can be transformed into its decisional version \cite{cheng_svp_red},
-i.e. given a lattice basis $B$ and an real number $r > 0$, the adversary needs
+i.e. given a lattice basis $B$ and a real number $r > 0$, the adversary needs
 to decide if $\lambda_1(\L(B)) < r$ or not. Then, using this version of SVP, the
 theorem is very similar to Theorem \ref{thm:gentry_ind_cpa} and so we omit
 it here.
@@ -2516,13 +2532,13 @@ be as quick as possible, whilst retaining security (here we are talking about
 asymptotic performance). In our case, as the reader
 will see below this is an even more burning issue. For this reason, we look to
 lattices as our solution, as the complexity of encryption and decryption
-procedures which are yielded by their appropriate trapdoors in lattice based
+procedures which are yielded by their appropriate trapdoors in lattice-based
 schemes outperforms other currently known trapdoors and they are also better
 parallelisable (\cite{hoffstein2014introduction}, Section 6.7).
 \paragraph{} This is complemented by the fact discussed in Section
 \ref{sec:ideal_lattices}, that ideals in polynomial rings automatically
 induce lattices. This dual nature of ideal lattices will immediately yield us
-the ring homomorphisms between the message and the cipherspace that we need to
+the ring homomorphisms between the message and the cipher space that we need to
 achieve FHE.
 
 \paragraph{} However, there is an issue with lattices which we must patch: we
@@ -2536,7 +2552,7 @@ a lattice point.
 
 \paragraph{} So how will all the above come together to give us FHE?
 Here is the abstract construction in 3 (broad) steps:
-\paragraph{Step 1:} We first define a cipher that will be allow computation 
+\paragraph{Step 1:} We first define a cipher that will allow computation 
 \textit{up to a certain level} (through a ring homomorphism). This limitation will come
 from the fact that the ``error'' associated with or ciphertext (the
 coset representative) in which we embed our messages will increase as we combine
@@ -2562,7 +2578,7 @@ secret key $sk_1$).
 \begin{enumerate}
   \item Calculate $c_0 = \Enc(pk_2, c) = \Enc(pk_2, \Enc(pk_1, m))$, the encryption of
     of $c$ under some public key $pk_2$.
-  \item Calculate $c_1 = \Evaluate(\Dec, \{sk_1\, c_0\})$, i.e. we homomophically
+  \item Calculate $c_1 = \Evaluate(\Dec, \{sk_1\, c_0\})$, i.e. we homomorphically
   decrypt $c$ under $sk_1$. Hence, we will have $c_1 = \Enc(pk_2, m)$ (with
   some technical caveats).
 \end{enumerate}
@@ -2574,16 +2590,16 @@ $\Dec^{op}$ with more than one ciphertext and make progress at the same time as
 resetting the error.
 \paragraph{Step 3:} Instead of using different public-private key pairs, we
 just use one pair! In particular, we will encrypt twice under the same public
-key and then homomophically decrypt using the encryption of the associated
+key and then homomorphically decrypt using the encryption of the associated
 secret key. Is it safe to encrypt the secret key under its own private key? This
-and other technicalities unfortunately fall out of the scope of our work,
+and other technicalities, unfortunately, fall out of the scope of our work,
 however, we note that under some mild assumptions there are appropriate
 workarounds and the scheme will be secure.
 
 \paragraph{} In the upcoming few sections, we will mainly focus on the first two
 steps. We will present the scheme that is
 \textit{almost bootstrappable} (in Gentry's terminology, it is \textit{somewhat
-  homomorphic}). This scheme, with some tweaks can then be made bootstrappable
+  homomorphic}). This scheme, with some tweaks, can then be made bootstrappable
 and thus will yield us FHE.
 \paragraph{}
 Before we can move on, however, we are obliged to
@@ -2591,7 +2607,7 @@ clarify what we mean by being able to compute arbitrary functions on encrypted d
 What we will in fact show is that we are capable of evaluating arbitrary
 (binary) circuits on ciphertexts. We will then rely on a theorem by Fischer
 and Pippenger \cite{Fischer96lectureson}, which states that a \textit{family of circuits over a set functionally complete gates} can
-simulate any Turing Machine. Then, by the Church-Turing Thesis we have that we can
+simulate any Turing Machine. Then, by the Church-Turing Thesis, we have that we can
 compute anything that is computable. We will now clarify some terminology:
 \begin{definition}{Circuit:} Let $\Gamma$ be a set of $k$-ary operations (also
   called \textbf{gates} in this context) over some set $S$. Then, an (acyclic) circuit is a tree
@@ -2625,7 +2641,7 @@ will not need to worry about correctness or security!
 \subsubsection{Definition of the Scheme}
 \paragraph{} For what follows, we will assume that given a ring $R$ and ideals
 $I$ and $J$ of $R$, modding by the ideals may be performed in polynomial time.
-We make the last assumption, because we know that eventually we would like to
+We make the last assumption because we know that eventually, we would like to
 work with lattices. Then, based on the trapdoor provided by the ICP, we define
 the following scheme:
 \paragraph{Key Generation} We are given a security parameter $\lambda = 1^n$. We
@@ -2668,7 +2684,7 @@ case we will see that
   (R/J, +_J, \times_J) \cong (\{0, 1\}, \land, \oplus),
 \]
 where $\oplus$ denotes the $\texttt{XOR}$ operation. Then, if $R = S[\vec{x}]$ is a (multivariate)
-polynomial ring (which it will be), then there is a one-to-one correspondance
+polynomial ring (which it will be), then there is a one-to-one correspondence
 between the circuits that may be built from our circuits in $\Gamma$ and the
 polynomials in $R$. In particular, if $x, y \in S \leftrightarrow a, b \in \{0, 1\}$
 respectively, we will have
@@ -2688,7 +2704,7 @@ is quite a natural way and it is the one that will be used in the actual impleme
 \subsubsection{Correctness}
 \paragraph{} Now we consider the correctness of the above scheme. However, we
 will first rely on a few definitions to reduce the verbosity of the proof.
-\begin{definition}
+\begin{definition}{Generalised circuit:}
   Let $R$ and $I$ be as in our cipher and $\sigma$ be a mod-$I$ circuit. Then, the \textbf{generalised circuit} $g(\sigma)$ of
   $\sigma$ is formed by lifting the mod-I operations of $\sigma$ to the operations of $R$.
 \end{definition}
@@ -2697,7 +2713,7 @@ will first rely on a few definitions to reduce the verbosity of the proof.
   are in $X_\Enc + J$ (by definition). Let $X_\Dec := R \mod J^{sk}$, the set of
   all distinguished representatives of $J$ with respect to $J^{sk}$.  
 \end{definition}
-\begin{definition}
+\begin{definition}{Permitted Circuits:}
 \label{def:perm_circuits}
   Let
   \[
@@ -2714,7 +2730,7 @@ what input we give the circuit, the output is always decryptable. The set of all
 sensible circuits is precisely $\Sigma_\Pi'$. The need for the generalisation arises
 because during decryption we want to mod by $J^{sk}$ first and not $I$. We need
 one more definition still.
-\begin{definition}
+\begin{definition}{Valid Ciphertext:}
   We say that a ciphertext $c$ is \textbf{valid} with respect to $\Pi$, public
   key $pk$ and permitted circuits $\Sigma_\Pi$ iff there exists some $\sigma \in \Sigma_\Pi$
   and $\vec{c} \in \C^t, t \in \Nat$ such that
@@ -2752,7 +2768,7 @@ one more definition still.
   \end{align*}
 \end{proof}
 \subsubsection{Security of the construction}
-\paragraph{} Finally in this section, we prove the security of our scheme.
+\paragraph{} Finally, in this section, we prove the security of our scheme.
 \begin{theorem}
   \label{thm:gentry_ind_cpa}
 Fix a ring $R$ and an ideal $(s)$ for some $s \in R$. Let our ideal sampling algorithm
@@ -2796,7 +2812,7 @@ Then our construction $\Pi$ is IND-CPA secure relative to the ICP.
   \[
     c = m_\beta + t \times s \mod J^{pk},
   \]
-  which is certainly of the correct form for a ciphertext. This case therefore
+  which is certainly of the correct form for a ciphertext. This case, therefore,
   is exactly a usual case of IND-CPA for $\Pi$ and hence the output of
   $\A'$ is completely determined by $\A$. Formally:
   \[
@@ -2812,7 +2828,7 @@ Then our construction $\Pi$ is IND-CPA secure relative to the ICP.
   $t \times s$ will map onto $J$ in some $k$-to-$1$ fashion). Thus, the
   ciphertext will be uniformly random in $R/J$ and will be independent of
   $\beta$. Hence $\A$ will have 0 advantage (i.e. cannot
-  guess with probability better than $1/2$), and hence, by extension $\A'$ has 0
+  guess with probability better than $1/2$), and hence, by extension, $\A'$ has 0
   advantage.
   \paragraph{} Denote
   \[
@@ -2845,7 +2861,7 @@ we will be utilising.
 \paragraph{}
 As we discussed already in Section \ref{sec:fhe_motivation}, the underlying
 mathematical objects that will help us achieve our goal will be ideal lattices.
-The reason is not only because their decryption complexity is lower than known
+The reason is not only because of their decryption complexity is lower than known
 factoring-based public-key schemes, but due to the ring ideal - lattice duality,
 calculations with these objects are easier and also the performance and security
 analyses of them will be easier, as we can leverage the geometric nature of
@@ -2863,7 +2879,7 @@ possible, so that we can start with as small an ``error'' on the ciphertexts as
 possible (while maintaining security) and want $X_\Dec$ to be as large as
 possible, so we can correctly decrypt ciphertexts with larger errors. Therefore,
 we will also focus on attempting to achieve these two goals.
-\paragraph{} The first ``substitution'' into the abstract scheme will therefore
+\paragraph{} The first ``substitution'' into the abstract scheme will
 be the ring we will employ. We would like as nice a ring to work with as
 possible. Since integers are really easy to work with from a computational
 point of view, they are an obvious choice as a base ring. Then, since we would
@@ -2875,14 +2891,14 @@ $\lambda = 1^n$ we shall work with the quotient ring $R = \Int[x]/f(x)$, where
 $f$ is a degree $n$ irreducible polynomial! This will also have the added
 benefit that since $f$ is irreducible, $R$ will be a field, and hence every
 non-zero element will have a multiplicative inverse (this will be crucial in our
-implementation, however, it is not necessery for the concrete description). Note
+implementation, however, it is not necessary for the concrete description). Note
 that now every element of $R$ can be represented as an $n$-dimensional vector
 sitting in $\Int^n$. In particular, this will mean for us that $X_\Enc$ and
 $X_\Dec$ may be treated as subsets of $\Int^n$. Based on this observation, we
 can make our definition of permitted circuits much simpler and more intuitive:
-\begin{definition}
+\begin{definition}{Encryption and Decryption Radii:}
   Let $r_\Enc$ be the smallest value, such that $X_\Enc \subseteq B(r_\Enc)$,
-  where $B(r)$ is the ball of radius $r$ centered at the origin. Similarly, let
+  where $B(r)$ is the ball of radius $r$ centred at the origin. Similarly, let
   $r_\Dec$ be the largest value such that $B(r_\Dec) \subseteq X_\Dec$. Then, let
   \[
     \Sigma_\Pi = \{\sigma\,\,|\,\,\forall \vec{c} \in B(r_\Enc)\,\,\text{ we have
@@ -2913,7 +2929,7 @@ The first one relies on the observation, that a circuit (in our case) may be
 expressed as a directed tree with the leaves being the inputs and the root being
 the output of the circuits, with the non-leaf nodes corresponding to the logic
 gates.
-\begin{definition}
+\begin{definition}{Circuit Depth:}
   Let $\sigma = (E, V)$ be an (acyclic) circuit represented as a tree, with root node
   $o$. Define the set of level $l$ gates by 
   \[
@@ -2921,7 +2937,7 @@ gates.
   \]
   Now, define the depth of $\sigma$ denoted by $\delta(\sigma)$ by
   \[
-    \delta(\sigma) = \max_{i \in \Nat} \sigma^{(i)} \neq \emptyset.
+    \delta(\sigma) = \max_{i \in \Nat} \left\{ \sigma^{(i)} \neq \emptyset \right\}.
   \]
 \end{definition}
 Note, that according to our definition $\sigma^{(0)}$ is simply the singleton set
@@ -2929,15 +2945,16 @@ containing the root of the tree, and $\delta(\sigma)$
 is going to denote the length of the longest path between a leaf and the root.
 \paragraph{} The second definition is merely a slight generalisation of our earlier
 definition of a gate. Recall that a (binary) logic gate was a function $g: \{0,
-1\} \times \{0, 1\} \to \{0, 1\}$. We generalise this notion slighly further
-\begin{definition}{Fan-in}
+1\} \times \{0, 1\} \to \{0, 1\}$. We generalise this notion slightly further
+\begin{definition}{Fan-in:}
   Let $g: \{0, 1\}^k \to \{0, 1\}$ be a $k$-ary Boolean function. Then we say
   that the fan-in of $g$ is $k$. 
 \end{definition}
 The reason for talking about $k$ fan-in gates is not theoretical, but practical.
 In particular, as we will see in a moment that it is desirable to keep our
 circuit depths as low as possible. Hence, where possible, we can replace
-$\log_2k$ deep complete binary tree-circuit of addition gates that with a $k$
+a $\log_2k$-deep complete binary tree-circuit (which is the most efficient
+circuit we can have to evaluate $k$ binary gates) of addition gates that with a $k$
 fan-in addition gate, which has depth $1$.
 We are now ready to state the theorem on the circuit bounds:
 \begin{theorem}
@@ -2954,7 +2971,7 @@ We are now ready to state the theorem on the circuit bounds:
   Let $r_i$ be an upper bound on the norm of the results of gates in $\sigma^{(i)}$
   for $0 \leq i \leq \delta(\sigma)$. Then, our task is to bound $\norm{g(\sigma)(\vec{c}}
   \leq r_0$ by $r_\Enc$, the radius of the input nodes in the circuit. Hence, $r_{\delta(\sigma)} = r_\Enc$. Then
-  an $\Add$ gate at level $i$ will take take as input at most $\gamma(R)$ number
+  an $\Add$ gate at level $i$ will take as input at most $\gamma(R)$ number
   of $\vec{u_j}$s from level $i + 1$ and output some vector $\vec{v}$. Then, by
   the triangle equality
   \[
@@ -2992,7 +3009,7 @@ use $\Int[x]$ as the base for our quotient, it is highly non-trivial what
 polynomial $f$ we should quotient by, and how it will affect the multiplicative
 expansion factor. Due to lack of space, we merely mention that by sacrificing
 some choice in our security parameter $\lambda$, we can indeed find a polynomial
-$f$ that is both irreducible and has a favourable expansion factor. For a more complete
+$f$ that is both irreducible and has a favourable expansion factor. For a more elaborate
 discussion on the topic, we direct the reader to Section 7.4 in
 \cite{gentry2009fully} and \cite{lyubashevsky2006generalized}.
 \subsubsection{The concrete encryption function}
@@ -3017,7 +3034,7 @@ triangle inequality, the multiplicative bound in $R$ and the fact that
 $\vec{m}$ will be a bit vector, hence again by the triangle inequality
 $\norm{\vec{m}S}\leq n\norm{S}$. There are two values we
 can tweak here: the generator $s$, and the sampling radius $\ell_\Samp$. Indeed,
-in the next section we will see that our choice for $v$ is such that $\norm{S}$
+in the next section, we will see that our choice for $v$ is such that $\norm{S}$
 is small. As for $\ell_\Samp$, due to lack of space, we merely note that it
 controls the security of our scheme, at the cost of functionality and
 performance. See the next section for more details or Section 7.5 in \cite{gentry2009fully}.
@@ -3026,13 +3043,13 @@ performance. See the next section for more details or Section 7.5 in \cite{gentr
 with lattices, when we ran $\GenIdeal$, we may assume that the generators we got
 $(J^{pk}, J^{sk})$ are polynomials $(v(x), w(x))$, respectively. Then, we will
 write $V, W$ for their rotation bases, respectively. Then, substituting into
-our abstract schem, our decryption function becomes
+our abstract scheme, our decryption function becomes
 \[
   \Dec((R, I, V), \vec{c}) = (\vec{c} \mod V) \mod I = \vec{c} - \lfloor \vec{c}
   \times V^{-1} \rceil \times V \mod I.
 \]
 Recall that by our definition of $X_\Dec$, ciphertexts will be correctly
-decrypted in the fundamental domain of $V$. Geometrically therefore, $r_\Dec$ is
+decrypted in the fundamental domain of $V$. Geometrically, $r_\Dec$ is
 the radius of the largest ball
 that can be inscribed into the parallelepiped defined by $V$.
 \subsection{The Scheme, Implemented}
@@ -3046,13 +3063,13 @@ in the \texttt{Sage} language. Now that we have seen the underlying machinery,
 the aim of this section is to expose how we can use neat tricks to reduce the
 complexity of the procedure, as well as how to reduce the space that is required
 to store various components of the algorithm.
-\paragraph{} To stay consistent with notation in literature, we remind the
+\paragraph{} To stay consistent with the notation in literature, we remind the
 reader that for integers $c, d$ we shall write $[c]_d$ to refer to the
-\textit{centered mod} of $c$ by $d$. This operation will work precisely as the
+\textit{centred mod} of $c$ by $d$. This operation will work precisely as the
 normal modulo operation, but with the caveat that $[c]_d$ will map its input in
 the range $[-\frac{d}2, \frac{d}2)$.
 \paragraph{} Furthermore, below we will make use of the notion of the Hermite
-Normal Form of an integer matrix. We therefore define them here so that we avoid
+Normal Form of an integer matrix. We define it here so that we avoid
 clutter later.
 \begin{definition}{(Lower triangular) Hermite Normal Form:}
   Let $A \in \GL_n(\Int)$. Then, there exists a unimodular matrix $U \in
@@ -3067,9 +3084,9 @@ clutter later.
 \end{definition}
 An important observation for us is that since if $A$ is a basis for a lattice
 $\L(A)$ then since $U$ is unimodular then $H$ is also a basis for that same
-lattice (we will expand on this in a moment). For a more complete treatment of
+lattice (we will expand on this in a moment). For a treatment of
 the HNF, we refer the reader to Section 2.4.2 in \cite{cohen1993course}.
-The reason why we will want to use the HNF is because it always exists, can be
+The reason why we will want to use the HNF is that it always exists, can be
 calculated in polynomial time via Gaussian elimination and will provide the
 ``worst'' possible basis for a lattice. For a rigorous explanation see \cite{micciancio2001improving}.
 \subsubsection{Choosing the ring, its ideal and the key generation algorithm}
@@ -3118,12 +3135,12 @@ We now calculate the HNF of $V$ and check if it is of the form:
   \end{bmatrix}
 \]
 for some other integer $r$. The reason why we prefer this form of the HNF is
-because it would allow us to store it very compactly: we would only need to
+that it would allow us to store it very compactly: we would only need to
 store $d$ and $r$ to store the whole $n \times n$ matrix! However, the
 question is how likely is it that we have a HNF like above? Fortunately for us,
 very likely, in particular, the HNF is of the above form whenever $d$ is odd and
 is not divisible by any squares of integers (the technical term is $d$ is
-square-free). Another great advantage of this method, is that since $v \times w
+square-free). Another great advantage of this method is that since $v \times w
 = d$, taking rotation bases, we will also get $VW = d\cdot I$, where $I$ is the
 $n\times n$ identity matrix. Hence, $V^{-1} = \frac1d \cdot W$. 
 \paragraph{} To perform the check described above, we can use another trick. It
@@ -3141,7 +3158,7 @@ Now, we can mod the whole equation by $d$ and get
 \begin{gather*}
   r \cdot [w_0, w_1, \hdots, w_{n - 1}] = [-w_{n - 1}, w_0, \hdots, w_{n-2}] \mod d.
 \end{gather*}
-Due to linear independence now, we therefore have $rw_{i+1} = w_i$ for all $0
+Due to linear independence now, we have $rw_{i+1} = w_i$ for all $0
 \leq i \leq n - 2$ and $rw_0 = -w_{n - 1}$. Then, multiplying all these terms
 together, we get
 \[
@@ -3153,7 +3170,7 @@ sides, we get
   r^n = -1 \mod d.
 \]
 Observe, that the above two equations are equivalent up to an even number of
-$-1$ factors. Hence, it is enough to check for the last equation to see that the
+$-1$ factors. Hence, it is enough to check for the last equation to see that
 we have the HNF in the required form (up to an even number of negated rows). For
 a proof of the existence of a row $\vec{h}_2$ being a sufficient condition for
 the correct HNF form, please see Lemma 1 in \cite{gentryImplementation}.
@@ -3198,7 +3215,7 @@ Starting with the multiplication, let $\vec{c}' = [2u_0 + b, 2u_1, \hdots,
 \]
 Since all coefficients of $u(x)$ are integers already, rounding them will have
 no effect. However, observe that the first term is some integer and we are
-taking its centered mod by $d$, so it will fall in the interval $[-d/2, d/2)$.
+taking its centred mod by $d$, so it will fall in the interval $[-d/2, d/2)$.
 Hence, after dividing it by $d$, it will fall into the interval $[-1/2, 1/2)$,
 which will round to $0$. Thus, we will have
 \[
@@ -3233,7 +3250,7 @@ Hence,
   \lfloor \vec{c} \times W/d \rceil = \lfloor \vec{y} \times V \times W/d +
   \vec{a} \times W/d \rceil = \vec{y} + \lfloor \vec{a} \times W/d \rceil.
 \]
-From the above we can see that we will decrypt correctly iff $\lfloor \vec{a}
+From the above, we can see that we will decrypt correctly iff $\lfloor \vec{a}
 \times W/d \rceil \in [-1/2, 1/2)$ which holds iff $[\vec{a} \times W]_d =
 \vec{a} \times W$, which holds iff $\vec{a} \times W \in [-d/2, d/2)$. In
 particular, from this we get that we are correct if and only if
@@ -3268,18 +3285,18 @@ $J^{sk}$ for the secret key!
 \paragraph{}
 Now that we have seen the somewhat homomorphic scheme, how do we make it fully
 homomorphic? We first formalise some ideas:
-\begin{definition}{(Compact Homomorphic Encryption)}
+\begin{definition}{Compact Homomorphic Encryption:}
   Let $\Pi = (\Gen, \Enc, \Dec, \Evaluate)$ be a homomorphic cipher. Then, we say that it is \textbf{compact},
   iff for every security parameter $\lambda$ there is a (family of) permitted circuits $D_\Pi$
   expressing $\Dec$ of depth $\Oh(\lambda)$.\\
-  Further, we say that if $\Evaluate$ is correct for some set of circuts $\Sigma_\Pi$ too,
+  Further, we say that if $\Evaluate$ is correct for some set of circuits $\Sigma_\Pi$ too,
   then we say that $\Pi$ \textbf{compactly evaluates} $\Sigma_\Pi$.
 \end{definition}
-\begin{definition}
+\begin{definition}{Fully Homomorphic Encryption:}
   A homomorphic scheme $\Pi$ is \textbf{fully homomorphic} iff $\Pi$ compactly evaluates
   \textit{all circuits}.
 \end{definition}
-\begin{definition}
+\begin{definition}{Bootstrappable Scheme:}
   A homomorphic scheme is called \textbf{bootstrappable} if it compactly
   evaluates its decryption circuit augmented with a set of functionally complete
   gates. More formally, let $\Gamma$ be a set of functionally complete gates,
@@ -3289,7 +3306,7 @@ homomorphic? We first formalise some ideas:
     D_\Pi(\Gamma) \subseteq \Sigma_\Pi.
   \] 
 \end{definition}
-\begin{definition}
+\begin{definition}{Levelled Fully Homomorphic Encryption:}
   A family of homomorphic schemes $\{\Pi^{(d)}\,\,|\,\,d\in\Nat\}$ is levelled
   fully homomorphic if for all $d$ every element uses the same decryption
   function and a scheme $\Pi^{(d)}$ can correctly evaluate all circuits of depth
@@ -3298,7 +3315,7 @@ homomorphic? We first formalise some ideas:
 \end{definition}
 \paragraph{} In this section, we will show (a sketch of the proof) that we can construct a levelled
 fully homomorphic scheme from any bootstrappable scheme $\Pi$. We note, that
-setting up the scheme, proving its correctness and its security require some
+setting up the scheme, proving its correctness and its security requires some
 more setup that is out of the scope of this work. Hence, the reader should be
 aware that all arguments below, although very close to the formal setting, are
 just sketches. 
@@ -3343,11 +3360,11 @@ intuitive it is. We wish to calculate the function $g$ of the input ciphertexts
 $\vec{c}$, where each ciphertext has some potentially large error associated
 with them. We wish to reset this error to prevent the decryption failing and
 then compute $g$. Hence, in Step 1 we encrypt each ciphertext again, under the public key
-of the next level, $pk_{i-1}$. Now, every ciphertext is doubly encrpted, once
+of the next level, $pk_{i-1}$. Now, every ciphertext is doubly encrypted, once
 under $pk_i$ and $pk_{i-1}$. But, since we have the secret key $sk_i$ encrypted
 in our public key under $pk_{i-1}$ as well, since $\Pi$ is bootstrappable, in
 Step 2 we
-can now \textit{homomophically decrypt} the ciphertext, resetting the error and
+can now \textit{homomorphically decrypt} the ciphertext, resetting the error and
 ``removing'' the level $i$ encryption. Thus the ciphertexts in $\vec{c}'$ will
 be all encrypted only under $pk_{i - 1}$, and hence in Step 3 so will be
 $g(\vec{c}')$, achieving our initial goal.
@@ -3361,7 +3378,7 @@ argument please see Theorem 4.2.1 in \cite{gentry2009fully}.
 just reusing the parts of an IND-CPA secure cipher, ``layering '' $d$ of them
 on top of each other will essentially mean that an adversary will now need to
 break $d$ instances of the cipher, as we never expose any part that would make
-the adversary's job easier. However, in practice the definition of
+the adversary's job easier. However, in practice, the definition of
 $\Pi^{(d)}$ and in particular $\Evaluate^{(d)}$ is slightly different and hence
 its security analysis requires more care, but the result is the same. For the
 precise definitions, theorems and results, please see Chapter 4 in
@@ -3373,7 +3390,7 @@ arbitrary depth $d$, the public key will have size $\Oh(d)$, whereas we would
 prefer the key size to be $\Oh(1)$. To solve this, we consider the final big
 idea: instead of using different public-private key pairs, with the $i$th secret
 key being encrypted under the $i-1$st public key, we merely use the pair $(pk,
-\Enc_{pk}(sk))$! Thus, we have have finally arrived at FHE.
+\Enc_{pk}(sk))$! Thus, we have finally arrived at FHE.
 \paragraph{Security} The last remaining question is, now that we encrypted the
 secret key under its own public key, do we retain the same level of security?
 The answer is sadly no, and one needs to employ a further security framework and
@@ -3383,11 +3400,62 @@ hardness assumption). Due to lack of space, we merely note here that using these
 reasonable assertions, we can reach IND-CPA security again, and we finally get a
 secure fully homomorphic scheme. (See Section 4.3 in \cite{gentry2009fully}.)
 \section{Implementation Design}
-\paragraph{} As mentioned in the introduction, there are 4 \texttt{Sage}
-accompanying this text and are supposed to help understanding the concepts of
+\paragraph{} As mentioned in the introduction, there are four \texttt{Sage}
+implementations of the ciphers presented in this report, along with four
+walkthroughs in the form of \texttt{Jupyter Notebooks} accompanying this text. 
+They are supposed to help to understand the concepts of
 their respective cryptosystems, by providing a bridge between theory and
 implementation. Here, we briefly describe the design decisions that we took when
 creating these.
+\subsection{Tools}
+\paragraph{} We opted for the \texttt{Sage} language and the environment it
+provides to implement the entirety of the project. The reason is twofold:
+\begin{enumerate}
+\item It implements basically all the abstract algebraic (and related)
+ functionality that this work required with sufficient coherence and efficiency.
+\item Due to its extreme expressiveness, it allowed us to present a very close
+  approximation of the theoretical schemes without much boilerplate.
+\end{enumerate} 
+We also used \texttt{Jupyter Notebooks} to provide walkthroughs of the code
+interleaved with relevant theory. These notebooks are great as they allowed us
+to create brief and good quality narratives very easily. They also allow the use
+of \texttt{Markdown} and a limited amount of in \TeX to be embedded in the document.
+Finally, we used \url{https://www.draw.io/} to create a couple of diagrams to
+further aid understanding.
+\subsection{Structure}
+\paragraph{} We attempted to stay consistent with the implementation patterns
+for each of the cryptosystems as well as with the text. This should allow the
+reader to cross-examine two ciphers or switch between the report and the
+implementation fairly easily. Every file is made up of three core functions:
+\texttt{key\_gen, encrypt} and \texttt{decrypt}, which correspond to the triple
+$\Pi = (\Gen, \Enc, \Dec)$ in the text. Some of the ciphers required some extra
+functionality, such as the calculation of the Hadamard ratio, these are also
+present in their files. 
+\paragraph{} We attempted to make these as self-contained as
+possible, such that they would only rely on the \texttt{Sage} standard library.
+The only place where this was not possible was the GGH implementation,
+where for convenience we rely on the \texttt{MatrixSpace} extension, and in its
+walkthrough, we use a cryptography extension to demonstrate a lattice basis
+reduction attack on the scheme.
+\paragraph{} As for the walkthroughs, we created their narratives so that they
+match the descriptions of the ciphers in this report. Namely, we always begin
+with a brief discussion of the hard computational problem that yields the
+trapdoor upon which the scheme will be based. Then, we discuss key generation,
+encryption and decryption. This is followed by a discussion on the correctness
+of the scheme. The walkthroughs are usually closed by the exposition of some
+property unique to the system and/or security considerations. In particular, the
+reader can find a direct implementation of Theorem \ref{thm:determ_enc_insecure}
+in the RSA walkthrough and an implementation of Theorem
+\ref{thm:homom_enc_limit} in the Paillier walkthrough.
+\paragraph{} In addition to their exposition, there are some topics mentioned
+briefly in the notebooks that are not mentioned/ expanded upon in this report. These are:
+\begin{itemize}
+\item RSA: factorisation attacks for low moduli.
+\item GGH: visual representation of the scheme and lattice reduction attack
+  using LLL on a low-dimensional lattice.
+\item Gentry's scheme: concrete example of converting a circuit to a
+  multivariate polynomial and evaluating it.
+\end{itemize}
 \section*{Acknowledgements} The author would like to thank Nick Tikhonov for introducing the author to fully homomorphic encryption and the many interesting
 conversations with him about the topic.
 \section*{Appendix}

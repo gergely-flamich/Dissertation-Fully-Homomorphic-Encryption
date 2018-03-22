@@ -1,5 +1,3 @@
-from sage.modules.free_module_integer import IntegerLattice
-import sage.matrix.matrix_integer_dense_hnf as hnf
 from sage.matrix.matrix_space import MatrixSpace
 
 def key_gen(security_parameter, hadamard_threshold = 0.7, delta=4):
