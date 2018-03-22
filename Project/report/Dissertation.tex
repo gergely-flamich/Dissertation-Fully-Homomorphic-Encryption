@@ -222,6 +222,12 @@ alphabet. Then, let $+ : A^* \times A^* \to A^*$, such that
 \end{definition}
 \paragraph{} If $G$ is finite, we call ($G, \circ$) a \textbf{finite group};
 most of the groups we will be dealing with in this work will indeed be finite.
+A very natural operation on an arbitrary group element is to multiply it by
+itself some $n$ times. So, for some group $G$ and $g \in G$, we will refer to
+\[
+  \underbrace{g\cdot g \cdots g}_\text{$n$ times} = g^n
+\]
+as the $n$-th power of $g$.
 \begin{definition}{Big-O notation:} Let $f, g: \Nat \mapsto \Reals $ be
   functions. Then we will write
   \[
@@ -232,7 +238,8 @@ most of the groups we will be dealing with in this work will indeed be finite.
     \exists M \in \Reals. \exists N \in \Nat.\quad \forall n \geq N \Rightarrow
     |f(n)| \leq M|g(n)|.
   \]
-  Intuitively, this means that $f$ grows \textbf{at most} as fast as $g$.
+  Intuitively, this means that $f$ grows \textbf{at most} as fast as $g$ as the
+  input gets big.
 \end{definition}
 \section{A Very Brief History of Ciphers}
 \paragraph{}
@@ -618,7 +625,7 @@ are arbitrary polynomials, then
 \[
   p(n) \times f(n) + q(n) \times g(n)
 \]
-is also negligible.
+is also negligible. See Proposition 3.6 in \cite{katz2014introduction} for a proof.
 \subsection{How do we define security?}
 \label{sec:howdefsec}
 \paragraph{} Now that we decided to relax our definition of security, we are
@@ -1798,6 +1805,12 @@ motivates our next definition:
   we have $|B_1| = |B_2|$. We call this unique number the dimension of $V$ and
   write $\dim(V) = |B_1|$.
 \end{theorem}
+\begin{definition}{General Linear Group:}
+  It turns out that that the set of $n \times n$ invertible matrices (over a
+  ring $R$) form a group under matrix
+  multiplication. This group is called the general linear group and is usually
+  denoted $\GL_n(R)$.
+\end{definition}
 \paragraph{} We now briefly discuss the idea of projecting a vector onto
 another, as well as measuring the length of a vector and the distance between two
 vectors.
@@ -1817,6 +1830,11 @@ measuring its length. In particular:
   $\vec{v}$ is defined as
   \[
     \norm{\vec{v}} = \sqrt{\vec{v} \cdot \vec{v}} = \sqrt{v_1^2 + \hdots + v_n^2}.
+  \]
+  The norm of a matrix $B$ can then be defined to be the norm of its
+  largest-normed row:
+  \[
+    \norm{B} = \sup_i\{\norm{\vec{b}_i} \,\,|\,\,\vec{b}_i \in B\}
   \]
 \end{definition}
 Finally, using the definition of length, we may measure distance between any two
@@ -1954,7 +1972,7 @@ It can be shown that the cosets of $I$ are either the same or disjoint.
 \]
 where $r_0,\hdots, r_m \in R$ are the coefficients of $p$. We call $x$ the
 \textit{indeterminate} and the $x^i$
-the powers of $x$. The highest power of $x$ is the \textit{degree} of the
+the \textit{powers} of $x$. The highest power of $x$ is the \textit{degree} of the
 polynomial. The set of all finite degree polynomials over a ring $R$ is dentored $R[x]$.
 Then, the set $R[x]$ forms a ring under the additive operation $+: R[x]\times
 R[x] \to R[x]$ defined by
@@ -2167,33 +2185,47 @@ possess structure under two operations, while at the same time have a nice
 geometric interpretation, and yield an efficient trapdoor. To see their
 connection to rings and how they are constructed, we show the following theorem.
 \begin{theorem}{Ideal membership in integer polynomial fields:}
- Let $f \in \Int[x]$ be an irreducible polynomial of degree $n$. Let $R = \Int[x]/f$. Then, an
- element $p(x) = p_1 + \hdots + p_nx^n\in R$ is a polynomial of degree at most $n$, and hence it may be
- represented by a vector $\vec{p} = [p_1, \hdots p_n] \in \Int^n$. Define the \textbf{rotation
+ Let $f \in \Int[x]$ be a (monic) irreducible polynomial of degree $n$. Let $R = \Int[x]/f$. Then, an
+ element $p(x) = p_0 + \hdots + p_{n - 1}x^{n - 1}\in R$ is a polynomial of
+ degree at most $n - 1$, and hence it may be
+ represented by a vector $\vec{p} = [p_0, \hdots p_{n - 1}] \in \Int^n$. Define the \textbf{rotation
    basis} of $p$ by
  \[
-   P =
-   \begin{bmatrix}
-     p_1 & p_2 & \cdots & p_n \\
-     -p_n & p_1 & \cdots & p_{n - 1} \\
-     \vdots & & & \vdots \\
-     -p_2 & -p_3 & \cdots & p_n
-   \end{bmatrix}
+   \mathcal{P} := \{\vec{p}_i \text{ the is the coefficient vector of }
+   p(x)x^i \mod f(x) \,\,|\,\, i \in \{0, 1, \hdots, n - 1\}\}.
  \]
- Then, a polynomial $q(x) \in R$ is in the ideal $(p(x))$ if and only if its
+ We can write this more compactly as a matrix:
+ \[
+   P = \begin{bmatrix} - p_0 - \\ \vdots \\ - p_{n-1} - \end{bmatrix}
+ \]
+  Then, a polynomial $q(x) \in R$ is in the ideal $(p(x))$ if and only if its
  corresponding coefficient vector $\vec{q} \in \Int^n$ is in the lattice $\L(P)$. 
 \end{theorem}
-\begin{proof}
-  We show that the claim is implied in both directions.
-  \paragraph{Forward direction:} $q(x) \in (p(x)) \Rightarrow \vec{q} \in \L(P)$.\\
+Before we get into the proof, we examine why rotation bases should be relevant
+to us. Let $p, q$ as above, and recall polynomial multiplication:
+\[
+  p(x) \times q(x) = \sum_{i = 0}^{m + n} c_ix^i \mod f(x)\quad\text{ where }
+  c_i = \sum_{\substack{0 \leq k, l \leq m + n \\ k + l = i}} p_kq_l.
+\]
+This can be rewritten as
+\begin{align*}
+  p(x) \times q(x) &= \left[ \sum_{i = 0}^{n-1} q_ix^i \cdot p(x)  \right]\mod f(x) \\
+                   &= \sum_{i = 0}^{n-1} \left[ q_ix^i \cdot p(x) \mod f(x) \right] \quad\text{ we can now take out }q_i\\
+                   &= \sum_{i = 0}^{n-1} q_i \cdot \left[p(x)x^i\mod f(x) \right] \quad\text{ switching to coefficient vectors now, } \\
+                   &\Leftrightarrow \sum_{i = 0}^{n-1} q_i \cdot \vec{p_i} = \vec{q} \times P.\\
+\end{align*}
+This means that we can calculate the product of two polynomials in $R$ by
+switching to their vector representation, multiplying one by the other's
+rotation basis and swithcing back! With this insight, the proof is very straightforward.
+\begin{proof} $q(x) \in (p(x)) \Rightarrow \vec{q} \in \L(P)$.\\
   $q(x) \in (p(x))$ means that there is some $v(x) \in R$ such that $q(x) = v(x)
-  \times p(x)$. In particular, we will thus have integers $a_1, \hdots a_n$ such that
+  \times p(x)$. Now switching to the vector context, we have
   \[
-    q(x) = \sum_{i = 1}^n a_ip(x)x^i \mod f(x)
-  \] which corresponds precisely with
-  $\vec{a} \cdot P \in \L(P)$. Hence $\vec{q} \in \L(P)$.
-\paragraph{} We observe that all of the above steps are reversible, hence \textbf{the
-backwards direction} holds as well.
+    q(x) = v(x) \times p(x) \Leftrightarrow \vec{q} = \vec{v} \times P
+  \]
+  Since $\vec{v}$ is an integer vector, $\vec{v} \times P \in \L(P)$. Hence $\vec{q} \in \L(P)$.
+\paragraph{} We observe that all of the above steps are reversible, hence the
+other direction holds as well.
 \end{proof}
 The above if and only if condition motivates the following definition.
 \begin{definition}{Ideal Lattice:}
@@ -2230,12 +2262,18 @@ construct public-key ciphers.
   successive minimum of $\L$ as the smallest radius $r > 0 $ such that $\L$
   contains at least $i$ linearly independent (non-zero) vectors with norm at most $r$.
 \end{definition}
+\paragraph{}
 The reader should think about the above definition as a ball around the origin
 with the smallest such radius that (at least) $i$ non-collinear points fall in
 the ball. In particular, the ball with radius $\lambda_1(\L)$ will only contain
 one point, the shortest vector in $\L$. (Actually, the ball may contain more
 than one point as long as they all have the same norm.)
-\begin{definition}{The $\gamma(n)$-SVP Experiment} The SVP experiment
+
+\paragraph{} How easy is it to find the shortest vector in a randomly picked,
+$n$-dimensional lattice? And what should it even mean to find the shortest
+vector? We answer these questions below in reverse order.
+
+\begin{definition}{The $\gamma(n)$-SVP Experiment} The Shortest Vector Problem experiment
   $\Expr{SVP}{\A, \GenBasis}(n)$ with factor $\gamma(n)$ involving a $\PPT$ adversary $\A$ and
   $\PPT$ algorithm $\GenBasis$ is as follows:
   \begin{enumerate}
@@ -2248,6 +2286,8 @@ than one point as long as they all have the same norm.)
     \cdot \lambda_1(\L(P))$ and $0$ otherwise.
   \end{enumerate}
 \end{definition}
+\paragraph{} Then, in the hope that it is easy to find a ``hard'' lattice, we
+can define the hardness assumption of this problem.
 \begin{definition}{$\gamma(n)$-Shortest Vector Problem (SVP) Assumption}
   $\gamma(n)$-SVP is hard relative to $\GenBasis$ if for all $\PPT$ adversaries $\A$ we
   have
@@ -2255,7 +2295,10 @@ than one point as long as they all have the same norm.)
     \Prob(\Expr{SVP}{\A, \GenBasis}(n) = 1) \leq \negl(n).
   \]
 \end{definition}
-\begin{definition}{The $\gamma(n)$-CVP Experiment} The CVP experiment
+\paragraph{} A similar and related problem is, informally, given a point
+$\vec{v}$ from the lattice's ambient space, finding the closest lattice point to
+$\vec{v}$. We formalise this below:
+\begin{definition}{The $\gamma(n)$-CVP Experiment} The Closest Vector Problem experiment
   $\Expr{CVP}{\A, \GenCVP}(n)$ with factor $\gamma(n)$ involving a $\PPT$ adversary $\A$ and
   $\PPT$ algorithm $\GenCVP$ is as follows:
   \begin{enumerate}
@@ -2268,8 +2311,8 @@ than one point as long as they all have the same norm.)
     \cdot \norm{\vec{v} - \vec{u}}$ for any other $\vec{u} \in \L(P)$ and $0$ otherwise.
   \end{enumerate}
 \end{definition}
-
-
+\paragraph{} Again, in the hope that we can find ``hard'' lattice bases, we can
+define the appropriate hardness assumption:
 \begin{definition}{$\gamma(n)$-Closest Vector Problem (CVP) Assumption}
    $\gamma(n)$-CVP is hard relative to $\GenCVP$ if for all $\PPT$ adversaries $\A$ we
   have
@@ -2277,14 +2320,14 @@ than one point as long as they all have the same norm.)
     \Prob(\Expr{CVP}{\A, \GenCVP}(n) = 1) \leq \negl(n).
   \]
 \end{definition}
-\paragraph{} There are two details that are currently unclear. Firstly, are
-there $\PPT$ algorithms $\GenBasis$ and $\GenCVP$ as specified in the above
-definitios, with respect to which our hardness assumptions hold? Secondly, is
-there a connection between CVP and SVP so that we can base the hardness
+\paragraph{} Now that we know what we mean by ``finding'' vectors, we can answer
+our second question above: are there $\PPT$ algorithms $\GenBasis$ and $\GenCVP$ as specified in the above
+definitios, with respect to which our hardness assumptions hold? A related
+question is, how are CVP and SVP connected? It would be preferable to find a
+connection so that we can base the hardness
 assumption of one problem on the assumption of the other (as we did with the
-factoring and RSA assumptions in Section \ref{sec:hardness_assumptions})? The answer in both
-questions is fortunately ``yes''. In particular, Ajtai shows in
-\cite{AjtaiLatticeAvgWorst} that essentially solving average-case (i.e. randomly
+factoring and RSA assumptions in Section \ref{sec:hardness_assumptions}). Ajtai shows in
+\cite{AjtaiLatticeAvgWorst} that solving average-case (i.e. randomly
 generated instances of) SVP is polynomially equivalent to solving a different,
 worst-case lattice problem, the Short Basis Problem (SBP). In the framework of
 this text, this means for us that the SBP yields a $\PPT$ algorithm $\GenBasis$
@@ -2296,7 +2339,7 @@ and Section 6.5 in \cite{hoffstein2014introduction} for the other direction as
 well as a discussion on connections between other lattice problems. Again,
 interpreting this within our framework, we can base our CVP hardness assumption
 on $\GenBasis$ also.
-\paragraph{} An interesting other approach relies on the idea of modding a
+\paragraph{} An interesting different approach relies on the idea of modding a
 vector by a lattice basis that we saw in Section \ref{sec:lattice_intro}. We define the
 following algorithm:
 \begin{algorithm}[H]
@@ -2321,12 +2364,15 @@ vector within an approximation factor of $\gamma(n) = 1 + 2n \cdot
 (\frac92)^{n/2}$ where $n$ is the dimension of the lattice. However, if the
 vectors in $B$ are not very orthogonal, there is a large number of lattice points that
 are closer to $\vec{v}$ than $\vec{u}$. Due to these results, this algorithm is
-named B\'abai's algorithm in his honour. What is great about this approach, is
+named B\'abai's algorithm in his honour. What is great about this approach, is that
 not only does it put precise conditions on the parameters of the lattice, but it
 immediately yields a trapdoor for a cipher: generate two bases for a lattice,
 one with very orthogonal vectors, and another with quite parallel vectors in it,
 and use them as our secret and public key, respectively. Then, a message can be
-encoded using the public basis and can be recovered using the secret basis.
+encoded using the public basis and can be recovered using the secret basis. The
+scheme called GGH that we introduce at the end of this section will be a
+straightforward application of this approach. In fact, a slightly twisted
+version of the above ideas will give us the scheme in the last section.
 \subsubsection{Computational Ring Problems}
 \paragraph{} In the above section we have seen concrete computational problems
 involving lattices. We now take a step back, and consider two more abstract
@@ -2341,10 +2387,10 @@ simpler one.
   \item We generate $r_0 \leftarrow \Samp_I$ and $r_1 \leftarrow R$ (uniformly).
     We also generate a bit $b \leftarrow \{0, 1\}$. 
   \item $\A$ is given $R, I, \Samp_I$ and $r_b$, and outputs some bit $b' \in \{0, 1\}$.
-  \item We set $\Expr{IMP}{\A, \GenIdeal}(n) = 1$ if $b = b''''$ and $0$ otherwise.
+  \item We set $\Expr{IMP}{\A, \GenIdeal}(n) = 1$ if $b = b'$ and $0$ otherwise.
   \end{enumerate}
 \end{definition}
-Hence, we are asking that given a ring $R$ and $I$ and some sampling function
+Informally, we are asking that given a ring $R$ and $I$ and some sampling function
 $\Samp_I$, is it easy to determine if a randomly chosen element of $R$ is in
 $I$. While this problem may seem very far removed from practicalities, we
 consider the following example.
@@ -2354,20 +2400,26 @@ Recall Paillier's scheme, in particular, that it it relies on the isomorphism
   \Int_{N^2}^* \cong \Int_N^* \times \Int_N
 \]
 where $N = pq$ for $p, q$ primes of equal length. Recall, that the set of $N$th
-residues $\texttt{Res}(N)$ is the set of $N$th powers in $\Int_{N^2}^*$. Fix $a
+residues $\texttt{Res}(\Int_{N^2}^*,N)$ is the set of $N$th powers in $\Int_{N^2}^*$. Fix $a
 \in \Int_{N^2}$. Then,
 \begin{align*}
   (a + N)^N &= a^N + \binom{N}{1}a^{N-1}\cdot N + \hdots \text{ terms with a factor of } N^2 \\
             &= a^N + N a^{N-1}\cdot N + 0 \mod N^2 \\
             &= a^N \mod N^2.
 \end{align*}
-This means that $a^N = (a \mod N)^N$, thus $\texttt{Res}(N) \cong \Int_N \cong
-(N) \leq \Int_{N^2}$. Hence, solving the IMP in $\Int_{N^2}$ for the ideal $(N)$
-is equivalent to solving the DCRP for $\Int_{N^2}^*$ and $\texttt{Res}(N)$!
+This means that $a^N = (a \mod N)^N$, thus there is a bijection between
+$\texttt{Res}(\Int_{N^2}, N) \leftrightarrows \Int_N$. Then,
+since both $\Int_N$ and the additive group of $(N)$ are cyclic and have the same
+number of elements, they are isomorphic. Thus,
+\[
+  \texttt{Res}(\Int_{N^2}, N) \leftrightarrows \Int_{N} \cong (N).
+\]
+Hence, solving the IMP in $\Int_{N^2}$ for the ideal $(N)$
+is equivalent to solving the DCRP for $\Int_{N^2}$ and $\texttt{Res}(\Int_{N^2}, N)$!
 \begin{definition}{Ideal Membership Problem (IMP) Assumption}
   IMP is hard relative to $(R, I, \Samp_I)$ if for all $\PPT$ adversaries $\A$ we have
   \[
-    \Adv{IMP}{\A, R, I, \Samp_I}(n) = 2 \cdot \Prob(\Expr{IMP}{\A, R, I, \Samp_I}(n) = 1) - 1 = \negl(n)
+    \Adv{IMP}{\A, R, I, \Samp_I}(n) = 2 \cdot \Prob(\Expr{IMP}{\A, R, I, \Samp_I}(n) = 1) - 1 \leq \negl(n)
   \]
 \end{definition}
 In ideal lattices, however, we are in trouble. It is because testing ideal
@@ -2396,7 +2448,7 @@ motivates our second ring problem.
   The ICP is hard relative to $(R,I,\Samp_R,\GenIdeal)$ if for all $\PPT$ adversaries $\A$ we have
   \[
     \Adv{ICP}{\A, R, I, \Samp_R, \GenIdeal}(n) = 2 \cdot \Prob(\Expr{ICP}{\A, R,
-      I, \Samp_R, \GenIdeal}(n) = 1) - 1 = \negl(n).
+      I, \Samp_R, \GenIdeal}(n) = 1) - 1 \leq \negl(n).
   \]
 \end{definition}
 \subsection{The Construction: GGH}
@@ -2405,9 +2457,9 @@ straightforward application of them in a cryptosystem developed due to
 Goldreich, Goldwasser and Halevi, named GGH in their honour \cite{goldreich1997public}.
 \paragraph{Key Generation}
 \paragraph{} Assume the security parameter is $\lambda = 1^n$. Generate a basis
-$V \in \Int^{n\times n}$ with small Hadamard ratio. Then, generate a random matrix
-$U \in \Int^{n\times n}$ such that $\det(U) = \pm 1$. Calculate $W = UV$. Output
-$(pk, sk) = (W, U)$.
+$V \in \GL_n(\Int)$ with small Hadamard ratio. Then, generate a random matrix
+$U \in \GL_n(\Int)$ such that $|\det(U)| = 1$. Calculate $W = UV$. Output
+$(pk, sk) = (W, V)$.
 \paragraph{Encryption}
 Let $pk = W$ and $m \in \Int^n$ be the message that we want to encrypt. Let $r
 \in \Int^n$ be a random vector with $\norm{r}$ small. Then, caluclate and output
@@ -2424,11 +2476,21 @@ Hadamard ratio is high we will have decoded to the closest lattice point, hence
 we will now have $\hat{m}V = mW$. Hence by multiplying $\hat{m}$ by $VW^{-1}$ on
 the left, we get
 \[
-  m'' = \hat{m}VW^{-1} = mWW^{-1} = m.
+  m' = \hat{m}VW^{-1} = mWW^{-1} = m.
 \]
 Hence the cipher is correct.
 \subsubsection{Security of GGH}
-\paragraph{} IND-CPA
+\paragraph{} The IND-CPA security of GGH relies on the result that CVP can be transformed into SVP and
+that SVP can be transformed into its decisional version \cite{cheng_svp_red},
+i.e. given a lattice basis $B$ and an real number $r > 0$, the adversary needs
+to decide if $\lambda_1(\L(B)) < r$ or not. Then, using this version of SVP, the
+theorem is very similar to Theorem \ref{thm:gentry_ind_cpa} and so we omit
+it here.
+\paragraph{} We also note that when GGH was introduced, the effectiveness of
+sophisticated \textit{lattice basis reduction algorithms} (such as LLL) was not
+considered. As it turns out, these algorithms can effectively break sufficiently
+large keys, that it is impractical to use GGH (\cite{hoffstein2014introduction},
+Section 6.7).
 \section{Fully Homomorphic Encryption}
 \paragraph{} At last, we have arrived at the crowning jewel of obfuscated
 computation: \textbf{fully homomorphic encryption}, which will allow us to
@@ -2436,62 +2498,64 @@ compute the result of arbitrary functions on encrypted data! Here the author
 aims to expose the core ideas that are involved in achieving such a scheme. Due
 to its youth, there is rather limited literature available on the topic, hence
 our narrative will be mostly following the footsteps of the inventor of the first
-ever such scheme: the PhD thesis of Dr Craig Gentry \cite{gentry2009fully}.
+such scheme: the PhD thesis of C. Gentry \cite{gentry2009fully}.
 Here, however, we run into a problem: the full description and justification of
 the scheme draws on so many topics from different parts of mathematics, that
-attempting to present the whole work would take a much longer work then this
+attempting to present the whole work would take a much longer work than this
 one. Instead, our goal is to distil the core concepts and put them in the
 context of what we already know. When this is not possible, we will point the
 reader to the appropriate source.
 \paragraph{}
 This section takes a top-down approach to the explanation. That is, after the mathematical
 preamble we will provide insight starting from the most abstract approach to the
-concrete, implemented cipher. 
+concrete, then implemented cipher. 
 \subsection{Motivation, Definitions and Approach}
 \label{sec:fhe_motivation}
-\paragraph{}
-We begin with a bunch of definitions that we will make use of later.
 \paragraph{} Whenever one is designing a cipher, they would obviously want it to
-be as quick as possible, whilst retaining security. In our case, as the reader
+be as quick as possible, whilst retaining security (here we are talking about
+asymptotic performance). In our case, as the reader
 will see below this is an even more burning issue. For this reason, we look to
 lattices as our solution, as the complexity of encryption and decryption
 procedures which are yielded by their appropriate trapdoors in lattice based
 schemes outperforms other currently known trapdoors and they are also better
-parallelisable.
+parallelisable (\cite{hoffstein2014introduction}, Section 6.7).
 \paragraph{} This is complemented by the fact discussed in Section
 \ref{sec:ideal_lattices}, that ideals in polynomial rings automatically
 induce lattices. This dual nature of ideal lattices will immediately yield us
 the ring homomorphisms between the message and the cipherspace that we need to
 achieve FHE.
+
 \paragraph{} However, there is an issue with lattices which we must patch: we
 saw in Section \ref{sec:comp_lattice_prob} that checking ideal membership in
 (ideal) lattices may be performed in polynomial time! In particular, all we need
 to do is check for some $\vec{v} \in \L(B)$ for some lattice $\L$ with basis $B$
 is whether $\vec{v} = 0 \mod B$. Therefore, we will rely on the slightly
-different problem of the ideal coset problem (ICP), which will yield us a nice trapdoor.
+different problem of the ideal coset problem (ICP), which will yield us a nice
+trapdoor. Relying on the ICP, we will encode the message into an offset from
+a lattice point. 
+
 \paragraph{} So how will all the above come together to give us FHE?
-We first define a cipher that will be allow computation \textit{up to a certain
-  level}. At this point, it is important to pause and identify the reason that
-causes this limitation, because if the limitation is inherent to the scheme,
-then any improvement upon it will be obviously futile. In our case, however, we
-can ``tune'' the limitation, i.e. we can sacrifice computation time and memory
-space to push our limitation further. In particular, our limitation will come
-from the fact that the trapdoor the ICP in ideal lattices gives us is such that
-each new ciphertext has some ``error'' associated with it (in particular it is the
-coset representative) in which we embed our
-message, that can be thought of as an offset from a lattice point. Then, adding
-and multiplying ciphertexts will increase the error associated with their sum/
+Here is the abstract construction in 3 (broad) steps:
+\paragraph{Step 1:} We first define a cipher that will be allow computation 
+\textit{up to a certain level} (through a ring homomorphism). This limitation will come
+from the fact that the ``error'' associated with or ciphertext (the
+coset representative) in which we embed our messages will increase as we combine
+ciphertexts. Adding and multiplying ciphertexts will increase the error associated with their sum/
 product, and at some point it grows so much that the offset will push the
 ciphertext vector so far from its original lattice point that it will be closer
 to another one, causing decryption failure. The question then is, can we
-``reset'' this error somehow while preserving the correctness of the scheme.
+``reset'' this error somehow while preserving the correctness of the scheme?
+\paragraph{Step 2:}
 The solution is to create a scheme that can evaluate a sufficiently complex
-combination of operations so that it is capable of \textit{computing its own decryption function} (augmented with some operation at
-the end)! The term we will use to describe a cipher with such a property is that
+combination of operations so that it is capable of \textit{computing its own
+  decryption function} (augmented with some operation at the end)!
+The term we will use to describe a cipher with such a property is that
 the cipher is \textbf{bootstrappable}.  Once we have a bootstrappable scheme, we
-can use it to construct an (almost) fully homomorphic scheme! (The caveat being
+can use it to construct an almost fully homomorphic scheme. (The caveat being
 that the length of the public key will depend on the complexity of the function
-we wish to evaluate). Here is the core of the construction: Let $\Pi = (\Gen,
+we wish to evaluate).
+\paragraph{}
+Here is the core of the construction: Let $\Pi = (\Gen,
 \Enc, \Dec)$ be a bootstrappable cipher. Let $m$ be our message and $c =
 \Enc(pk_1, m)$ its encryption under some public key $pk_1$ (with corresponding
 secret key $sk_1$).
@@ -2505,10 +2569,19 @@ secret key $sk_1$).
 This is great, however, we have not made any progress, we just switched keys on
 the encryption of $m$. This is why we will also require a bootstrappable cipher
 to be able to evaluate its decryption function \textbf{together with some
-  operation}. Hence, in step two we can actually call this augmented function
+  operation}. Hence, in the second step we can actually call this augmented function
 $\Dec^{op}$ with more than one ciphertext and make progress at the same time as
 resetting the error.
-\paragraph{} In the upcoming few sections, we will present the scheme that is
+\paragraph{Step 3:} Instead of using different public-private key pairs, we
+just use one pair! In particular, we will encrypt twice under the same public
+key and then homomophically decrypt using the encryption of the associated
+secret key. Is it safe to encrypt the secret key under its own private key? This
+and other technicalities unfortunately fall out of the scope of our work,
+however, we note that under some mild assumptions there are appropriate
+workarounds and the scheme will be secure.
+
+\paragraph{} In the upcoming few sections, we will mainly focus on the first two
+steps. We will present the scheme that is
 \textit{almost bootstrappable} (in Gentry's terminology, it is \textit{somewhat
   homomorphic}). This scheme, with some tweaks can then be made bootstrappable
 and thus will yield us FHE.
@@ -2518,37 +2591,45 @@ clarify what we mean by being able to compute arbitrary functions on encrypted d
 What we will in fact show is that we are capable of evaluating arbitrary
 (binary) circuits on ciphertexts. We will then rely on a theorem by Fischer
 and Pippenger \cite{Fischer96lectureson}, which states that a \textit{family of circuits over a set functionally complete gates} can
-simulate any Turing Machine. Then, by Church-Turing Thesis we have that we can
-compute anything that is computable. We will now clarify functional
-completeness:
-\begin{definition}{(Informal) Functionally complete set:}
-  Let $\Gamma$ be a set of boolean (binary) gates, such that every gate in the set is a
-  binary operation, i.e $\forall g \in \Gamma$ we have $g: \{0, 1\} \times \{0,
-  1\} \to \{0, 1\}$. Then, $\Gamma$ is functionally complete, if every Boolean
+simulate any Turing Machine. Then, by the Church-Turing Thesis we have that we can
+compute anything that is computable. We will now clarify some terminology:
+\begin{definition}{Circuit:} Let $\Gamma$ be a set of $k$-ary operations (also
+  called \textbf{gates} in this context) over some set $S$. Then, an (acyclic) circuit is a tree
+  with root $o$, where all nodes are gates in $\Gamma$ and edge connecting gate
+  $g_1$ on level $n$ with gate $g_2$ on level $n - 1$ indicates that the output
+  of $g_2$ is going to be an input to gate $g_1$. The leaves of the tree are
+  called the inputs of the circuit. If we substitute in a value for every leaf,
+  then calculate the value of every node and finally arrive at the value of the
+  root node $o$, we say that the circuit was \textbf{evaluated}, and the result
+  is the output of $o$.
+\end{definition}
+\begin{definition}{Functionally complete set:}
+  Let $\Gamma$ be a set of boolean (binary) gates. Then, $\Gamma$ is functionally complete, if every Boolean
   function $f: \{0, 1\}^n \to \{0, 1\}$ may be expressed as a circuit of
-  the elements of $\Gamma$. (Here the term circuit is left vague as it
-  needs some care to define formally. The reader should think of it as the
-  intuitive way of combining boolean gates.)
+  the elements of $\Gamma$.
 \end{definition}
 Hence, all we need to show now is that our scheme can evaluate a functionally
 complete set of gates. It is easy to show that given the function $\NAND(x, y)
 \mapsto \neg (x \land y)$ the set $\{\NAND\}$ is functionally complete. The last
 question remaining then is, how can we represent circuits in our scheme? To
 answer this question, we need to know how the scheme works, so we will get the
-answer to this question at the end of the next section.
+answer at the end of the next section.
 \subsection{The Scheme, Abstractly}
 \paragraph{} We are now going to present the somewhat homomorphic scheme that is
 used to obtain a bootstrappable one. There are two reasons for presenting it
 abstractly. Firstly, following our aim and convention in this work to present
 the underlying mechanism of the cipher in its purest form, and secondly, because
-we can base our security proofs on the abstract scheme. This means that if we
+we can base our correctness and security proofs on the abstract scheme. This means that if we
 can ``substitute in'' more concrete objects that satisfy our assumptions, we
-will not need to worry about security!
+will not need to worry about correctness or security!
 \subsubsection{Definition of the Scheme}
 \paragraph{} For what follows, we will assume that given a ring $R$ and ideals
 $I$ and $J$ of $R$, modding by the ideals may be performed in polynomial time.
+We make the last assumption, because we know that eventually we would like to
+work with lattices. Then, based on the trapdoor provided by the ICP, we define
+the following scheme:
 \paragraph{Key Generation} We are given a security parameter $\lambda = 1^n$. We
-generate a (description of) ring $R$ appropriate to $\lambda$. Also fix an ideal
+generate (a description of) a ring $R$ appropriate to $\lambda$. Also fix an ideal
 $I$ in $R$. Now, run $\GenIdeal(\lambda, R, I)$, such that we obtain $(J^{pk},
 J^{sk})$, such that $(J^{sk})$ and $I$ are relatively prime. Set $pk = (R, I,
 J^{pk}, \Samp_R)$ as the public key and $sk = (R, I, J^{sk})$ as the secret key.
@@ -2564,7 +2645,7 @@ ciphertext $c$, calculate
 \]
 Output $m'$.
 \paragraph{Evaluation} We are given a public key $pk = (R, I, J^{pk}, \Samp_R)$, a
-circuit $C \in \Sigma_\Pi$ for some permitted set of circuits $\Sigma_\Pi$ (see
+circuit $\sigma \in \Sigma_\Pi$ for some permitted set of circuits $\Sigma_\Pi$ (see
 below for the definition of ``permitted circuit'') composed of $\Add_I$ and $\Mult_I$ gates and a ciphertext vector
 $\vec{c}$. Then, it performs the circuit operations in the correct order on the
 input $\vec{c}$ and outputs the resulting ciphertext $c'$.
@@ -2580,10 +2661,11 @@ ciphertexts $c_1, c_2$, calculate and output
 \]
 \paragraph{} Now we may return to the question posed at the end of the previous
 section. How can we represent circuits in our scheme? Take the ring $R$ and
-ideals $I, J$ output by key generation. Then, it is enough to show that $R/I$ is
-isomorphic to a functionally complete set of gates. In our concrete case we shall show that
+ideals $I, J$ output by key generation. Then, it is enough to show that $R/J$
+has a ring homomorphism to a functionally complete set of gates. In our concrete
+case we will see that
 \[
-  (R/I, +_I, \times_I) \cong (\{0, 1\}, \land, \oplus),
+  (R/J, +_J, \times_J) \cong (\{0, 1\}, \land, \oplus),
 \]
 where $\oplus$ denotes the $\texttt{XOR}$ operation. Then, if $R = S[\vec{x}]$ is a (multivariate)
 polynomial ring (which it will be), then there is a one-to-one correspondance
@@ -2607,11 +2689,11 @@ is quite a natural way and it is the one that will be used in the actual impleme
 \paragraph{} Now we consider the correctness of the above scheme. However, we
 will first rely on a few definitions to reduce the verbosity of the proof.
 \begin{definition}
-  Let $R$ and $I$ be as in our cipher and $C$ be a mod-$I$ circuit. Then, the \textbf{generalised circuit} $g(C)$ of
-  $C$ is formed by lifting the mod-I operations of $C$ to the operations of $R$.
+  Let $R$ and $I$ be as in our cipher and $\sigma$ be a mod-$I$ circuit. Then, the \textbf{generalised circuit} $g(\sigma)$ of
+  $\sigma$ is formed by lifting the mod-I operations of $\sigma$ to the operations of $R$.
 \end{definition}
 \begin{definition}
-  $X_\Enc$ be the image of $\Samp$. Then, all ciphertexts output by $\Enc$
+  $X_\Enc$ be the image of $\Samp_R$. Then, all ciphertexts output by $\Enc$
   are in $X_\Enc + J$ (by definition). Let $X_\Dec := R \mod J^{sk}$, the set of
   all distinguished representatives of $J$ with respect to $J^{sk}$.  
 \end{definition}
@@ -2619,8 +2701,8 @@ will first rely on a few definitions to reduce the verbosity of the proof.
 \label{def:perm_circuits}
   Let
   \[
-    \Sigma'_\Pi = \{C | \forall \vec{x} \in X_\Enc^t \,\,\text{ we have }\,\,
-    g(C)(\vec{x}) \in X_\Dec\}.
+    \Sigma'_\Pi = \{\sigma \,\,|\,\, \forall \vec{x} \in X_\Enc^t \,\,\text{ we have }\,\,
+    g(\sigma)(\vec{x}) \in X_\Dec\}.
   \]
   Then, call the subsets $\Sigma_\Pi \subseteq \Sigma_\Pi'$ the set of \textbf{permitted
   circuits} of $\Pi$.
@@ -2634,12 +2716,12 @@ because during decryption we want to mod by $J^{sk}$ first and not $I$. We need
 one more definition still.
 \begin{definition}
   We say that a ciphertext $c$ is \textbf{valid} with respect to $\Pi$, public
-  key $pk$ and permitted circuits $\Sigma_\Pi$ iff there exists some $C \in \Sigma_\Pi$
+  key $pk$ and permitted circuits $\Sigma_\Pi$ iff there exists some $\sigma \in \Sigma_\Pi$
   and $\vec{c} \in \C^t, t \in \Nat$ such that
   \[
-    c = \Evaluate(pk, C, \vec{c}).
+    c = \Evaluate(pk, \sigma, \vec{c}).
   \]
-  (Note, that $C$ may be the identity circuit, i.e. the circuit that simply
+  (Note, that $\sigma$ may be the identity circuit, i.e. the circuit that simply
   returns its input.)
 \end{definition}
 \paragraph{} Finally, we are ready to prove the correctness of $\Pi$.
@@ -2655,23 +2737,24 @@ one more definition still.
     c_k = m_k + i_k + j_k\quad\text{where }m_k \in \M, i_k \in I, j_k \in J.
   \]
   We also have $m_k + i_k \in X_\Enc$ by definition. Now, simply writing out the
-  evaluation of a permitted circuit $C \in \Sigma_\Pi$, we get
+  evaluation of a permitted circuit $\sigma \in \Sigma_\Pi$, we get
   \[
-    \Evaluate(pk, C, \vec{c}) = g(C)(\vec{c}) \mod J^{pk} \in g(C)(m_1 + i_1,
+    \Evaluate(pk, \sigma, \vec{c}) = g(\sigma)(\vec{c}) \mod J^{pk} \in g(\sigma)(m_1 + i_1,
     \hdots m_t + i_t) + J.
   \]
-  Now, using the fact that $C \in \Sigma_\Pi$, we know that the result of the lifted circuit
-  $g(C)$ can be correctly decrypted (i.e. $g(C)(X_\Enc, \hdots, X_\Enc) \in X_\Dec$). Formally:
+  Now, using the fact that $\sigma \in \Sigma_\Pi$, we know that the result of the lifted circuit
+  $g(\sigma)$ can be correctly decrypted (i.e. $g(\sigma)(X_\Enc, \hdots, X_\Enc) \in X_\Dec$). Formally:
   \begin{align*}
-    \Dec(sk, \Evaluate(pk, C, \vec{c})) &= g(C)(m_1 + i_1,
+    \Dec(sk, \Evaluate(pk, \sigma, \vec{c})) &= g(\sigma)(m_1 + i_1,
                                           \hdots m_t + i_t) \mod I \\
-                                        &= g(C)(m_1, \hdots m_t) \mod I\quad\text{due to the lifting property} \\
-                                        &= C(m_1, \hdots, m_t).\quad \text{as required by correctness.}
+                                        &= g(\sigma)(m_1, \hdots m_t) \mod I\quad\text{due to the lifting property} \\
+                                        &= \sigma(m_1, \hdots, m_t).\quad \text{as required by correctness.}
   \end{align*}
 \end{proof}
 \subsubsection{Security of the construction}
 \paragraph{} Finally in this section, we prove the security of our scheme.
 \begin{theorem}
+  \label{thm:gentry_ind_cpa}
 Fix a ring $R$ and an ideal $(s)$ for some $s \in R$. Let our ideal sampling algorithm
 \[
   \Samp_R(I, m) = m + r \times s\quad\text{where } r \leftarrow \Samp_R.
@@ -2700,7 +2783,12 @@ Then our construction $\Pi$ is IND-CPA secure relative to the ICP.
     \State \Return $b' = \beta' \oplus \beta$.
     \State
   \end{algorithmic}
-  Let us now analyse the behaviour of the above algorithm.
+  \paragraph{} The intuition behind the above definition is that if $\A$ is any good at
+  guessing $\beta$ given a non-uniformly sampled $t$,
+  then $\beta' \oplus \beta$ will be 0 more often than it will
+  be 1. Then, by our hardness assumption the problem cannot
+  be solved with reliable success, and so there is a limit on how good $\A$
+  can be at guessing in any case. Below we formally analyse the behaviour of the above algorithm:
   \paragraph{Case 1:} The ICP challenger chooses $b = 0$\\ 
   Recall, that by the definition of the ICP when $b = 0$ our algorithm $\A'$ will
   receive $t = r + j$ for some $r$ sampled according to $\Samp_R$ and $j \in J$.
@@ -2720,9 +2808,10 @@ Then our construction $\Pi$ is IND-CPA secure relative to the ICP.
   relatively prime to $J$, if we multiply $t$ by the generator $s$, their
   product will still be uniform modulo $J^{pk}$ (this follows by the fact that
   similarly to the way elements of $\Int_{N^2}^*$ mapped $N$-to-$1$ onto the
-  elements of $\texttt{Res}(N^2)$, here the elements of $(s) + J$ such as
-  $t \times s$ will map onto $J$ in some $k$-to-$1$ fashion). Hence $t\times s$
-  is independent of $\beta$, and hence $\A$ will have 0 advantage (i.e. cannot
+  elements of $\texttt{Res}(\Int_{N^2}, N)$, here the elements of $(s) + J$ such as
+  $t \times s$ will map onto $J$ in some $k$-to-$1$ fashion). Thus, the
+  ciphertext will be uniformly random in $R/J$ and will be independent of
+  $\beta$. Hence $\A$ will have 0 advantage (i.e. cannot
   guess with probability better than $1/2$), and hence, by extension $\A'$ has 0
   advantage.
   \paragraph{} Denote
@@ -2751,7 +2840,7 @@ Then our construction $\Pi$ is IND-CPA secure relative to the ICP.
 we look at a special case of our abstract scheme. By the end of this chapter, it
 should be clear to us how and what should be implemented. Therefore, the goal of
 this section is to present the bridge that connects the abstract scheme and the
-concrete implementation, while exposing the pure mathematical machinery that
+implementation, while exposing the pure mathematical machinery that
 we will be utilising.
 \paragraph{}
 As we discussed already in Section \ref{sec:fhe_motivation}, the underlying
@@ -2761,12 +2850,12 @@ factoring-based public-key schemes, but due to the ring ideal - lattice duality,
 calculations with these objects are easier and also the performance and security
 analyses of them will be easier, as we can leverage the geometric nature of
 lattices. 
-\subsubsection{Approach, and the concrete ring}
+\subsubsection{Approach and the concrete ring}
 \paragraph{} We recall from our discussion in the previous section, the
 definition of permitted circuits:
 \[
-  \Sigma_\Pi' = \{C\,\,|\,\, \forall \vec{c} \in X_\Enc^t\,\,\text{ we
-    have }\,\,g(C)(\vec{c}) \in X_\Dec\}.
+  \Sigma_\Pi' = \{\sigma\,\,|\,\, \forall \vec{c} \in X_\Enc^t\,\,\text{ we
+    have }\,\,g(\sigma)(\vec{c}) \in X_\Dec\}.
 \]
 What controls the size of $\Sigma_\Pi'$? It is precisely the two sets $X_\Enc$
 and $X_\Dec$! Concretely, we would prefer the size of $X_\Enc$ to be a small as
@@ -2796,8 +2885,8 @@ can make our definition of permitted circuits much simpler and more intuitive:
   where $B(r)$ is the ball of radius $r$ centered at the origin. Similarly, let
   $r_\Dec$ be the largest value such that $B(r_\Dec) \subseteq X_\Dec$. Then, let
   \[
-    \Sigma_\Pi = \{C\,\,|\,\,\forall \vec{c} \in B(r_\Enc)\,\,\text{ we have
-    }\,\,g(C)(\vec{c} \in B(r_\Dec))\}.
+    \Sigma_\Pi = \{\sigma\,\,|\,\,\forall \vec{c} \in B(r_\Enc)\,\,\text{ we have
+    }\,\,g(\sigma)(\vec{c}) \in B(r_\Dec)\}.
   \]
   We refer to $r_\Enc$ as the \textbf{encryption radius} and to $r_\Dec$ as the
   \textbf{decryption radius}.
@@ -2806,10 +2895,10 @@ Note, that by the definition of $\Sigma_\Pi$, it sits in the maximal set of
 permitted circuits $\Sigma_\Pi'$, as defined in Definition
 \ref{def:perm_circuits}. Then, our goal may be rephrased as minimising the
 encryption radius and maximising the decryption radius.
-\paragraph{} Given $r_\Enc$ and $r_\Dec$ we can now as a more precise question:
+\paragraph{} Given $r_\Enc$ and $r_\Dec$ we can now ask a more precise question:
 what is the size of $\Sigma_\Pi$? To answer this, we need to bound the length of
-the output of a generalised circuit. Namely, given $C \in \Sigma_\Pi$ and $\vec{c}
-\in B(r_\Enc)$, what can we say about $\norm{g(C)(\vec{c})}$? Since the
+the output of a generalised circuit. Namely, given $\sigma \in \Sigma_\Pi$ and $\vec{c}
+\in B(r_\Enc)$, what can we say about $\norm{g(\sigma)(\vec{c})}$? Since the
 generalised circuit will be composed of sums and products of vectors in
 Euclidean space, we can break down the problem into bounding the size of two
 arbitrary vectors $\vec{u}$ and $\vec{v}$, then the norm of the output of the
@@ -2825,18 +2914,18 @@ expressed as a directed tree with the leaves being the inputs and the root being
 the output of the circuits, with the non-leaf nodes corresponding to the logic
 gates.
 \begin{definition}
-  Let $C = (E, V)$ be an (acyclic) circuit represented as a tree, with root node
+  Let $\sigma = (E, V)$ be an (acyclic) circuit represented as a tree, with root node
   $o$. Define the set of level $l$ gates by 
   \[
-    C^{l} = \{v \in V\,\,|\,\, d(v, o) = l\}.
+    \sigma^{l} = \{v \in V\,\,|\,\, d(v, o) = l\}.
   \]
-  Now, define the depth of C denoted by $\delta(C)$ by
+  Now, define the depth of $\sigma$ denoted by $\delta(\sigma)$ by
   \[
-    \delta(C) = \max_{i \in \Nat} C^{(i)} \neq \emptyset.
+    \delta(\sigma) = \max_{i \in \Nat} \sigma^{(i)} \neq \emptyset.
   \]
 \end{definition}
-Note, that according to our definition $C^{(0)}$ is simply the singleton set
-containing the root of the tree, and $\delta(C)$
+Note, that according to our definition $\sigma^{(0)}$ is simply the singleton set
+containing the root of the tree, and $\delta(\sigma)$
 is going to denote the length of the longest path between a leaf and the root.
 \paragraph{} The second definition is merely a slight generalisation of our earlier
 definition of a gate. Recall that a (binary) logic gate was a function $g: \{0,
@@ -2847,27 +2936,24 @@ definition of a gate. Recall that a (binary) logic gate was a function $g: \{0,
 \end{definition}
 The reason for talking about $k$ fan-in gates is not theoretical, but practical.
 In particular, as we will see in a moment that it is desirable to keep our
-circuit depths as low as possible. Hence, where possible, we can replace $k - 1$
-addition gates that evaluate $c = \Add(c_1, \Add(c_2, \Add(\hdots, \Add(c_{k-1},
-c_{k}))))$ for some $\vec{c} = [c_1, \hdots, c_k] \in B(r_\Enc)$ with a $k$
-fan-in addition gate to get $c = \Add(\vec{c})$. The important difference here
-is that the depth of the first circuit is $k-1$ whereas the depth of the second
-is $1$.
+circuit depths as low as possible. Hence, where possible, we can replace
+$\log_2k$ deep complete binary tree-circuit of addition gates that with a $k$
+fan-in addition gate, which has depth $1$.
 We are now ready to state the theorem on the circuit bounds:
 \begin{theorem}
-  Assume $r_\Enc \geq 1$. Given a circuit $C$, assume its $\Add$ gates have
+  Assume $r_\Enc \geq 1$. Given a circuit $\sigma$, assume its $\Add$ gates have
   fan-in at most $\gamma(R)$ and its $\Mult$ gates have fan-in 2.
   Finally, assume that
   \[
-    \delta(C) \leq \log_2\log_2 r_\Dec - \log_2\log_2(\gamma(R) \cdot r_\Enc).
+    \delta(\sigma) \leq \log_2\log_2 r_\Dec - \log_2\log_2(\gamma(R) \cdot r_\Enc).
   \]
-  Then, $C(\vec{c}) \in B(r_\Dec)$ for all $\vec{c} \in B(r_\Enc)$, and hence $C
+  Then, $\sigma(\vec{c}) \in B(r_\Dec)$ for all $\vec{c} \in B(r_\Enc)$, and hence $\sigma
   \in \Sigma_\Pi$.
 \end{theorem}
 \begin{proof}
-  Let $r_i$ be an upper bound on the norm of the results of gates in $C^{(i)}$
-  for $0 \leq i \leq \delta(C)$. Then, our task is to bound $\norm{g(C)(\vec{c}}
-  \leq r_0$ by $r_\Enc$, the radius of the input nodes in the circuit. Hence, $r_{\delta(C)} = r_\Enc$. Then
+  Let $r_i$ be an upper bound on the norm of the results of gates in $\sigma^{(i)}$
+  for $0 \leq i \leq \delta(\sigma)$. Then, our task is to bound $\norm{g(\sigma)(\vec{c}}
+  \leq r_0$ by $r_\Enc$, the radius of the input nodes in the circuit. Hence, $r_{\delta(\sigma)} = r_\Enc$. Then
   an $\Add$ gate at level $i$ will take take as input at most $\gamma(R)$ number
   of $\vec{u_j}$s from level $i + 1$ and output some vector $\vec{v}$. Then, by
   the triangle equality
@@ -2884,13 +2970,13 @@ We are now ready to state the theorem on the circuit bounds:
   \]
   Since $r_i, \gamma(R) \geq 1$, in both cases $r_{i-1} \leq \gamma(R)\cdot
   r_i^2 \leq (\gamma(R)\cdot r_i)^2$ for all $i$. Then, applying this inequality
-  to $r_0$ $\delta(C)$ times, we get:
+  to $r_0$ $\delta(\sigma)$ times, we get:
   \[
-    r_0 \leq (\gamma(R)\cdot r_\Enc)^{2^{\delta(C)}}
+    r_0 \leq (\gamma(R)\cdot r_\Enc)^{2^{\delta(\sigma)}}
   \]
   Taking logs twice then:
   \begin{align*}
-    \log_2\log_2r_0 &\leq \delta(C) + \log_2\log_2(\gamma(R)\cdot r_\Enc)\\
+    \log_2\log_2r_0 &\leq \delta(\sigma) + \log_2\log_2(\gamma(R)\cdot r_\Enc)\\
                     &\leq (\log_2\log_2r_\Dec - \log_2\log_2(\gamma(R)\cdot r_\Enc)) + \log_2\log_2(\gamma(R)\cdot r_\Enc)\\
                     &= \log_2\log_2r_\Dec.
   \end{align*}
@@ -2898,10 +2984,10 @@ We are now ready to state the theorem on the circuit bounds:
   \[
     r_0 \leq r_\Dec,
   \]
-  and so $g(C)(\vec{c}) \in B(r_\Dec)$.
+  and so $g(\sigma)(\vec{c}) \in B(r_\Dec)$.
 \end{proof}
 \paragraph{} We now see that besides minimising $r_\Enc$ and maximising $r_\Dec$
-we should also minimise $\gamma(R)$, hence beyond the fact that we would like to
+we should also minimise $\gamma(R)$. However, beyond the fact that we would like to
 use $\Int[x]$ as the base for our quotient, it is highly non-trivial what
 polynomial $f$ we should quotient by, and how it will affect the multiplicative
 expansion factor. Due to lack of space, we merely mention that by sacrificing
@@ -2912,7 +2998,7 @@ discussion on the topic, we direct the reader to Section 7.4 in
 \subsubsection{The concrete encryption function}
 \label{sec:enc_concretely}
 \paragraph{} Similarly to how we went from an abstract condition to concrete
-criteria with the when considering the choice of ring, we would like to continue
+criteria when considering the choice of ring, we would like to continue
 in this vein when we consider how we would like to concretise our encryption
 function. We must remember that all we are doing is substituting into the
 definitions of the abstract scheme and then ``tweak'' the parameters of the
@@ -2939,14 +3025,15 @@ performance. See the next section for more details or Section 7.5 in \cite{gentr
 \paragraph{} Finally, we consider the decryption function. Since we are working
 with lattices, when we ran $\GenIdeal$, we may assume that the generators we got
 $(J^{pk}, J^{sk})$ are polynomials $(v(x), w(x))$, respectively. Then, we will
-write $V, W$ for their rotation bases, respectively. Hence, substituting into
+write $V, W$ for their rotation bases, respectively. Then, substituting into
 our abstract schem, our decryption function becomes
 \[
   \Dec((R, I, V), \vec{c}) = (\vec{c} \mod V) \mod I = \vec{c} - \lfloor \vec{c}
   \times V^{-1} \rceil \times V \mod I.
 \]
 Recall that by our definition of $X_\Dec$, ciphertexts will be correctly
-decrypted in the fundamental domain of $V$. Geometrically therefore, $r_\Dec$ is the largest ball
+decrypted in the fundamental domain of $V$. Geometrically therefore, $r_\Dec$ is
+the radius of the largest ball
 that can be inscribed into the parallelepiped defined by $V$.
 \subsection{The Scheme, Implemented}
 \label{sec:scheme_impl}
@@ -2966,7 +3053,7 @@ normal modulo operation, but with the caveat that $[c]_d$ will map its input in
 the range $[-\frac{d}2, \frac{d}2)$.
 \paragraph{} Furthermore, below we will make use of the notion of the Hermite
 Normal Form of an integer matrix. We therefore define them here so that we avoid
-clutter.
+clutter later.
 \begin{definition}{(Lower triangular) Hermite Normal Form:}
   Let $A \in \GL_n(\Int)$. Then, there exists a unimodular matrix $U \in
   \GL_n(\Int)$ and another matrix $H \in \GL_n(\Int)$ such that $UA = H$, $H$ is
@@ -2989,7 +3076,8 @@ calculated in polynomial time via Gaussian elimination and will provide the
 \paragraph{} We begin by describing the ring $R = \Int[x]/f$ as we described in the previous
 section. In particular, we need to make concrete our choice for $f$. Let $N =
 |\lambda| $ be our security parameter, and set $n = 2^N$. Then, we will be
-using $f(x) = x^n + 1$, not only because it is irreducible, but also as we
+using $f(x) = x^n + 1$, not only because it is irreducible\footnote{See
+  Appendix, Theorem \ref{thm:f_irred}}, but also as we
 will see in a moment has some very nice properties. 
 \paragraph{} As mentioned in Section \ref{sec:enc_concretely}, we would also
 like to have the generator of $I$ as small as possible. Hence, we set $I = (2)$,
@@ -3008,7 +3096,18 @@ that
 \]
 Modding by $f$, we get $v\times w = d \mod f$. We merely need to apply the
 Extended Euclidean algorithm to compute $w$ and $d$.
-We now generate the HNF of $v$'s rotation basis, and check if it is of the form 
+Due to the simplicity of $f$, $v$'s rotation basis has a special form (because
+modding by $f$ essentially becomes setting all $x^n$ terms to $-1$): 
+\[
+   V =
+   \begin{bmatrix}
+     v_0 & v_1 & \cdots & v_{n - 1} \\
+     -v_{n-1} & v_0 & \cdots & v_{n - 2} \\
+     \vdots & \vdots & \ddots & \vdots \\
+     -v_1 & -v_2 & \cdots & v_0
+   \end{bmatrix}
+ \]
+We now calculate the HNF of $V$ and check if it is of the form:
 \[
   H = \begin{bmatrix}
     d & 0 & 0 &\hdots &0 \\
@@ -3031,22 +3130,22 @@ $n\times n$ identity matrix. Hence, $V^{-1} = \frac1d \cdot W$.
 can be shown, that the HNF of $V$ is of the correct form if and only if $H$
 contains the row 
 \[
-  \vec{h}_1 = \vec{y} \times V = [-r, 1, \hdots, 0]
+  \vec{h}_2 = \vec{y} \times V = [-r, 1, \hdots, 0]
 \]
 for some $\vec{y} \in \Int^n$. Then, multiplying both sides by $W$, we get
 \begin{gather*}
   \vec{y} \times V \times W = [-r, 1, \hdots, 0] \times W \\
-  \vec{y} \cdot d = -r \cdot [w_1, w_2, \hdots, w_n] + [-w_n, w_1, \hdots, w_{n-1}]. 
+  \vec{y} \cdot d = -r \cdot [w_0, w_1, \hdots, w_{n - 1}] + [-w_{n - 1}, w_0, \hdots, w_{n-2}]. 
 \end{gather*}
 Now, we can mod the whole equation by $d$ and get
 \begin{gather*}
-  r \cdot [w_1, w_2, \hdots, w_n] = [-w_n, w_1, \hdots, w_{n-1}] \mod d.
+  r \cdot [w_0, w_1, \hdots, w_{n - 1}] = [-w_{n - 1}, w_0, \hdots, w_{n-2}] \mod d.
 \end{gather*}
-Due to linear independence now, we therefore have $rw_{i+1} = w_i$ for all $1
-\leq i \leq n - 2$ and $rw_1 = -w_{n - 1}$. Then, multiplying all these terms
+Due to linear independence now, we therefore have $rw_{i+1} = w_i$ for all $0
+\leq i \leq n - 2$ and $rw_0 = -w_{n - 1}$. Then, multiplying all these terms
 together, we get
 \[
-  r^n\cdot w_1w_2\cdots w_n = -w_nw_1\cdots w_{n-1} \mod d.
+  r^n\cdot w_0w_1\cdots w_{n - 1} = -w_{n - 1}w_0\cdots w_{n - 1} \mod d.
 \]
 Then, the $w_i$ terms match up on both sides, hence dividing by them on both
 sides, we get
@@ -3056,19 +3155,19 @@ sides, we get
 Observe, that the above two equations are equivalent up to an even number of
 $-1$ factors. Hence, it is enough to check for the last equation to see that the
 we have the HNF in the required form (up to an even number of negated rows). For
-a proof of the existence of a row $\vec{h}_1$ being a sufficient condition for
+a proof of the existence of a row $\vec{h}_2$ being a sufficient condition for
 the correct HNF form, please see Lemma 1 in \cite{gentryImplementation}.
 \paragraph{To summarise:} We will have $R = \Int[x]/f$, $f = x^n + 1$, $I =
 (2)$ and we will only store $d$ and $r$ as the description $J^{pk}$.
 \subsubsection{The encryption function}
 \paragraph{} We will focus on encryption a single bit $b \in \{0, 1\}$, with a
-public key $J^{pk}$. To then encode the message as the representative of a coset
+public key $J^{pk}$. Then to encode the message as the representative of a coset
 of $(2)$, we pick a representative $u(x) \leftarrow \Samp_R \mod (2)$. Note, that all
 coefficients of $u$ are now going to be $\{0, 1\}$. Then set $c' = 2\cdot u(x) + b$.
 Then, to perform the encryption function, assume $J^{pk} = (d, r)$ generates
 matrix $H$, and thus we get
 \[
-  \vec{c} = \vec{c}''' \mod H = \vec{c}' - \lfloor \vec{c}' \times H^{-1} \rceil
+  \vec{c} = \vec{c}'\mod H = \vec{c}' - \lfloor \vec{c}' \times H^{-1} \rceil
   \times H.
 \]
 Recall that $H$ and (it is easy to check that) its inverse, $H^{-1}$ are of the
@@ -3108,7 +3207,7 @@ which will round to $0$. Thus, we will have
 \]
 Then, one can easily verify, that  
 \[
-  \vec{c} = \vec{c}' - [ 0 , 2u_1,\hdots 2u_{n-1}] \times H = \vec{c} = [[2\cdot
+  \vec{c} = \vec{c}' - [ 0 , 2u_1,\hdots 2u_{n-1}] \times H = [[2\cdot
   u(r) + b]_d, 0, \hdots, 0]
 \]
 Thus, letting $c = [2\cdot u(r) + b]_d$, it is enough to output and transmit $c$!
@@ -3170,10 +3269,10 @@ $J^{sk}$ for the secret key!
 Now that we have seen the somewhat homomorphic scheme, how do we make it fully
 homomorphic? We first formalise some ideas:
 \begin{definition}{(Compact Homomorphic Encryption)}
-  Let $\Pi = (\Gen, \Enc, \Dec, \Evaluate)$ be a homomrphic cipher. Then, we say that it is \textbf{compact},
-  iff for every security parameter $\lambda$ there is a (family of) circuits $D_\Pi$
+  Let $\Pi = (\Gen, \Enc, \Dec, \Evaluate)$ be a homomorphic cipher. Then, we say that it is \textbf{compact},
+  iff for every security parameter $\lambda$ there is a (family of) permitted circuits $D_\Pi$
   expressing $\Dec$ of depth $\Oh(\lambda)$.\\
-  Further, we say that if $\Evaluate$ is correct for some circuts $\Sigma_\Pi$ too,
+  Further, we say that if $\Evaluate$ is correct for some set of circuts $\Sigma_\Pi$ too,
   then we say that $\Pi$ \textbf{compactly evaluates} $\Sigma_\Pi$.
 \end{definition}
 \begin{definition}
@@ -3197,7 +3296,7 @@ homomorphic? We first formalise some ideas:
   at most $d$, and the time complexity of $\Pi^{(d)}$'s algorithms is
   polynomial in $\lambda, d$ and the size of circuits that we are evaluating.
 \end{definition}
-\paragraph{} In this section, we will show (a sketch of the fact) that we can construct a levelled
+\paragraph{} In this section, we will show (a sketch of the proof) that we can construct a levelled
 fully homomorphic scheme from any bootstrappable scheme $\Pi$. We note, that
 setting up the scheme, proving its correctness and its security require some
 more setup that is out of the scope of this work. Hence, the reader should be
@@ -3383,6 +3482,7 @@ Remainder Theorem using the fact that for $m, n \in \Nat$ where $\gcd(m, n) = 1$
 we have $\phi(mn) = \phi(m)\phi(n)$, but this is outside the scope of this work. 
 
 \begin{theorem}
+  \label{thm:f_irred}
   Let $f(x) = x^{2^n} + 1 \in \Int[x]$ for some $n \in \Nat$. Then, $f$ is
   irreducible in $\Int[x]$.
 \end{theorem}
